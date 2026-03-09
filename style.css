@@ -221,7 +221,7 @@ header {
   animation: fadeInUp 0.5s ease both;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   position: relative;
   overflow: hidden;
 }
