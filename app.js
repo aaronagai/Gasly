@@ -17,6 +17,14 @@ const FUEL_KEYS = [
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#ea580c', regionAlt: 'diesel_eastmsia' },
 ];
 
+// ── EV Charging Data ─────────────────────────────────────────────
+// Reference: ChargEV (TNB) indicative rates. Update manually if rates change.
+const EV_RATES = {
+  ac: { rate: 0.55, label: 'AC Slow', labelBM: 'AC Perlahan' },
+  dc: { rate: 0.80, label: 'DC Fast', labelBM: 'DC Pantas'   },
+};
+const EV_KM_PER_KWH = 6; // avg efficiency for Malaysia conditions
+
 // ── International Price Data ──────────────────────────────────────
 // UPDATE WEEKLY each Wednesday — native currency per litre
 // Starts Sep 2025 (when BUDI95 launched) — add new row each Wed, drop oldest
@@ -104,6 +112,12 @@ const I18N = {
     intlTitle:      'Global Price Comparison (RM/L)',
     intlDisclaimer: 'International prices updated weekly. Source: GlobalPetrolPrices.com',
     intlRateNote:   'Live exchange rates via exchangerate-api.com',
+    evName:         'EV Charging',
+    evSub:          'ChargEV (TNB)',
+    evAC:           'AC SLOW',
+    evDC:           'DC FAST',
+    evEquivLabel:   'est. per 100 km',
+    evNote:         'Indicative · rate varies by provider & location',
   },
   bm: {
     subtitle:    'Harga Minyak Malaysia Terkini',
@@ -140,6 +154,12 @@ const I18N = {
     intlTitle:      'Perbandingan Harga Antarabangsa (RM/L)',
     intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
     intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
+    evName:         'Cas EV',
+    evSub:          'ChargEV (TNB)',
+    evAC:           'AC PERLAHAN',
+    evDC:           'DC PANTAS',
+    evEquivLabel:   'anggaran per 100 km',
+    evNote:         'Anggaran · kadar berbeza mengikut pembekal & lokasi',
   },
 };
 
@@ -153,6 +173,7 @@ let refreshTimer  = null;
 let countdownTimer = null;
 let exchangeRates = null;
 let intlChart     = null;
+let evChargeType  = localStorage.getItem('evCharge') || 'ac';
 
 // ── Theme ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -218,6 +239,13 @@ window.setRegion = function(region) {
   document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
   if (rawData.length) renderCards(rawData);
+};
+
+// ── EV Charge Type Toggle ─────────────────────────────────────────
+window.setEvCharge = function(type) {
+  evChargeType = type;
+  localStorage.setItem('evCharge', type);
+  renderEVCard();
 };
 
 // ── Data Fetch ───────────────────────────────────────────────────
@@ -348,6 +376,54 @@ function renderCards(data) {
     grid.appendChild(card);
     requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
+
+  renderEVCard();
+}
+
+// ── EV Card ───────────────────────────────────────────────────────
+function renderEVCard() {
+  const t      = I18N[currentLang];
+  const grid   = document.getElementById('cards-grid');
+  const accent = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
+
+  const existing = document.getElementById('ev-card');
+  if (existing) existing.remove();
+
+  const rateData = EV_RATES[evChargeType];
+  const rate     = rateData.rate;
+  const equiv    = (rate / EV_KM_PER_KWH * 100).toFixed(2);
+  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
+  const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
+
+  const card = document.createElement('div');
+  card.className = 'fuel-card ev-card';
+  card.id = 'ev-card';
+  card.style.setProperty('--card-accent', accent);
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div>
+        <div class="card-name">${t.evName}</div>
+        <div class="card-name-sub">${t.evSub} · ${chargeLabel}</div>
+      </div>
+      <div class="card-header-right">
+        <span class="card-type-badge" style="${badgeStyle}">EV</span>
+      </div>
+    </div>
+    <div class="card-price-row">
+      <span class="card-currency">RM</span>
+      <span class="card-price" style="color:${accent}">${rate.toFixed(2)}</span>
+      <span class="card-currency">/kWh</span>
+    </div>
+    <div class="ev-equiv" style="color:${accent}">≈ RM ${equiv} / 100km</div>
+    <div class="ev-toggle">
+      <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
+      <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
+    </div>
+    <div class="ev-note">${t.evNote}</div>
+  `;
+
+  grid.appendChild(card);
 }
 
 // ── Exchange Rates ────────────────────────────────────────────────
