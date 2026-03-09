@@ -21,7 +21,6 @@ const FUEL_KEYS = [
 const I18N = {
   en: {
     subtitle:    'Malaysia Live Fuel Prices',
-    refresh:     'LIVE',
     lastUpdated: 'Last Updated',
     nextUpdate:  'Next Update',
     dataSource:  'Data source',
@@ -55,7 +54,6 @@ const I18N = {
   },
   bm: {
     subtitle:    'Harga Minyak Malaysia Terkini',
-    refresh:     'LANGSUNG',
     lastUpdated: 'Kemaskini Terakhir',
     nextUpdate:  'Kemaskini Seterusnya',
     dataSource:  'Sumber data',

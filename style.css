@@ -151,19 +151,6 @@ header {
   letter-spacing: 0.12em;
 }
 
-.refresh-ring {
-  display: inline-block;
-  width: 14px; height: 14px;
-  border: 2px solid transparent;
-  border-top-color: var(--accent);
-  border-right-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 2s linear infinite;
-  box-shadow: 0 0 6px rgba(0,255,100,0.5);
-}
-
-.refresh-ring.paused { animation-play-state: paused; border-top-color: var(--text-muted); border-right-color: var(--text-muted); box-shadow: none; }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Meta Bar ───────────────────────────────────────────────── */
