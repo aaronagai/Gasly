@@ -430,15 +430,12 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   header { flex-direction: column; align-items: flex-start; }
 }
 
-/* ── Region Toggle (header) — mirrors .lang-toggle ──────────── */
-.region-toggle {
+/* ── Region Toggle (above RON95 card) ────────────────────────── */
+.card-region-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(0,255,100,0.05);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 8px;
+  margin-bottom: 4px;
 }
 
 .region-btn {
@@ -449,15 +446,13 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px 0;
   transition: all 0.2s;
   letter-spacing: 0.08em;
 }
 
 .region-btn.active, .region-btn:hover {
   color: var(--accent);
-  background: rgba(0,255,100,0.1);
 }
 
 /* Card header right (badge + region tag) */

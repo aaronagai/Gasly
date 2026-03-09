@@ -100,9 +100,6 @@ let countdownTimer = null;
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   applyLang(currentLang);
-  // Restore region button state from localStorage
-  document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
-  document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
   startCountdown();
   refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
@@ -141,8 +138,6 @@ function applyLang(lang) {
 window.setRegion = function(region) {
   selectedRegion = region;
   localStorage.setItem('region', region);
-  document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
-  document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
   if (rawData.length) renderCards(rawData);
 };
 
@@ -254,7 +249,15 @@ function renderCards(data) {
     card.className = 'fuel-card';
     card.style.setProperty('--card-accent', accent);
 
+    const regionToggleHTML = regionAlt ? `
+      <div class="card-region-toggle" role="group">
+        <button id="rbtn-peninsular" class="region-btn ${selectedRegion === 'peninsular' ? 'active' : ''}" onclick="setRegion('peninsular')">${t.peninsular}</button>
+        <span class="lang-sep">/</span>
+        <button id="rbtn-east" class="region-btn ${selectedRegion === 'east' ? 'active' : ''}" onclick="setRegion('east')">${t.eastMY}</button>
+      </div>` : '';
+
     card.innerHTML = `
+      ${regionToggleHTML}
       <div class="card-header">
         <div class="card-header-right">
           ${regionalTag}
