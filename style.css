@@ -97,8 +97,8 @@ header {
   color: var(--text);
 }
 
-.title-regular { font-weight: 400; color: #fff; }
-.title-bold    { font-weight: 700; color: #fff; }
+.title-regular { font-weight: 400; color: #ffffff !important; }
+.title-bold    { font-weight: 700; color: #ffffff !important; }
 
 .site-subtitle {
   font-size: 0.72rem;
