@@ -37,7 +37,7 @@ const I18N = {
       ron95_budi95:    'BUDI95 Subsidised',
     },
     fuelSubs: {
-      ron95:           'Semenanjung Malaysia',
+      ron95:           'Malaysia-wide',
       ron95_skps:      'East Malaysia (SKPS)',
       ron97:           'All regions',
       diesel:          'Semenanjung',
@@ -70,7 +70,7 @@ const I18N = {
       ron95_budi95:    'BUDI95 Bersubsidi',
     },
     fuelSubs: {
-      ron95:           'Semenanjung Malaysia',
+      ron95:           'Seluruh Malaysia',
       ron95_skps:      'Malaysia Timur (SKPS)',
       ron97:           'Semua kawasan',
       diesel:          'Semenanjung',
