@@ -11,10 +11,10 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', label: 'BUDI95' },
+  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', lightAccent: '#6d28d9', label: 'BUDI95' },
   { key: 'ron95',        icon: '🟢', accent: '#00ff64', lightAccent: '#0F9D58' },
-  { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
-  { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
+  { key: 'ron97',        icon: '🔵', accent: '#00d4ff', lightAccent: '#0369a1' },
+  { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#b45309', regionAlt: 'diesel_eastmsia' },
 ];
 
 // ── i18n ─────────────────────────────────────────────────────────
@@ -282,7 +282,7 @@ function renderCards(data) {
     `;
 
     grid.appendChild(card);
-    requestAnimationFrame(() => renderSparkline(key, series, accent));
+    requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
 }
 
