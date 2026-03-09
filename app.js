@@ -244,13 +244,13 @@ function renderCards(data) {
 
     card.innerHTML = `
       <div class="card-header">
+        <div>
+          <div class="card-name">${displayName}</div>
+          <div class="card-name-sub">${displaySub}</div>
+        </div>
         <div class="card-header-right">
           <span class="card-type-badge" style="${badgeStyle}">${label || key.toUpperCase().replace(/_/g, ' ')}</span>
         </div>
-      </div>
-      <div>
-        <div class="card-name">${displayName}</div>
-        <div class="card-name-sub">${displaySub}</div>
       </div>
       <div class="card-price-row">
         <span class="card-currency">RM</span>

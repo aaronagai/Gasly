@@ -248,9 +248,8 @@ header {
 .card-header {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
-  min-height: 36px;
 }
 
 .card-icon {
