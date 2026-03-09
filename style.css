@@ -21,6 +21,13 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Prevent sticky hover on touch devices */
+@media (hover: none) {
+  .fuel-card:hover { transform: none; border-color: var(--border); box-shadow: var(--glow); }
+  .lang-btn:hover, .region-btn:hover { background: none; color: var(--text-muted); }
+  .lang-btn.active, .region-btn.active { color: var(--accent); background: rgba(0,255,100,0.1); }
+}
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -419,15 +426,68 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 .footer-sub { opacity: 0.6; margin-top: 4px; }
 
 /* ── Responsive ─────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .site-title { font-size: 1.5rem; }
-  .cards-grid { grid-template-columns: 1fr; }
-  .meta-bar { gap: 12px; }
-  .card-price { font-size: 2rem; }
+
+/* Tablet: 2-column card grid */
+@media (min-width: 600px) and (max-width: 960px) {
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 400px) {
+/* Phone: ≤ 599px */
+@media (max-width: 599px) {
+  .container { padding: 14px 12px 36px; }
+
+  /* Header: logo left, controls right — wrap gracefully */
+  header {
+    gap: 10px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+  }
+
+  .site-title  { font-size: 1.55rem; }
+  .logo-icon   { font-size: 1.9rem; }
+  .site-subtitle { font-size: 0.65rem; letter-spacing: 0.08em; }
+
+  .header-right { gap: 10px; }
+
+  /* Bigger touch targets on toggles */
+  .lang-btn, .region-btn {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+
+  /* Meta bar: 2-column grid */
+  .meta-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+
+  .meta-item { gap: 6px; }
+  .meta-item:last-child { grid-column: 1 / -1; }
+  .meta-label { font-size: 0.62rem; }
+  .meta-value { font-size: 0.78rem; }
+
+  /* Cards: single column, tighter */
+  .cards-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 28px; }
+
+  .fuel-card   { padding: 16px 14px; gap: 10px; }
+  .card-price  { font-size: 2.8rem; }
+  .card-name   { font-size: 0.9rem; }
+  .card-chart-wrap { height: 56px; }
+
+  /* Larger touch area on region toggle buttons */
+  .card-region-toggle { margin-bottom: 2px; }
+  .region-btn { padding: 4px 2px; font-size: 0.78rem; }
+}
+
+/* Very small phones: ≤ 380px */
+@media (max-width: 380px) {
   header { flex-direction: column; align-items: flex-start; }
+  .header-right { width: 100%; justify-content: space-between; }
+  .site-title { font-size: 1.4rem; }
+  .card-price { font-size: 2.4rem; }
 }
 
 /* ── Region Toggle (above RON95 card) ────────────────────────── */
