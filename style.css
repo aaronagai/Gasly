@@ -494,7 +494,7 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
     margin-bottom: 14px;
   }
 
-  .site-title  { font-size: 1.55rem; }
+  .site-title  { font-size: 0.95rem; }
   .logo-icon   { font-size: 1.9rem; }
   .site-subtitle { font-size: 0.65rem; letter-spacing: 0.08em; }
 
@@ -537,7 +537,7 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 @media (max-width: 380px) {
   header { flex-direction: column; align-items: flex-start; }
   .header-right { width: 100%; justify-content: space-between; }
-  .site-title { font-size: 1.4rem; }
+  .site-title { font-size: 0.95rem; }
   .card-price { font-size: 2.4rem; }
 }
 
