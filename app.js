@@ -18,17 +18,49 @@ const FUEL_KEYS = [
 ];
 
 // ── International Price Data ──────────────────────────────────────
-// UPDATE WEEKLY each Wednesday — native currency per litre (US: USD/gallon)
+// UPDATE WEEKLY each Wednesday — native currency per litre
+// Starts Sep 2025 (when BUDI95 launched) — add new row each Wed, drop oldest
 const INTL_WEEKS = [
-  '2026-01-14', '2026-01-21', '2026-01-28',
-  '2026-02-04', '2026-02-11', '2026-02-18',
-  '2026-02-25', '2026-03-04',
+  '2025-09-03', '2025-09-10', '2025-09-17', '2025-09-24',
+  '2025-10-01', '2025-10-08', '2025-10-15', '2025-10-22', '2025-10-29',
+  '2025-11-05', '2025-11-12', '2025-11-19', '2025-11-26',
+  '2025-12-03', '2025-12-10', '2025-12-17', '2025-12-24', '2025-12-31',
+  '2026-01-07', '2026-01-14', '2026-01-21', '2026-01-28',
+  '2026-02-04', '2026-02-11', '2026-02-18', '2026-02-25',
+  '2026-03-04',
 ];
 
 const INTL_PRICES = {
-  uk: [1.46, 1.47, 1.45, 1.44, 1.46, 1.48, 1.47, 1.45], // GBP/litre
-  au: [1.92, 1.95, 1.88, 1.85, 1.87, 1.90, 1.93, 1.91], // AUD/litre
-  sg: [2.68, 2.71, 2.69, 2.65, 2.63, 2.66, 2.70, 2.72], // SGD/litre (RON 95)
+  // GBP/litre (UK unleaded)
+  uk: [
+    1.44, 1.45, 1.46, 1.46,
+    1.47, 1.47, 1.46, 1.45, 1.44,
+    1.45, 1.46, 1.47, 1.48,
+    1.48, 1.49, 1.50, 1.50, 1.49,
+    1.48, 1.47, 1.46, 1.45,
+    1.44, 1.46, 1.48, 1.47,
+    1.45,
+  ],
+  // AUD/litre (Australia regular unleaded)
+  au: [
+    1.91, 1.88, 1.85, 1.87,
+    1.92, 1.95, 1.90, 1.86, 1.83,
+    1.88, 1.93, 1.97, 1.94,
+    1.91, 1.89, 1.86, 1.88, 1.91,
+    1.95, 1.88, 1.85, 1.87,
+    1.90, 1.93, 1.91, 1.88,
+    1.90,
+  ],
+  // SGD/litre (Singapore RON 95)
+  sg: [
+    2.65, 2.67, 2.69, 2.71,
+    2.70, 2.68, 2.66, 2.64, 2.63,
+    2.65, 2.67, 2.68, 2.70,
+    2.71, 2.69, 2.67, 2.65, 2.63,
+    2.65, 2.68, 2.71, 2.69,
+    2.65, 2.63, 2.66, 2.70,
+    2.72,
+  ],
 };
 
 // Per-series chart config (en/bm labels + light/dark colors)
@@ -355,11 +387,10 @@ function renderIntlChart() {
     sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
   };
 
-  // BUDI95 from rawData, oldest → newest
+  // BUDI95 from rawData aligned with INTL_WEEKS (oldest → newest, nulls kept for gaps)
   const budi95 = rawData
-    .map(r => r.ron95_budi95)
-    .filter(v => v != null && v > 0)
-    .slice(0, 8)
+    .slice(0, INTL_WEEKS.length)
+    .map(r => r.ron95_budi95 || null)
     .reverse();
 
   const labels = INTL_WEEKS.map(d =>
@@ -369,9 +400,11 @@ function renderIntlChart() {
     )
   );
 
-  const datasets = INTL_SERIES.map(s => {
+  const datasets = INTL_SERIES.map((s, i) => {
     const color = (isDark || !s.lightColor) ? s.color : s.lightColor;
     const data  = s.key === 'budi95' ? budi95 : toRMperL[s.key];
+    // Country lines fill towards BUDI95 (index 0) to show the subsidy gap
+    const fill  = i === 0 ? false : { target: 0, above: color + '28', below: color + '28' };
     return {
       label:                s[currentLang],
       data,
@@ -380,8 +413,9 @@ function renderIntlChart() {
       pointRadius:          s.width === 3 ? 3 : 2,
       pointHoverRadius:     s.width === 3 ? 6 : 5,
       pointBackgroundColor: color,
-      fill:                 false,
+      fill,
       tension:              0.4,
+      spanGaps:             true,
     };
   });
 
@@ -423,7 +457,7 @@ function renderIntlChart() {
       scales: {
         x: {
           grid:  { color: gridColor },
-          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0 },
+          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 8 },
         },
         y: {
           grid:  { color: gridColor },
