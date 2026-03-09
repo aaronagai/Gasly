@@ -54,6 +54,22 @@
       </div>
     </div>
 
+    <!-- Region Filter -->
+    <div class="region-bar">
+      <span class="region-bar-label" data-i18n="myRegion">My Region</span>
+      <div class="region-bar-toggle" role="group" aria-label="Region selector">
+        <button id="rbtn-peninsular" class="region-bar-btn active" onclick="setRegion('peninsular')">
+          <span class="region-flag">🇲🇾</span>
+          <span data-i18n="peninsular">Peninsular</span>
+        </button>
+        <button id="rbtn-east" class="region-bar-btn" onclick="setRegion('east')">
+          <span class="region-flag">🌴</span>
+          <span data-i18n="eastMY">East MY</span>
+        </button>
+      </div>
+      <span class="region-bar-hint" data-i18n="regionHint">Affects RON95, RON97 &amp; Diesel</span>
+    </div>
+
     <!-- Fuel Cards Grid -->
     <main class="cards-grid" id="cards-grid">
       <!-- Cards injected by JS -->

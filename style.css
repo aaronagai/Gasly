@@ -430,47 +430,91 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   header { flex-direction: column; align-items: flex-start; }
 }
 
-/* ── RON95 Region Toggle ─────────────────────────────────────── */
-.card-header-right {
+/* ── Region Filter Bar ───────────────────────────────────────── */
+.region-bar {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.region-bar-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.region-bar-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 9px;
+  padding: 4px;
+}
+
+.region-bar-btn {
+  display: flex;
+  align-items: center;
   gap: 6px;
-}
-
-.region-toggle {
-  display: flex;
-  gap: 2px;
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 7px;
-  padding: 3px;
-}
-
-.region-btn {
   background: none;
   border: none;
   color: var(--text-muted);
   font-family: var(--font);
-  font-size: 0.62rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  padding: 3px 8px;
-  border-radius: 5px;
+  padding: 6px 14px;
+  border-radius: 6px;
   transition: all 0.18s;
   white-space: nowrap;
 }
 
-.region-btn.active {
-  background: var(--rbtn-accent, var(--accent));
+.region-bar-btn.active {
+  background: var(--accent);
   color: #000;
-  box-shadow: 0 0 8px var(--rbtn-accent, var(--accent));
+  box-shadow: 0 0 12px rgba(0,255,100,0.4);
 }
 
-.region-btn:not(.active):hover {
-  color: var(--rbtn-accent, var(--accent));
-  background: rgba(255,255,255,0.05);
+.region-bar-btn:not(.active):hover {
+  color: var(--accent);
+  background: rgba(0,255,100,0.07);
+}
+
+.region-flag { font-size: 1rem; line-height: 1; }
+
+.region-bar-hint {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  letter-spacing: 0.06em;
+  margin-left: auto;
+}
+
+/* Card header right (badge + region tag) */
+.card-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.card-region-tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid;
 }
 
 /* ── Error State ─────────────────────────────────────────────── */

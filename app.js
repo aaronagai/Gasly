@@ -9,14 +9,12 @@
 const API_URL    = 'https://api.data.gov.my/data-catalogue?id=fuelprice&sort=-date&limit=52';
 const REFRESH_MS = 60_000;
 
-// Fuel field keys matching actual API field names
-// ron95 has a region toggle: 'ron95' (Peninsular) vs 'ron95_skps' (East MY)
+// regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95',         icon: '🟢', accent: '#00ff64', regionToggle: true, altKey: 'ron95_skps' },
-  { key: 'ron97',         icon: '🔵', accent: '#00d4ff' },
-  { key: 'diesel',        icon: '🟠', accent: '#ffaa00' },
-  { key: 'diesel_eastmsia', icon: '🟤', accent: '#c87941' },
-  { key: 'ron95_budi95',  icon: '⭐', accent: '#b478ff' },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64', regionAlt: 'ron95_skps' },
+  { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
+  { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
+  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff' },
 ];
 
 // ── i18n ─────────────────────────────────────────────────────────
@@ -47,6 +45,8 @@ const I18N = {
       diesel_eastmsia: 'Sarawak, Sabah & Labuan',
       ron95_budi95:    'Subsidised programme',
     },
+    myRegion:     'My Region',
+    regionHint:   'Affects RON95, RON97 & Diesel',
     tagline:      'Built with open government data. Free & open source forever.',
     viewOnGithub: 'View on GitHub',
     openSource:   'Open Source',
@@ -79,6 +79,8 @@ const I18N = {
       diesel_eastmsia: 'Sarawak, Sabah & Labuan',
       ron95_budi95:    'Program bersubsidi',
     },
+    myRegion:     'Kawasan Saya',
+    regionHint:   'Mempengaruhi RON95, RON97 & Diesel',
     tagline:      'Dibina dengan data kerajaan terbuka. Percuma & sumber terbuka selama-lamanya.',
     viewOnGithub: 'Lihat di GitHub',
     openSource:   'Sumber Terbuka',
@@ -88,9 +90,9 @@ const I18N = {
 };
 
 // ── State ────────────────────────────────────────────────────────
-let currentLang   = localStorage.getItem('lang')       || 'en';
-let ron95Region   = localStorage.getItem('ron95Region') || 'peninsular'; // 'peninsular' | 'east'
-let rawData       = [];
+let currentLang    = localStorage.getItem('lang')      || 'en';
+let selectedRegion = localStorage.getItem('region')    || 'peninsular'; // 'peninsular' | 'east'
+let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
@@ -98,6 +100,9 @@ let countdownTimer = null;
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   applyLang(currentLang);
+  // Restore region button state from localStorage
+  document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
+  document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
   startCountdown();
   refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
@@ -132,10 +137,12 @@ function applyLang(lang) {
   });
 }
 
-// ── RON95 Region Toggle ───────────────────────────────────────────
-window.setRon95Region = function(region) {
-  ron95Region = region;
-  localStorage.setItem('ron95Region', region);
+// ── Region Toggle ─────────────────────────────────────────────────
+window.setRegion = function(region) {
+  selectedRegion = region;
+  localStorage.setItem('region', region);
+  document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
+  document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
   if (rawData.length) renderCards(rawData);
 };
 
@@ -213,9 +220,9 @@ function renderCards(data) {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
 
-  FUEL_KEYS.forEach(({ key, icon, accent, regionToggle, altKey }) => {
-    // For RON95 region toggle: pick active key
-    const activeKey = (regionToggle && ron95Region === 'east') ? altKey : key;
+  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt }) => {
+    // Use the regional alternate field when East MY is selected and one exists
+    const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
     const series = data
       .map(row => row[activeKey])
@@ -234,25 +241,14 @@ function renderCards(data) {
       ? t.unchanged
       : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} RM`;
 
-    const badgeStyle = `color:${accent};border-color:${accent}40;background:${accent}12;`;
-
-    // Region toggle HTML (only for RON95 card)
-    const regionToggleHTML = regionToggle ? `
-      <div class="region-toggle" role="group" aria-label="Region">
-        <button
-          class="region-btn ${ron95Region === 'peninsular' ? 'active' : ''}"
-          style="--rbtn-accent:${accent}"
-          onclick="setRon95Region('peninsular')"
-        >${t.peninsular}</button>
-        <button
-          class="region-btn ${ron95Region === 'east' ? 'active' : ''}"
-          style="--rbtn-accent:${accent}"
-          onclick="setRon95Region('east')"
-        >${t.eastMY}</button>
-      </div>` : '';
-
+    const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
     const displayName = t.fuelNames[key];
     const displaySub  = t.fuelSubs[activeKey] || t.fuelSubs[key];
+
+    // Regional tag shown on cards that change with the toggle
+    const regionalTag = regionAlt
+      ? `<span class="card-region-tag" style="${badgeStyle}">${selectedRegion === 'east' ? t.eastMY : t.peninsular}</span>`
+      : '';
 
     const card = document.createElement('div');
     card.className = 'fuel-card';
@@ -262,7 +258,7 @@ function renderCards(data) {
       <div class="card-header">
         <span class="card-icon" style="filter:drop-shadow(0 0 8px ${accent})">${icon}</span>
         <div class="card-header-right">
-          ${regionToggleHTML}
+          ${regionalTag}
           <span class="card-type-badge" style="${badgeStyle}">${key.toUpperCase().replace(/_/g, ' ')}</span>
         </div>
       </div>
