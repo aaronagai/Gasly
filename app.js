@@ -11,10 +11,10 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', lightAccent: '#6d28d9', label: 'BUDI95' },
-  { key: 'ron95',        icon: '🟢', accent: '#00ff64', lightAccent: '#0F9D58' },
-  { key: 'ron97',        icon: '🔵', accent: '#00d4ff', lightAccent: '#0369a1' },
-  { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#b45309', regionAlt: 'diesel_eastmsia' },
+  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', lightAccent: '#9333ea', label: 'BUDI95' },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64', lightAccent: '#16a34a' },
+  { key: 'ron97',        icon: '🔵', accent: '#00d4ff', lightAccent: '#0ea5e9' },
+  { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#ea580c', regionAlt: 'diesel_eastmsia' },
 ];
 
 // ── International Price Data ──────────────────────────────────────
@@ -61,10 +61,10 @@ const INTL_PRICES = {
 
 // Per-series chart config (en/bm labels + light/dark colors)
 const INTL_SERIES = [
-  { key: 'budi95', en: 'BUDI95 (Malaysia)',  bm: 'BUDI95 (Malaysia)',  color: '#b478ff', lightColor: '#6d28d9', width: 3 },
-  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ff4466', lightColor: '#dc2626', width: 2 },
-  { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#0F9D58', width: 2 },
-  { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0369a1', width: 2 },
+  { key: 'budi95', en: 'BUDI95 (Malaysia)',  bm: 'BUDI95 (Malaysia)',  color: '#b478ff', lightColor: '#9333ea', width: 3 },
+  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ff4466', lightColor: '#ef4444', width: 2 },
+  { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#16a34a', width: 2 },
+  { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0ea5e9', width: 2 },
 ];
 
 // ── i18n ─────────────────────────────────────────────────────────
