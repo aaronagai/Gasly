@@ -165,28 +165,6 @@ header {
   margin-top: 2px;
 }
 
-/* ── Theme Toggle ────────────────────────────────────────────── */
-.theme-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  transition: background 0.2s;
-}
-
-.theme-btn:hover { background: rgba(255,255,255,0.1); }
-
-[data-theme="light"] .theme-btn {
-  background: rgba(0,0,0,0.05);
-}
-
-[data-theme="light"] .theme-btn:hover {
-  background: rgba(0,0,0,0.1);
-}
-
 /* ── Lang Toggle ─────────────────────────────────────────────── */
 .lang-toggle {
   display: flex;
@@ -262,6 +240,7 @@ header {
   font-size: 0.82rem;
   color: var(--text);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-dot {

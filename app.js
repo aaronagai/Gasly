@@ -90,8 +90,7 @@ const I18N = {
 // ── State ────────────────────────────────────────────────────────
 let currentLang    = localStorage.getItem('lang')      || 'en';
 let selectedRegion = localStorage.getItem('region')    || 'peninsular';
-let currentTheme   = localStorage.getItem('theme')     ||
-  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); // 'peninsular' | 'east'
+let currentTheme   = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; // 'peninsular' | 'east'
 let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
@@ -100,15 +99,14 @@ let countdownTimer = null;
 // ── Theme ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
 }
 
-window.toggleTheme = function() {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('theme', currentTheme);
+// Auto-update if system preference changes
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+  currentTheme = e.matches ? 'light' : 'dark';
   applyTheme(currentTheme);
   if (rawData.length) renderCards(rawData);
-};
+});
 
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
