@@ -11,7 +11,7 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95',        icon: '🟢', accent: '#00ff64', regionAlt: 'ron95_skps' },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64' },
   { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
   { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff' },
