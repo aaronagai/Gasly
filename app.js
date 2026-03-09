@@ -147,11 +147,9 @@ window.setRegion = function(region) {
 
 // ── Data Fetch ───────────────────────────────────────────────────
 async function loadData(isRefresh = false) {
-  const ring       = document.getElementById('refresh-ring');
   const statusDot  = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
 
-  if (isRefresh) ring.classList.remove('paused');
   statusText.textContent = I18N[currentLang].loading;
   statusDot.classList.remove('error');
 
@@ -175,8 +173,6 @@ async function loadData(isRefresh = false) {
       document.getElementById('cards-grid').innerHTML =
         `<p class="error-msg">${I18N[currentLang].error}</p>`;
     }
-  } finally {
-    if (isRefresh) setTimeout(() => ring.classList.add('paused'), 800);
   }
 }
 

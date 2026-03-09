@@ -32,8 +32,8 @@
           <button id="btn-bm" class="lang-btn" onclick="setLang('bm')">BM</button>
         </div>
         <div class="refresh-wrap" title="Auto-refreshes every 60s">
-          <span class="refresh-ring" id="refresh-ring"></span>
-          <span class="refresh-label" data-i18n="refresh">LIVE</span>
+          <span class="status-dot" id="status-dot"></span>
+          <span class="refresh-label" id="status-text">Loading…</span>
         </div>
       </div>
     </header>
@@ -47,10 +47,6 @@
       <div class="meta-item">
         <span class="meta-label" data-i18n="nextUpdate">Next Update</span>
         <span class="meta-value" id="next-update-countdown">—</span>
-      </div>
-      <div class="meta-item">
-        <span class="status-dot" id="status-dot"></span>
-        <span class="meta-value" id="status-text">Loading…</span>
       </div>
     </div>
 
