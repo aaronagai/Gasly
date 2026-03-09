@@ -62,7 +62,7 @@ const INTL_PRICES = {
 // Per-series chart config (en/bm labels + light/dark colors)
 const INTL_SERIES = [
   { key: 'budi95', en: 'BUDI95 (Malaysia)',  bm: 'BUDI95 (Malaysia)',  color: '#b478ff', lightColor: '#6d28d9', width: 3 },
-  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ffaa00', lightColor: '#b45309', width: 2 },
+  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ff4466', lightColor: '#dc2626', width: 2 },
   { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#0F9D58', width: 2 },
   { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0369a1', width: 2 },
 ];
