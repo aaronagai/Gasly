@@ -137,7 +137,7 @@ const I18N = {
     openSource:   'Sumber Terbuka',
     mitLicense:   'Lesen MIT',
     creditLine:     'Data bersumber dari Portal Data Terbuka Rasmi Malaysia — data.gov.my, disediakan oleh Kementerian Kewangan (MOF) Malaysia',
-    intlTitle:      'Perbandingan Harga Global (RM/L)',
+    intlTitle:      'Perbandingan Harga Antarabangsa (RM/L)',
     intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
     intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
   },
