@@ -430,6 +430,7 @@ function renderIntlChart() {
           ticks: {
             color: tickColor,
             font:  { family: 'JetBrains Mono', size: 10 },
+            maxTicksLimit: 5,
             callback: v => `RM ${v.toFixed(2)}`,
           },
         },
