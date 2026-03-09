@@ -2,7 +2,8 @@
    MY FUEL PRICE — Dark Terminal Theme
    ============================================================ */
 
-:root {
+/* ── Dark theme (default) ───────────────────────────────────── */
+:root, [data-theme="dark"] {
   --bg:          #0a0a0a;
   --bg-card:     rgba(20, 20, 20, 0.72);
   --border:      rgba(255, 255, 255, 0.1);
@@ -17,7 +18,63 @@
   --font:        'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
   --radius:      14px;
   --glow:        none;
+  --shadow:      none;
+  --tooltip-bg:  rgba(10,10,10,0.9);
+  --tooltip-text: #f0f0f0;
 }
+
+/* ── Light theme ─────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #f2f2f2;
+  --bg-card:     rgba(255, 255, 255, 0.95);
+  --border:      rgba(0, 0, 0, 0.1);
+  --border-h:    rgba(0, 0, 0, 0.22);
+  --accent:      #1a1a1a;
+  --accent-dim:  #555555;
+  --blue:        #0099cc;
+  --red:         #e0003c;
+  --green:       #00a651;
+  --text:        #1a1a1a;
+  --text-muted:  #666666;
+  --shadow:      0 2px 12px rgba(0,0,0,0.08);
+  --tooltip-bg:  rgba(255,255,255,0.97);
+  --tooltip-text: #1a1a1a;
+}
+
+/* Light mode overrides */
+[data-theme="light"] body {
+  background-image: none;
+}
+
+[data-theme="light"] .scanlines { display: none; }
+
+[data-theme="light"] .fuel-card {
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-theme="light"] .lang-toggle,
+[data-theme="light"] .region-strip {
+  background: rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .meta-bar {
+  background: rgba(0,0,0,0.03);
+}
+
+[data-theme="light"] .region-btn.active {
+  background: rgba(0,0,0,0.1);
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] footer {
+  border-top-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .title-regular,
+[data-theme="light"] .title-bold { color: #1a1a1a !important; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -106,6 +163,28 @@ header {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-top: 2px;
+}
+
+/* ── Theme Toggle ────────────────────────────────────────────── */
+.theme-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.theme-btn:hover { background: rgba(255,255,255,0.1); }
+
+[data-theme="light"] .theme-btn {
+  background: rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .theme-btn:hover {
+  background: rgba(0,0,0,0.1);
 }
 
 /* ── Lang Toggle ─────────────────────────────────────────────── */

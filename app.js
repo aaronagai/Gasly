@@ -89,14 +89,30 @@ const I18N = {
 
 // ── State ────────────────────────────────────────────────────────
 let currentLang    = localStorage.getItem('lang')      || 'en';
-let selectedRegion = localStorage.getItem('region')    || 'peninsular'; // 'peninsular' | 'east'
+let selectedRegion = localStorage.getItem('region')    || 'peninsular';
+let currentTheme   = localStorage.getItem('theme')     ||
+  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); // 'peninsular' | 'east'
 let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
 
+// ── Theme ─────────────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+window.toggleTheme = function() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', currentTheme);
+  applyTheme(currentTheme);
+  if (rawData.length) renderCards(rawData);
+};
+
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(currentTheme);
   applyLang(currentLang);
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
@@ -307,11 +323,11 @@ function renderSparkline(key, series, accent) {
         legend: { display: false },
         tooltip: {
           enabled: true,
-          backgroundColor: 'rgba(10,10,10,0.9)',
+          backgroundColor: currentTheme === 'light' ? 'rgba(255,255,255,0.97)' : 'rgba(10,10,10,0.9)',
           borderColor: accent,
           borderWidth: 1,
           titleColor: accent,
-          bodyColor: '#e0ffe8',
+          bodyColor: currentTheme === 'light' ? '#1a1a1a' : '#f0f0f0',
           titleFont: { family: 'JetBrains Mono' },
           bodyFont:  { family: 'JetBrains Mono' },
           callbacks: { label: ctx => ` RM ${ctx.parsed.y.toFixed(2)}/L` },
