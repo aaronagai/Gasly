@@ -252,10 +252,54 @@ window.setRegion = function(region) {
 
 // ── EV Charge Type Toggle ─────────────────────────────────────────
 window.setEvCharge = function(type) {
+  const regionRates = EV_RATES[selectedRegion];
+  const oldRate     = regionRates[evChargeType].rate;
+
   evChargeType = type;
   localStorage.setItem('evCharge', type);
-  renderEVCard();
+
+  // Update button active states
+  document.getElementById('ev-btn-ac')?.classList.toggle('active', type === 'ac');
+  document.getElementById('ev-btn-dc')?.classList.toggle('active', type === 'dc');
+
+  const rateData    = regionRates[type];
+  const newRate     = rateData.rate;
+  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
+  const accent      = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
+
+  // Animate the rate number
+  const priceEl = document.getElementById('ev-rate-value');
+  if (priceEl) animateNumber(priceEl, oldRate, newRate, 2);
+
+  // Update sub-label
+  const labelEl = document.getElementById('ev-charge-label');
+  if (labelEl) labelEl.textContent = `${regionRates.provider} · ${chargeLabel}`;
+
+  // Animate cost comparison
+  const ron95Price = rawData.length ? rawData[0].ron95 : null;
+  const oldCost    = oldRate / EV_KM_PER_KWH * 100;
+  const newCost    = newRate / EV_KM_PER_KWH * 100;
+  const petrolCost = ron95Price ? ron95Price * 10 : null;
+  const newPct     = petrolCost ? Math.round(newCost / petrolCost * 100) : 50;
+
+  const barEl = document.getElementById('ev-bar-fill');
+  if (barEl) barEl.style.width = `${newPct}%`;
+
+  const costEl = document.getElementById('ev-cost-amount');
+  if (costEl) animateNumber(costEl, oldCost, newCost, 2);
 };
+
+// ── Number Counter Animation ──────────────────────────────────────
+function animateNumber(el, from, to, decimals, duration = 380) {
+  const start = performance.now();
+  function step(now) {
+    const t      = Math.min((now - start) / duration, 1);
+    const eased  = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // ease-in-out quad
+    el.textContent = (from + (to - from) * eased).toFixed(decimals);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 // ── Data Fetch ───────────────────────────────────────────────────
 async function loadData(isRefresh = false) {
@@ -419,9 +463,9 @@ function renderEVCard() {
       <div class="ev-compare-row">
         <span class="ev-compare-label">EV</span>
         <div class="ev-compare-track">
-          <div class="ev-compare-fill" style="width:${evPct}%;background:${accent}"></div>
+          <div class="ev-compare-fill" id="ev-bar-fill" style="width:${evPct}%;background:${accent}"></div>
         </div>
-        <span class="ev-compare-cost" style="color:${accent}">RM ${evCost.toFixed(2)}</span>
+        <span class="ev-compare-cost" id="ev-cost-amount" style="color:${accent}">RM ${evCost.toFixed(2)}</span>
       </div>
       <div class="ev-compare-row">
         <span class="ev-compare-label">RON95</span>
@@ -449,7 +493,7 @@ function renderEVCard() {
     <div class="card-header">
       <div>
         <div class="card-name">${t.evName}</div>
-        <div class="card-name-sub">${provider} · ${chargeLabel}</div>
+        <div class="card-name-sub" id="ev-charge-label">${provider} · ${chargeLabel}</div>
       </div>
       <div class="card-header-right">
         <span class="card-type-badge" style="${badgeStyle}">EV</span>
@@ -457,7 +501,7 @@ function renderEVCard() {
     </div>
     <div class="card-price-row">
       <span class="card-currency">RM</span>
-      <span class="card-price" style="color:${accent}">${rate.toFixed(2)}</span>
+      <span class="card-price" id="ev-rate-value" style="color:${accent}">${rate.toFixed(2)}</span>
       <span class="card-currency">/kWh</span>
     </div>
     ${compareHTML}
