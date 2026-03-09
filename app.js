@@ -18,10 +18,18 @@ const FUEL_KEYS = [
 ];
 
 // ── EV Charging Data ─────────────────────────────────────────────
-// Reference: ChargEV (TNB) indicative rates. Update manually if rates change.
+// Peninsular: ChargEV (TNB) — update manually if rates change
+// East MY: Gentari × SEB — DC only (no AC rate published). Source: SoyaCincau
 const EV_RATES = {
-  ac: { rate: 0.55, label: 'AC Slow', labelBM: 'AC Perlahan' },
-  dc: { rate: 0.80, label: 'DC Fast', labelBM: 'DC Pantas'   },
+  peninsular: {
+    ac: { rate: 0.90, label: 'AC Slow', labelBM: 'AC Perlahan' },
+    dc: { rate: 1.40, label: 'DC Fast', labelBM: 'DC Pantas'   },
+    provider: 'ChargEV (TNB)',
+  },
+  east: {
+    dc: { rate: 1.40, label: 'DC Fast', labelBM: 'DC Pantas' },
+    provider: 'Gentari × SEB',
+  },
 };
 const EV_KM_PER_KWH = 6; // avg efficiency for Malaysia conditions
 
@@ -238,7 +246,8 @@ window.setRegion = function(region) {
   localStorage.setItem('region', region);
   document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
-  if (rawData.length) renderCards(rawData);
+  if (rawData.length) renderCards(rawData); // renderCards calls renderEVCard internally
+  else renderEVCard(); // update EV card even before fuel data is loaded
 };
 
 // ── EV Charge Type Toggle ─────────────────────────────────────────
@@ -389,18 +398,23 @@ function renderEVCard() {
   const existing = document.getElementById('ev-card');
   if (existing) existing.remove();
 
-  const rateData    = EV_RATES[evChargeType];
+  const regionRates = EV_RATES[selectedRegion];
+  const isEast      = selectedRegion === 'east';
+  // East MY only has DC; Peninsular has AC/DC toggle
+  const activeType  = isEast ? 'dc' : evChargeType;
+  const rateData    = regionRates[activeType];
   const rate        = rateData.rate;
   const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
+  const provider    = regionRates.provider;
   const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
 
   // Cost comparison bars
-  const ron95Price    = rawData.length ? rawData[0].ron95 : null;
-  const evCost        = rate / EV_KM_PER_KWH * 100;
-  const petrolCost    = ron95Price ? ron95Price * 10 : null;
-  const evPct         = petrolCost ? Math.round(evCost / petrolCost * 100) : 50;
-  const refBarColor   = currentTheme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)';
-  const compareHTML   = `
+  const ron95Price  = rawData.length ? rawData[0].ron95 : null;
+  const evCost      = rate / EV_KM_PER_KWH * 100;
+  const petrolCost  = ron95Price ? ron95Price * 10 : null;
+  const evPct       = petrolCost ? Math.round(evCost / petrolCost * 100) : 50;
+  const refBarColor = currentTheme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)';
+  const compareHTML = `
     <div class="ev-compare">
       <div class="ev-compare-row">
         <span class="ev-compare-label">EV</span>
@@ -419,6 +433,13 @@ function renderEVCard() {
       <div class="ev-compare-note">${t.evCompareSub}</div>
     </div>`;
 
+  // Only show AC/DC toggle for Peninsular (East MY is DC-only)
+  const toggleHTML = isEast ? '' : `
+    <div class="ev-toggle">
+      <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
+      <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
+    </div>`;
+
   const card = document.createElement('div');
   card.className = 'fuel-card ev-card';
   card.id = 'ev-card';
@@ -428,7 +449,7 @@ function renderEVCard() {
     <div class="card-header">
       <div>
         <div class="card-name">${t.evName}</div>
-        <div class="card-name-sub">${t.evSub} · ${chargeLabel}</div>
+        <div class="card-name-sub">${provider} · ${chargeLabel}</div>
       </div>
       <div class="card-header-right">
         <span class="card-type-badge" style="${badgeStyle}">EV</span>
@@ -440,10 +461,7 @@ function renderEVCard() {
       <span class="card-currency">/kWh</span>
     </div>
     ${compareHTML}
-    <div class="ev-toggle">
-      <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
-      <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
-    </div>
+    ${toggleHTML}
     <div class="ev-note">${t.evNote}</div>
   `;
 
