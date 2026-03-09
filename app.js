@@ -174,7 +174,7 @@ const I18N = {
 // ── State ────────────────────────────────────────────────────────
 let currentLang    = localStorage.getItem('lang')      || 'en';
 let selectedRegion = localStorage.getItem('region')    || 'peninsular';
-let currentTheme   = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; // 'peninsular' | 'east'
+let currentTheme   = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
@@ -188,10 +188,26 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
 }
 
-// Auto-update if system preference changes
+function updateThemeBtn() {
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+}
+
+window.toggleTheme = function() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', currentTheme);
+  applyTheme(currentTheme);
+  updateThemeBtn();
+  if (rawData.length) renderCards(rawData);
+  renderIntlChart();
+};
+
+// Follow system preference only if user hasn't manually chosen
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+  if (localStorage.getItem('theme')) return;
   currentTheme = e.matches ? 'light' : 'dark';
   applyTheme(currentTheme);
+  updateThemeBtn();
   if (rawData.length) renderCards(rawData);
   renderIntlChart();
 });
@@ -199,6 +215,7 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentTheme);
+  updateThemeBtn();
   applyLang(currentLang);
   document.getElementById('btn-en').classList.toggle('active', currentLang === 'en');
   document.getElementById('btn-bm').classList.toggle('active', currentLang === 'bm');
