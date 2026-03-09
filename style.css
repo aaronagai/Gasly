@@ -87,7 +87,6 @@ header {
 
 .logo-icon {
   font-size: 2.2rem;
-  filter: drop-shadow(0 0 8px var(--accent));
 }
 
 .site-title {
@@ -96,7 +95,6 @@ header {
   letter-spacing: 0.1em;
   line-height: 1;
   color: var(--text);
-  text-shadow: 0 0 20px rgba(0,255,100,0.3);
 }
 
 .site-title .accent { color: var(--accent); }
