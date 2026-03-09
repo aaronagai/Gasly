@@ -490,12 +490,12 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   .card-price { font-size: 2.4rem; }
 }
 
-/* ── Region Toggle (above RON95 card) ────────────────────────── */
-.card-region-toggle {
+/* ── Region Strip (between meta bar and cards) ───────────────── */
+.region-strip {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
 .region-btn {
@@ -506,13 +506,18 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 2px 0;
-  transition: all 0.2s;
+  padding: 4px 2px;
+  transition: color 0.2s;
   letter-spacing: 0.08em;
 }
 
-.region-btn.active, .region-btn:hover {
-  color: var(--accent);
+.region-btn.active { color: var(--accent); }
+.region-btn:hover  { color: var(--accent); }
+
+.region-sep {
+  color: var(--border);
+  font-size: 0.8rem;
+  font-family: var(--font);
 }
 
 /* Card header right (badge + region tag) */

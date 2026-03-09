@@ -11,7 +11,7 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95',        icon: '🟢', accent: '#00ff64', showRegionToggle: true },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64' },
   { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
   { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff' },
@@ -100,6 +100,8 @@ let countdownTimer = null;
 // ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   applyLang(currentLang);
+  document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
+  document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
   startCountdown();
   refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
@@ -138,6 +140,8 @@ function applyLang(lang) {
 window.setRegion = function(region) {
   selectedRegion = region;
   localStorage.setItem('region', region);
+  document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
+  document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
   if (rawData.length) renderCards(rawData);
 };
 
@@ -215,7 +219,7 @@ function renderCards(data) {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
 
-  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt, showRegionToggle }) => {
+  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt }) => {
     // Use the regional alternate field when East MY is selected and one exists
     const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
@@ -249,15 +253,7 @@ function renderCards(data) {
     card.className = 'fuel-card';
     card.style.setProperty('--card-accent', accent);
 
-    const regionToggleHTML = showRegionToggle ? `
-      <div class="card-region-toggle" role="group">
-        <button id="rbtn-peninsular" class="region-btn ${selectedRegion === 'peninsular' ? 'active' : ''}" onclick="setRegion('peninsular')">${t.peninsular}</button>
-        <span class="lang-sep">/</span>
-        <button id="rbtn-east" class="region-btn ${selectedRegion === 'east' ? 'active' : ''}" onclick="setRegion('east')">${t.eastMY}</button>
-      </div>` : '';
-
     card.innerHTML = `
-      ${regionToggleHTML}
       <div class="card-header">
         <div class="card-header-right">
           ${regionalTag}
