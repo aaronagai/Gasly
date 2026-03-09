@@ -28,7 +28,7 @@ const I18N = {
     loading:     'Fetching live data…',
     error:       'Failed to load data. Retrying…',
     peninsular:  'SEMENANJUNG',
-    eastMY:      'SBH/SWK',
+    eastMY:      'SABAH/SARAWAK',
     fuelNames: {
       ron95:           'RON95 Petrol',
       ron97:           'RON97 Petrol',
@@ -61,7 +61,7 @@ const I18N = {
     loading:     'Mendapatkan data terkini…',
     error:       'Gagal memuatkan data. Cuba semula…',
     peninsular:  'SEMENANJUNG',
-    eastMY:      'SBH/SWK',
+    eastMY:      'SABAH/SARAWAK',
     fuelNames: {
       ron95:           'Petrol RON95',
       ron97:           'Petrol RON97',
