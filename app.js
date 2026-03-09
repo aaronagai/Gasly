@@ -32,7 +32,7 @@ const I18N = {
     fuelNames: {
       ron95:           'RON95 Petrol',
       ron97:           'RON97 Petrol',
-      diesel:          'Diesel (Peninsular)',
+      diesel:          'Diesel',
       diesel_eastmsia: 'Diesel (East Malaysia)',
       ron95_budi95:    'BUDI95 Subsidised',
     },
@@ -65,7 +65,7 @@ const I18N = {
     fuelNames: {
       ron95:           'Petrol RON95',
       ron97:           'Petrol RON97',
-      diesel:          'Diesel (Semenanjung)',
+      diesel:          'Diesel',
       diesel_eastmsia: 'Diesel (Malaysia Timur)',
       ron95_budi95:    'BUDI95 Bersubsidi',
     },
