@@ -655,10 +655,59 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 }
 
 /* ── EV Card ─────────────────────────────────────────────────────── */
-.ev-equiv {
-  font-size: 0.78rem;
+.ev-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ev-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ev-compare-label {
+  font-size: 0.62rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.ev-compare-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+[data-theme="light"] .ev-compare-track {
+  background: rgba(0,0,0,0.06);
+}
+
+.ev-compare-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.ev-compare-cost {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ev-compare-note {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  margin-top: 1px;
 }
 
 .ev-toggle {

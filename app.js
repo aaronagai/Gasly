@@ -116,8 +116,8 @@ const I18N = {
     evSub:          'ChargEV (TNB)',
     evAC:           'AC SLOW',
     evDC:           'DC FAST',
-    evEquivLabel:   'est. per 100 km',
     evNote:         'Indicative · rate varies by provider & location',
+    evCompareSub:   'per 100km · EV @ 6km/kWh · Petrol @ 10L/100km',
   },
   bm: {
     subtitle:    'Harga Minyak Malaysia Terkini',
@@ -158,8 +158,8 @@ const I18N = {
     evSub:          'ChargEV (TNB)',
     evAC:           'AC PERLAHAN',
     evDC:           'DC PANTAS',
-    evEquivLabel:   'anggaran per 100 km',
     evNote:         'Anggaran · kadar berbeza mengikut pembekal & lokasi',
+    evCompareSub:   'per 100km · EV @ 6km/kWh · Minyak @ 10L/100km',
   },
 };
 
@@ -389,11 +389,35 @@ function renderEVCard() {
   const existing = document.getElementById('ev-card');
   if (existing) existing.remove();
 
-  const rateData = EV_RATES[evChargeType];
-  const rate     = rateData.rate;
-  const equiv    = (rate / EV_KM_PER_KWH * 100).toFixed(2);
+  const rateData    = EV_RATES[evChargeType];
+  const rate        = rateData.rate;
   const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
   const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
+
+  // Cost comparison bars
+  const ron95Price    = rawData.length ? rawData[0].ron95 : null;
+  const evCost        = rate / EV_KM_PER_KWH * 100;
+  const petrolCost    = ron95Price ? ron95Price * 10 : null;
+  const evPct         = petrolCost ? Math.round(evCost / petrolCost * 100) : 50;
+  const refBarColor   = currentTheme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)';
+  const compareHTML   = `
+    <div class="ev-compare">
+      <div class="ev-compare-row">
+        <span class="ev-compare-label">EV</span>
+        <div class="ev-compare-track">
+          <div class="ev-compare-fill" style="width:${evPct}%;background:${accent}"></div>
+        </div>
+        <span class="ev-compare-cost" style="color:${accent}">RM ${evCost.toFixed(2)}</span>
+      </div>
+      <div class="ev-compare-row">
+        <span class="ev-compare-label">RON95</span>
+        <div class="ev-compare-track">
+          <div class="ev-compare-fill" style="width:100%;background:${refBarColor}"></div>
+        </div>
+        <span class="ev-compare-cost">${petrolCost ? `RM ${petrolCost.toFixed(2)}` : '—'}</span>
+      </div>
+      <div class="ev-compare-note">${t.evCompareSub}</div>
+    </div>`;
 
   const card = document.createElement('div');
   card.className = 'fuel-card ev-card';
@@ -415,7 +439,7 @@ function renderEVCard() {
       <span class="card-price" style="color:${accent}">${rate.toFixed(2)}</span>
       <span class="card-currency">/kWh</span>
     </div>
-    <div class="ev-equiv" style="color:${accent}">≈ RM ${equiv} / 100km</div>
+    ${compareHTML}
     <div class="ev-toggle">
       <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
       <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
