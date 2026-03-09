@@ -26,6 +26,11 @@
         </div>
       </div>
       <div class="header-right">
+        <div class="region-toggle" role="group" aria-label="Region selector">
+          <button id="rbtn-peninsular" class="region-btn active" onclick="setRegion('peninsular')" data-i18n="peninsular">Peninsular</button>
+          <span class="lang-sep">/</span>
+          <button id="rbtn-east" class="region-btn" onclick="setRegion('east')" data-i18n="eastMY">East MY</button>
+        </div>
         <div class="lang-toggle" role="group" aria-label="Language toggle">
           <button id="btn-en" class="lang-btn active" onclick="setLang('en')">EN</button>
           <span class="lang-sep">/</span>
@@ -52,22 +57,6 @@
         <span class="status-dot" id="status-dot"></span>
         <span class="meta-value" id="status-text">Loading…</span>
       </div>
-    </div>
-
-    <!-- Region Filter -->
-    <div class="region-bar">
-      <span class="region-bar-label" data-i18n="myRegion">My Region</span>
-      <div class="region-bar-toggle" role="group" aria-label="Region selector">
-        <button id="rbtn-peninsular" class="region-bar-btn active" onclick="setRegion('peninsular')">
-          <span class="region-flag">🇲🇾</span>
-          <span data-i18n="peninsular">Peninsular</span>
-        </button>
-        <button id="rbtn-east" class="region-bar-btn" onclick="setRegion('east')">
-          <span class="region-flag">🌴</span>
-          <span data-i18n="eastMY">East MY</span>
-        </button>
-      </div>
-      <span class="region-bar-hint" data-i18n="regionHint">Affects RON95, RON97 &amp; Diesel</span>
     </div>
 
     <!-- Fuel Cards Grid -->
