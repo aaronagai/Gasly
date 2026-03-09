@@ -26,7 +26,6 @@ const INTL_WEEKS = [
 ];
 
 const INTL_PRICES = {
-  us: [3.09, 3.07, 3.12, 3.15, 3.11, 3.08, 3.05, 3.03], // USD/gallon
   uk: [1.46, 1.47, 1.45, 1.44, 1.46, 1.48, 1.47, 1.45], // GBP/litre
   au: [1.92, 1.95, 1.88, 1.85, 1.87, 1.90, 1.93, 1.91], // AUD/litre
   sg: [2.68, 2.71, 2.69, 2.65, 2.63, 2.66, 2.70, 2.72], // SGD/litre (RON 95)
@@ -38,7 +37,6 @@ const INTL_SERIES = [
   { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ffaa00', lightColor: '#b45309', width: 2 },
   { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#0F9D58', width: 2 },
   { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0369a1', width: 2 },
-  { key: 'us',     en: 'United States',       bm: 'Amerika Syarikat',   color: '#ff4466', lightColor: '#dc2626', width: 2 },
 ];
 
 // ── i18n ─────────────────────────────────────────────────────────
@@ -352,7 +350,6 @@ function renderIntlChart() {
 
   // Convert to RM/L (rates are: 1 MYR = N foreign, so 1 foreign = 1/rate MYR)
   const toRMperL = {
-    us: INTL_PRICES.us.map(p => +((p / 3.78541) / exchangeRates.USD).toFixed(3)),
     uk: INTL_PRICES.uk.map(p => +(p / exchangeRates.GBP).toFixed(3)),
     au: INTL_PRICES.au.map(p => +(p / exchangeRates.AUD).toFixed(3)),
     sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
