@@ -226,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
   loadExchangeRates();
   startCountdown();
-  refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
+  // Auto-refresh disabled — prices only update Wednesdays, no need to poll
+  // refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
 });
 
 // ── Language ─────────────────────────────────────────────────────
