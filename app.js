@@ -254,7 +254,7 @@ function renderCards(data) {
       </div>
       <div class="card-price-row">
         <span class="card-currency">RM</span>
-        <span class="card-price" style="color:${accent};text-shadow:0 0 20px ${accent}44">${current.toFixed(2)}</span>
+        <span class="card-price" style="color:${accent}">${current.toFixed(2)}</span>
         <span class="card-currency">/L</span>
       </div>
       <div class="card-change ${changeClass}">
