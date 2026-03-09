@@ -698,9 +698,10 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
-  width: 52px;
+  width: 64px;
   text-align: right;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .ev-compare-note {
