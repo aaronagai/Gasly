@@ -28,8 +28,8 @@ const I18N = {
     unchanged:   'Unchanged',
     loading:     'Fetching live data…',
     error:       'Failed to load data. Retrying…',
-    peninsular:  'Peninsular',
-    eastMY:      'East MY',
+    peninsular:  'SEMENANJUNG',
+    eastMY:      'SBH/SWK',
     fuelNames: {
       ron95:           'RON95 Petrol',
       ron97:           'RON97 Petrol',
@@ -62,8 +62,8 @@ const I18N = {
     unchanged:   'Harga tidak berubah',
     loading:     'Mendapatkan data terkini…',
     error:       'Gagal memuatkan data. Cuba semula…',
-    peninsular:  'Semenanjung',
-    eastMY:      'Malaysia Timur',
+    peninsular:  'SEMENANJUNG',
+    eastMY:      'SBH/SWK',
     fuelNames: {
       ron95:           'Petrol RON95',
       ron97:           'Petrol RON97',
