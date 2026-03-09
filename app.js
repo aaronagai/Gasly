@@ -11,7 +11,7 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff' },
+  { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', label: 'BUDI95' },
   { key: 'ron95',        icon: '🟢', accent: '#00ff64' },
   { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
@@ -213,7 +213,7 @@ function renderCards(data) {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
 
-  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt }) => {
+  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt, label }) => {
     // Use the regional alternate field when East MY is selected and one exists
     const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
@@ -245,7 +245,7 @@ function renderCards(data) {
     card.innerHTML = `
       <div class="card-header">
         <div class="card-header-right">
-          <span class="card-type-badge" style="${badgeStyle}">${key.toUpperCase().replace(/_/g, ' ')}</span>
+          <span class="card-type-badge" style="${badgeStyle}">${label || key.toUpperCase().replace(/_/g, ' ')}</span>
         </div>
       </div>
       <div>
