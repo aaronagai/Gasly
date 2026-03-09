@@ -242,12 +242,13 @@ function applyLang(lang) {
 
 // ── Region Toggle ─────────────────────────────────────────────────
 window.setRegion = function(region) {
-  selectedRegion = region;
+  const prevRegion = selectedRegion;
+  selectedRegion   = region;
   localStorage.setItem('region', region);
   document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
-  if (rawData.length) renderCards(rawData); // renderCards calls renderEVCard internally
-  else renderEVCard(); // update EV card even before fuel data is loaded
+  if (rawData.length) renderFuelCards(rawData); // fuel cards only — EV handled separately
+  animateEVRegionChange(prevRegion, region);
 };
 
 // ── EV Charge Type Toggle ─────────────────────────────────────────
@@ -299,6 +300,52 @@ function animateNumber(el, from, to, decimals, duration = 380) {
     if (t < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
+}
+
+// ── EV Card Region Animation ──────────────────────────────────────
+function animateEVRegionChange(prevRegion, newRegion) {
+  const evCard = document.getElementById('ev-card');
+  if (!evCard) { renderEVCard(); return; }
+
+  const prevRates  = EV_RATES[prevRegion];
+  const newRates   = EV_RATES[newRegion];
+  const isEast     = newRegion === 'east';
+  const prevType   = prevRegion === 'east' ? 'dc' : evChargeType;
+  const newType    = isEast ? 'dc' : evChargeType;
+  const oldRate    = prevRates[prevType].rate;
+  const newRate    = newRates[newType].rate;
+  const rateData   = newRates[newType];
+  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
+  const accent      = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
+
+  // Sub-label (provider + charge type)
+  const labelEl = document.getElementById('ev-charge-label');
+  if (labelEl) labelEl.textContent = `${newRates.provider} · ${chargeLabel}`;
+
+  // Animate rate number
+  const priceEl = document.getElementById('ev-rate-value');
+  if (priceEl) animateNumber(priceEl, oldRate, newRate, 2);
+
+  // Animate cost comparison
+  const ron95Price = rawData.length ? rawData[0].ron95 : null;
+  const oldCost    = oldRate / EV_KM_PER_KWH * 100;
+  const newCost    = newRate / EV_KM_PER_KWH * 100;
+  const petrolCost = ron95Price ? ron95Price * 10 : null;
+  const newPct     = petrolCost ? Math.round(newCost / petrolCost * 100) : 50;
+
+  const barEl = document.getElementById('ev-bar-fill');
+  if (barEl) barEl.style.width = `${newPct}%`;
+
+  const costEl = document.getElementById('ev-cost-amount');
+  if (costEl) animateNumber(costEl, oldCost, newCost, 2);
+
+  // Slide AC/DC toggle in or out
+  const toggleEl = evCard.querySelector('.ev-toggle');
+  if (toggleEl) toggleEl.classList.toggle('ev-toggle--hidden', isEast);
+
+  // Update AC/DC button active state (in case evChargeType changed while on east)
+  document.getElementById('ev-btn-ac')?.classList.toggle('active', evChargeType === 'ac');
+  document.getElementById('ev-btn-dc')?.classList.toggle('active', evChargeType === 'dc');
 }
 
 // ── Data Fetch ───────────────────────────────────────────────────
@@ -368,20 +415,27 @@ function updateCountdown() {
 
 // ── Render Cards ─────────────────────────────────────────────────
 function renderCards(data) {
-  const t    = I18N[currentLang];
-  const grid = document.getElementById('cards-grid');
+  renderFuelCards(data);
+  renderEVCard();
+}
+
+// Renders only the fuel price cards, preserving the EV card across re-renders
+function renderFuelCards(data) {
+  const t      = I18N[currentLang];
+  const grid   = document.getElementById('cards-grid');
+  const evCard = document.getElementById('ev-card');
+  if (evCard) evCard.remove(); // detach so innerHTML = '' doesn't destroy it
   grid.innerHTML = '';
 
   FUEL_KEYS.forEach(({ key, icon, accent, lightAccent, regionAlt, label }) => {
     const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
-    // Use the regional alternate field when East MY is selected and one exists
     const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
     const series = data
       .map(row => row[activeKey])
       .filter(v => v !== null && v !== undefined && v > 0)
       .slice(0, 8)
-      .reverse(); // oldest → newest for chart
+      .reverse();
 
     const current = series[series.length - 1];
     const prev    = series[series.length - 2];
@@ -430,7 +484,7 @@ function renderCards(data) {
     requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
 
-  renderEVCard();
+  if (evCard) grid.appendChild(evCard); // re-attach preserved EV card
 }
 
 // ── EV Card ───────────────────────────────────────────────────────
@@ -477,9 +531,9 @@ function renderEVCard() {
       <div class="ev-compare-note">${t.evCompareSub}</div>
     </div>`;
 
-  // Only show AC/DC toggle for Peninsular (East MY is DC-only)
-  const toggleHTML = isEast ? '' : `
-    <div class="ev-toggle">
+  // Always render toggle; hidden for East MY so it can animate in/out
+  const toggleHTML = `
+    <div class="ev-toggle${isEast ? ' ev-toggle--hidden' : ''}">
       <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
       <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
     </div>`;

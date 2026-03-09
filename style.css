@@ -716,6 +716,10 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   align-items: center;
   width: fit-content;
   background: rgba(255,255,255,0.05);
+  max-height: 48px;
+  opacity: 1;
+  margin-top: 0.75rem;
+  transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.35s ease;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   padding: 3px;
@@ -726,6 +730,13 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 [data-theme="light"] .ev-toggle {
   background: rgba(0,0,0,0.05);
   border-color: rgba(0,0,0,0.1);
+}
+
+.ev-toggle--hidden {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  margin-top: 0 !important;
+  pointer-events: none;
 }
 
 .ev-btn {
