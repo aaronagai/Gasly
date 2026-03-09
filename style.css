@@ -534,8 +534,9 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
-  padding: 4px 0;
+  padding: 4px;
   gap: 2px;
+  overflow: hidden;
 }
 
 .region-btn {
