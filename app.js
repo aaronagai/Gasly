@@ -414,7 +414,7 @@ function renderIntlChart() {
       pointHoverRadius:     4,
       pointBackgroundColor: color,
       fill,
-      tension:              0.4,
+      tension:              0.6,
       spanGaps:             true,
     };
   });
