@@ -12,7 +12,7 @@ const REFRESH_MS = 60_000;
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
   { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff', label: 'BUDI95' },
-  { key: 'ron95',        icon: '🟢', accent: '#00ff64' },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64', lightAccent: '#0F9D58' },
   { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
 ];
@@ -227,7 +227,8 @@ function renderCards(data) {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
 
-  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt, label }) => {
+  FUEL_KEYS.forEach(({ key, icon, accent, lightAccent, regionAlt, label }) => {
+    const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
     // Use the regional alternate field when East MY is selected and one exists
     const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
@@ -248,13 +249,13 @@ function renderCards(data) {
       ? t.unchanged
       : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} RM`;
 
-    const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
+    const badgeStyle  = `color:${activeAccent};border-color:${activeAccent}40;background:${activeAccent}12;`;
     const displayName = t.fuelNames[key];
     const displaySub  = t.fuelSubs[activeKey] || t.fuelSubs[key];
 
     const card = document.createElement('div');
     card.className = 'fuel-card';
-    card.style.setProperty('--card-accent', accent);
+    card.style.setProperty('--card-accent', activeAccent);
 
     card.innerHTML = `
       <div class="card-header">
@@ -268,7 +269,7 @@ function renderCards(data) {
       </div>
       <div class="card-price-row">
         <span class="card-currency">RM</span>
-        <span class="card-price" style="color:${accent}">${current.toFixed(2)}</span>
+        <span class="card-price" style="color:${activeAccent}">${current.toFixed(2)}</span>
         <span class="card-currency">/L</span>
       </div>
       <div class="card-change ${changeClass}">
