@@ -145,6 +145,8 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentTheme);
   applyLang(currentLang);
+  document.getElementById('btn-en').classList.toggle('active', currentLang === 'en');
+  document.getElementById('btn-bm').classList.toggle('active', currentLang === 'bm');
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
