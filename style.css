@@ -84,8 +84,9 @@ header {
   gap: 12px;
 }
 
-.logo-icon {
-  font-size: 2.2rem;
+.site-logo {
+  height: 40px;
+  width: auto;
 }
 
 .site-title {
