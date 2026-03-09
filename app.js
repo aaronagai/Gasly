@@ -424,8 +424,15 @@ function renderFuelCards(data, skipAnimation = false) {
   const t      = I18N[currentLang];
   const grid   = document.getElementById('cards-grid');
   const evCard = document.getElementById('ev-card');
-  if (evCard) evCard.remove(); // detach so innerHTML = '' doesn't destroy it
-  grid.innerHTML = '';
+
+  // Capture old diesel price before clearing so we can animate it after re-render
+  const oldDieselEl    = document.getElementById('price-diesel');
+  const oldDieselPrice = oldDieselEl ? parseFloat(oldDieselEl.textContent) : null;
+
+  // Remove only fuel cards — leave EV card untouched so it never re-animates
+  Array.from(grid.children).forEach(child => {
+    if (child.id !== 'ev-card') child.remove();
+  });
 
   FUEL_KEYS.forEach(({ key, icon, accent, lightAccent, regionAlt, label }) => {
     const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
@@ -469,7 +476,7 @@ function renderFuelCards(data, skipAnimation = false) {
       </div>
       <div class="card-price-row">
         <span class="card-currency">RM</span>
-        <span class="card-price" style="color:${activeAccent}">${current.toFixed(2)}</span>
+        <span class="card-price" style="color:${activeAccent}" ${key === 'diesel' ? 'id="price-diesel"' : ''}>${current.toFixed(2)}</span>
         <span class="card-currency">/L</span>
       </div>
       <div class="card-change ${changeClass}">
@@ -481,11 +488,20 @@ function renderFuelCards(data, skipAnimation = false) {
       </div>
     `;
 
-    grid.appendChild(card);
+    // Insert before EV card so it stays last; insertBefore(x, null) = appendChild
+    grid.insertBefore(card, evCard || null);
     requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
 
-  if (evCard) grid.appendChild(evCard); // re-attach preserved EV card
+  // Animate diesel price if it changed (region switch)
+  if (skipAnimation && oldDieselPrice !== null) {
+    const newDieselEl = document.getElementById('price-diesel');
+    if (newDieselEl) {
+      const newDieselPrice = parseFloat(newDieselEl.textContent);
+      if (oldDieselPrice !== newDieselPrice)
+        animateNumber(newDieselEl, oldDieselPrice, newDieselPrice, 2);
+    }
+  }
 }
 
 // ── EV Card ───────────────────────────────────────────────────────
