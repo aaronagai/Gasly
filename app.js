@@ -256,7 +256,6 @@ function renderCards(data) {
 
     card.innerHTML = `
       <div class="card-header">
-        <span class="card-icon" style="filter:drop-shadow(0 0 8px ${accent})">${icon}</span>
         <div class="card-header-right">
           ${regionalTag}
           <span class="card-type-badge" style="${badgeStyle}">${key.toUpperCase().replace(/_/g, ' ')}</span>
