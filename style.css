@@ -109,19 +109,13 @@ header {
 
 /* ── Lang Toggle ─────────────────────────────────────────────── */
 .lang-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(10,10,10,0.85);
+  background: rgba(255,255,255,0.05);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px 8px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .lang-btn {
