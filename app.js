@@ -220,8 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentTheme);
   updateThemeBtn();
   applyLang(currentLang);
-  document.getElementById('btn-en').classList.toggle('active', currentLang === 'en');
-  document.getElementById('btn-bm').classList.toggle('active', currentLang === 'bm');
+  document.getElementById('lang-current').textContent = currentLang.toUpperCase();
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
@@ -234,12 +233,30 @@ document.addEventListener('DOMContentLoaded', () => {
 window.setLang = function(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
-  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-  document.getElementById('btn-bm').classList.toggle('active', lang === 'bm');
+  document.getElementById('lang-current').textContent = lang.toUpperCase();
+  closeLangDropdown();
   applyLang(lang);
   if (rawData.length) renderCards(rawData);
   renderIntlChart();
 };
+
+window.toggleLangDropdown = function() {
+  const menu = document.getElementById('lang-dropdown-menu');
+  const btn  = document.getElementById('lang-dropdown-btn');
+  const open = menu.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open);
+};
+
+function closeLangDropdown() {
+  const menu = document.getElementById('lang-dropdown-menu');
+  const btn  = document.getElementById('lang-dropdown-btn');
+  if (menu) { menu.classList.remove('open'); btn?.setAttribute('aria-expanded', 'false'); }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!document.getElementById('lang-dropdown')?.contains(e.target)) closeLangDropdown();
+});
 
 function applyLang(lang) {
   const t = I18N[lang];
