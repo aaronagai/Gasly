@@ -238,11 +238,6 @@ function renderCards(data) {
     const displayName = t.fuelNames[key];
     const displaySub  = t.fuelSubs[activeKey] || t.fuelSubs[key];
 
-    // Regional tag shown on cards that change with the toggle
-    const regionalTag = regionAlt
-      ? `<span class="card-region-tag" style="${badgeStyle}">${selectedRegion === 'east' ? t.eastMY : t.peninsular}</span>`
-      : '';
-
     const card = document.createElement('div');
     card.className = 'fuel-card';
     card.style.setProperty('--card-accent', accent);
@@ -250,7 +245,6 @@ function renderCards(data) {
     card.innerHTML = `
       <div class="card-header">
         <div class="card-header-right">
-          ${regionalTag}
           <span class="card-type-badge" style="${badgeStyle}">${key.toUpperCase().replace(/_/g, ' ')}</span>
         </div>
       </div>
