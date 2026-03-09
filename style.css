@@ -265,6 +265,7 @@ header {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  min-height: 36px;
 }
 
 .card-icon {
@@ -427,6 +428,49 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 
 @media (max-width: 400px) {
   header { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── RON95 Region Toggle ─────────────────────────────────────── */
+.card-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.region-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  padding: 3px;
+}
+
+.region-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 5px;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.region-btn.active {
+  background: var(--rbtn-accent, var(--accent));
+  color: #000;
+  box-shadow: 0 0 8px var(--rbtn-accent, var(--accent));
+}
+
+.region-btn:not(.active):hover {
+  color: var(--rbtn-accent, var(--accent));
+  background: rgba(255,255,255,0.05);
 }
 
 /* ── Error State ─────────────────────────────────────────────── */
