@@ -431,10 +431,13 @@ function renderIntlChart() {
           display: true,
           position: 'top',
           labels: {
-            color:    legendTx,
-            font:     { family: 'JetBrains Mono', size: 11 },
-            boxWidth: 20,
-            padding:  14,
+            color:         legendTx,
+            font:          { family: 'JetBrains Mono', size: 11 },
+            usePointStyle: true,
+            pointStyle:    'circle',
+            boxWidth:      8,
+            boxHeight:     8,
+            padding:       16,
           },
         },
         tooltip: {
