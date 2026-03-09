@@ -402,7 +402,7 @@ function renderIntlChart() {
     // Country lines fill towards BUDI95 (index 0) to show the subsidy gap
     const fill  = i === 0 ? false : { target: 0, above: color + '28', below: color + '28' };
     return {
-      label:                s[currentLang],
+      label:                ' ' + s[currentLang],
       data,
       borderColor:          color,
       borderWidth:          s.width,
