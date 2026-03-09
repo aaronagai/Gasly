@@ -635,3 +635,65 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   color: var(--text-muted);
   opacity: 0.65;
 }
+
+/* ── International Comparison Section ───────────────────────────── */
+.intl-section {
+  margin-bottom: 40px;
+}
+
+.intl-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.intl-rate-status {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.intl-chart-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 20px 12px;
+  height: 320px;
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+[data-theme="light"] .intl-chart-wrap {
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.intl-disclaimer {
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  opacity: 0.65;
+  margin-top: 10px;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+@media (max-width: 599px) {
+  .intl-chart-wrap { height: 260px; padding: 14px 12px 10px; }
+  .section-title   { font-size: 0.75rem; }
+  .intl-header     { gap: 6px; }
+}

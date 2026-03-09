@@ -17,6 +17,30 @@ const FUEL_KEYS = [
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#b45309', regionAlt: 'diesel_eastmsia' },
 ];
 
+// ── International Price Data ──────────────────────────────────────
+// UPDATE WEEKLY each Wednesday — native currency per litre (US: USD/gallon)
+const INTL_WEEKS = [
+  '2026-01-14', '2026-01-21', '2026-01-28',
+  '2026-02-04', '2026-02-11', '2026-02-18',
+  '2026-02-25', '2026-03-04',
+];
+
+const INTL_PRICES = {
+  us: [3.09, 3.07, 3.12, 3.15, 3.11, 3.08, 3.05, 3.03], // USD/gallon
+  uk: [1.46, 1.47, 1.45, 1.44, 1.46, 1.48, 1.47, 1.45], // GBP/litre
+  au: [1.92, 1.95, 1.88, 1.85, 1.87, 1.90, 1.93, 1.91], // AUD/litre
+  sg: [2.68, 2.71, 2.69, 2.65, 2.63, 2.66, 2.70, 2.72], // SGD/litre (RON 95)
+};
+
+// Per-series chart config (en/bm labels + light/dark colors)
+const INTL_SERIES = [
+  { key: 'budi95', en: 'BUDI95 (Malaysia)',  bm: 'BUDI95 (Malaysia)',  color: '#b478ff', lightColor: '#6d28d9', width: 3 },
+  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ffaa00', lightColor: '#b45309', width: 2 },
+  { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#0F9D58', width: 2 },
+  { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0369a1', width: 2 },
+  { key: 'us',     en: 'United States',       bm: 'Amerika Syarikat',   color: '#ff4466', lightColor: '#dc2626', width: 2 },
+];
+
 // ── i18n ─────────────────────────────────────────────────────────
 const I18N = {
   en: {
@@ -50,7 +74,10 @@ const I18N = {
     viewOnGithub: 'View on GitHub',
     openSource:   'Open Source',
     mitLicense:   'MIT License',
-    creditLine:   'Data sourced from the Official Malaysia Open Data Portal — data.gov.my, provided by the Ministry of Finance (MOF) Malaysia',
+    creditLine:     'Data sourced from the Official Malaysia Open Data Portal — data.gov.my, provided by the Ministry of Finance (MOF) Malaysia',
+    intlTitle:      'Price Comparison (RM/L)',
+    intlDisclaimer: 'International prices updated weekly. Source: GlobalPetrolPrices.com',
+    intlRateNote:   'Live exchange rates via exchangerate-api.com',
   },
   bm: {
     subtitle:    'Harga Minyak Malaysia Terkini',
@@ -83,7 +110,10 @@ const I18N = {
     viewOnGithub: 'Lihat di GitHub',
     openSource:   'Sumber Terbuka',
     mitLicense:   'Lesen MIT',
-    creditLine:   'Data bersumber dari Portal Data Terbuka Rasmi Malaysia — data.gov.my, disediakan oleh Kementerian Kewangan (MOF) Malaysia',
+    creditLine:     'Data bersumber dari Portal Data Terbuka Rasmi Malaysia — data.gov.my, disediakan oleh Kementerian Kewangan (MOF) Malaysia',
+    intlTitle:      'Perbandingan Harga (RM/L)',
+    intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
+    intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
   },
 };
 
@@ -95,6 +125,8 @@ let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
+let exchangeRates = null;
+let intlChart     = null;
 
 // ── Theme ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -106,6 +138,7 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
   currentTheme = e.matches ? 'light' : 'dark';
   applyTheme(currentTheme);
   if (rawData.length) renderCards(rawData);
+  renderIntlChart();
 });
 
 // ── Boot ─────────────────────────────────────────────────────────
@@ -115,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
+  loadExchangeRates();
   startCountdown();
   refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
 });
@@ -127,6 +161,7 @@ window.setLang = function(lang) {
   document.getElementById('btn-bm').classList.toggle('active', lang === 'bm');
   applyLang(lang);
   if (rawData.length) renderCards(rawData);
+  renderIntlChart();
 };
 
 function applyLang(lang) {
@@ -175,6 +210,7 @@ async function loadData(isRefresh = false) {
 
     renderCards(rawData);
     setMeta(rawData);
+    renderIntlChart();
     statusDot.classList.remove('error');
     statusText.textContent = 'Connected';
   } catch (err) {
@@ -284,6 +320,132 @@ function renderCards(data) {
     grid.appendChild(card);
     requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
+}
+
+// ── Exchange Rates ────────────────────────────────────────────────
+async function loadExchangeRates() {
+  try {
+    const res  = await fetch('https://api.exchangerate-api.com/v4/latest/MYR');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    exchangeRates = json.rates;
+    renderIntlChart();
+  } catch (err) {
+    console.error('Exchange rate fetch error:', err);
+    const badge = document.getElementById('intl-rate-status');
+    if (badge) badge.textContent = 'Rate fetch failed';
+  }
+}
+
+// ── International Comparison Chart ───────────────────────────────
+function renderIntlChart() {
+  if (!exchangeRates || !rawData.length) return;
+
+  const isDark    = currentTheme === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+  const tickColor = isDark ? '#888888' : '#666666';
+  const tooltipBg = isDark ? 'rgba(10,10,10,0.92)' : 'rgba(255,255,255,0.97)';
+  const tooltipTx = isDark ? '#f0f0f0' : '#1a1a1a';
+  const legendTx  = isDark ? '#f0f0f0' : '#1a1a1a';
+
+  // Convert to RM/L (rates are: 1 MYR = N foreign, so 1 foreign = 1/rate MYR)
+  const toRMperL = {
+    us: INTL_PRICES.us.map(p => +((p / 3.78541) / exchangeRates.USD).toFixed(3)),
+    uk: INTL_PRICES.uk.map(p => +(p / exchangeRates.GBP).toFixed(3)),
+    au: INTL_PRICES.au.map(p => +(p / exchangeRates.AUD).toFixed(3)),
+    sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
+  };
+
+  // BUDI95 from rawData, oldest → newest
+  const budi95 = rawData
+    .map(r => r.ron95_budi95)
+    .filter(v => v != null && v > 0)
+    .slice(0, 8)
+    .reverse();
+
+  const labels = INTL_WEEKS.map(d =>
+    new Date(d).toLocaleDateString(
+      currentLang === 'bm' ? 'ms-MY' : 'en-MY',
+      { month: 'short', day: 'numeric' }
+    )
+  );
+
+  const datasets = INTL_SERIES.map(s => {
+    const color = (isDark || !s.lightColor) ? s.color : s.lightColor;
+    const data  = s.key === 'budi95' ? budi95 : toRMperL[s.key];
+    return {
+      label:                s[currentLang],
+      data,
+      borderColor:          color,
+      borderWidth:          s.width,
+      pointRadius:          s.width === 3 ? 3 : 2,
+      pointHoverRadius:     s.width === 3 ? 6 : 5,
+      pointBackgroundColor: color,
+      fill:                 false,
+      tension:              0.4,
+    };
+  });
+
+  if (intlChart) { intlChart.destroy(); intlChart = null; }
+  const canvas = document.getElementById('intl-chart');
+  if (!canvas) return;
+
+  intlChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600 },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color:    legendTx,
+            font:     { family: 'JetBrains Mono', size: 11 },
+            boxWidth: 20,
+            padding:  14,
+          },
+        },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          borderColor:     isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+          borderWidth:     1,
+          titleColor:      isDark ? '#aaaaaa' : '#555555',
+          bodyColor:       tooltipTx,
+          titleFont:       { family: 'JetBrains Mono', size: 11 },
+          bodyFont:        { family: 'JetBrains Mono', size: 12 },
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: RM ${ctx.parsed.y.toFixed(2)}/L`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid:  { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0 },
+        },
+        y: {
+          grid:  { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font:  { family: 'JetBrains Mono', size: 10 },
+            callback: v => `RM ${v.toFixed(2)}`,
+          },
+        },
+      },
+    },
+  });
+
+  const badge = document.getElementById('intl-rate-status');
+  if (badge) {
+    const ts = new Date().toLocaleTimeString(
+      currentLang === 'bm' ? 'ms-MY' : 'en-MY',
+      { hour: '2-digit', minute: '2-digit' }
+    );
+    badge.textContent = `Live rates · ${ts}`;
+  }
 }
 
 // ── Sparkline Charts ──────────────────────────────────────────────
