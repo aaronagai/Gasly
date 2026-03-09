@@ -247,7 +247,7 @@ window.setRegion = function(region) {
   localStorage.setItem('region', region);
   document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
-  if (rawData.length) renderFuelCards(rawData); // fuel cards only — EV handled separately
+  if (rawData.length) renderFuelCards(rawData, true); // fuel cards only — EV handled separately
   animateEVRegionChange(prevRegion, region);
 };
 
@@ -420,7 +420,7 @@ function renderCards(data) {
 }
 
 // Renders only the fuel price cards, preserving the EV card across re-renders
-function renderFuelCards(data) {
+function renderFuelCards(data, skipAnimation = false) {
   const t      = I18N[currentLang];
   const grid   = document.getElementById('cards-grid');
   const evCard = document.getElementById('ev-card');
@@ -454,6 +454,7 @@ function renderFuelCards(data) {
 
     const card = document.createElement('div');
     card.className = 'fuel-card';
+    if (skipAnimation) card.style.animation = 'none';
     card.style.setProperty('--card-accent', activeAccent);
 
     card.innerHTML = `
