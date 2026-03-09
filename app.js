@@ -11,7 +11,7 @@ const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
 const FUEL_KEYS = [
-  { key: 'ron95',        icon: '🟢', accent: '#00ff64' },
+  { key: 'ron95',        icon: '🟢', accent: '#00ff64', showRegionToggle: true },
   { key: 'ron97',        icon: '🔵', accent: '#00d4ff' },
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', regionAlt: 'diesel_eastmsia' },
   { key: 'ron95_budi95', icon: '⭐', accent: '#b478ff' },
@@ -215,7 +215,7 @@ function renderCards(data) {
   const grid = document.getElementById('cards-grid');
   grid.innerHTML = '';
 
-  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt }) => {
+  FUEL_KEYS.forEach(({ key, icon, accent, regionAlt, showRegionToggle }) => {
     // Use the regional alternate field when East MY is selected and one exists
     const activeKey = (regionAlt && selectedRegion === 'east') ? regionAlt : key;
 
@@ -249,7 +249,7 @@ function renderCards(data) {
     card.className = 'fuel-card';
     card.style.setProperty('--card-accent', accent);
 
-    const regionToggleHTML = regionAlt ? `
+    const regionToggleHTML = showRegionToggle ? `
       <div class="card-region-toggle" role="group">
         <button id="rbtn-peninsular" class="region-btn ${selectedRegion === 'peninsular' ? 'active' : ''}" onclick="setRegion('peninsular')">${t.peninsular}</button>
         <span class="lang-sep">/</span>
