@@ -77,7 +77,7 @@ const INTL_PRICES = {
 
 // Per-series chart config (en/bm labels + light/dark colors)
 const INTL_SERIES = [
-  { key: 'budi95', en: 'BUDI95 (Malaysia)',  bm: 'BUDI95 (Malaysia)',  color: '#b478ff', lightColor: '#9333ea', width: 3 },
+  { key: 'ron95', en: 'RON95 (Malaysia)',  bm: 'RON95 (Malaysia)',  color: '#b478ff', lightColor: '#9333ea', width: 3 },
   { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ff4466', lightColor: '#ef4444', width: 2 },
   { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#16a34a', width: 2 },
   { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0ea5e9', width: 2 },
@@ -654,10 +654,10 @@ function renderIntlChart() {
     sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
   };
 
-  // BUDI95 from rawData aligned with INTL_WEEKS (oldest → newest, nulls kept for gaps)
-  const budi95 = rawData
+  // RON95 from rawData aligned with INTL_WEEKS (oldest → newest, nulls kept for gaps)
+  const ron95 = rawData
     .slice(0, INTL_WEEKS.length)
-    .map(r => r.ron95_budi95 || null)
+    .map(r => r.ron95 || null)
     .reverse();
 
   const labels = INTL_WEEKS.map(d =>
@@ -669,7 +669,7 @@ function renderIntlChart() {
 
   const datasets = INTL_SERIES.map((s, i) => {
     const color = (isDark || !s.lightColor) ? s.color : s.lightColor;
-    const data  = s.key === 'budi95' ? budi95 : toRMperL[s.key];
+    const data  = s.key === 'ron95' ? ron95 : toRMperL[s.key];
     // Country lines fill towards BUDI95 (index 0) to show the subsidy gap
     const fill  = i === 0 ? false : { target: 0, above: color + '28', below: color + '28' };
     return {
