@@ -682,9 +682,9 @@ function renderIntlChart() {
     sg: INTL_PRICES.sg.map(p => p == null ? null : +(p / exchangeRates.SGD).toFixed(3)),
   };
 
-  // RON95 from rawData aligned with INTL_WEEKS by date (not by index)
-  const ron95ByDate = Object.fromEntries(rawData.map(r => [r.date, r.ron95 || null]));
-  const ron95 = INTL_WEEKS.map(week => ron95ByDate[week] ?? null);
+  // RON95 from rawData aligned with INTL_WEEKS by index (oldest → newest)
+  const ron95Raw = rawData.map(r => r.ron95 || null).reverse();
+  const ron95 = INTL_WEEKS.map((_, i) => ron95Raw[i] ?? null);
 
   const labels = INTL_WEEKS.map(d =>
     new Date(d).toLocaleDateString(
