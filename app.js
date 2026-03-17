@@ -6,7 +6,7 @@
 'use strict';
 
 // ── Config ──────────────────────────────────────────────────────
-const API_URL    = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=52';
+const API_URL    = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=104';
 const REFRESH_MS = 60_000;
 
 // regionAlt: field to use when region = 'east'. undefined = same price both regions.
