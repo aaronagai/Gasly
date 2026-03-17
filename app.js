@@ -49,7 +49,7 @@ const INTL_WEEKS = [
   '2025-12-03', '2025-12-10', '2025-12-17', '2025-12-24', '2025-12-31',
   '2026-01-07', '2026-01-14', '2026-01-21', '2026-01-28',
   '2026-02-04', '2026-02-11', '2026-02-18', '2026-02-25',
-  '2026-03-04',
+  '2026-03-04', '2026-03-11', '2026-03-18',
 ];
 
 const INTL_PRICES = {
@@ -67,7 +67,7 @@ const INTL_PRICES = {
     1.48, 1.49, 1.50, 1.50, 1.49,
     1.48, 1.47, 1.46, 1.45,
     1.44, 1.46, 1.48, 1.47,
-    1.45,
+    1.45, null, null,
   ],
   // AUD/litre (Australia regular unleaded)
   au: [
@@ -83,7 +83,7 @@ const INTL_PRICES = {
     1.91, 1.89, 1.86, 1.88, 1.91,
     1.95, 1.88, 1.85, 1.87,
     1.90, 1.93, 1.91, 1.88,
-    1.90,
+    1.90, null, null,
   ],
   // SGD/litre (Singapore RON 95)
   sg: [
@@ -99,7 +99,7 @@ const INTL_PRICES = {
     2.71, 2.69, 2.67, 2.65, 2.63,
     2.65, 2.68, 2.71, 2.69,
     2.65, 2.63, 2.66, 2.70,
-    2.72,
+    2.72, null, null,
   ],
 };
 
@@ -682,11 +682,9 @@ function renderIntlChart() {
     sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
   };
 
-  // RON95 from rawData aligned with INTL_WEEKS (oldest → newest, nulls kept for gaps)
-  const ron95 = rawData
-    .slice(0, INTL_WEEKS.length)
-    .map(r => r.ron95 || null)
-    .reverse();
+  // RON95 from rawData aligned with INTL_WEEKS by date (not by index)
+  const ron95ByDate = Object.fromEntries(rawData.map(r => [r.date, r.ron95 || null]));
+  const ron95 = INTL_WEEKS.map(week => ron95ByDate[week] ?? null);
 
   const labels = INTL_WEEKS.map(d =>
     new Date(d).toLocaleDateString(
