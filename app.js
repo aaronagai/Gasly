@@ -677,9 +677,9 @@ function renderIntlChart() {
 
   // Convert to RM/L (rates are: 1 MYR = N foreign, so 1 foreign = 1/rate MYR)
   const toRMperL = {
-    uk: INTL_PRICES.uk.map(p => +(p / exchangeRates.GBP).toFixed(3)),
-    au: INTL_PRICES.au.map(p => +(p / exchangeRates.AUD).toFixed(3)),
-    sg: INTL_PRICES.sg.map(p => +(p / exchangeRates.SGD).toFixed(3)),
+    uk: INTL_PRICES.uk.map(p => p == null ? null : +(p / exchangeRates.GBP).toFixed(3)),
+    au: INTL_PRICES.au.map(p => p == null ? null : +(p / exchangeRates.AUD).toFixed(3)),
+    sg: INTL_PRICES.sg.map(p => p == null ? null : +(p / exchangeRates.SGD).toFixed(3)),
   };
 
   // RON95 from rawData aligned with INTL_WEEKS by date (not by index)
