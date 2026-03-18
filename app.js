@@ -33,83 +33,6 @@ const EV_RATES = {
 };
 const EV_KM_PER_KWH = 6; // avg efficiency for Malaysia conditions
 
-// ── International Price Data ──────────────────────────────────────
-// UPDATE WEEKLY each Wednesday — native currency per litre
-// 52-week window (Mar 2025 → Mar 2026) — add new row each Wed, drop oldest
-const INTL_WEEKS = [
-  '2025-03-12', '2025-03-19', '2025-03-26',
-  '2025-04-02', '2025-04-09', '2025-04-16', '2025-04-23', '2025-04-30',
-  '2025-05-07', '2025-05-14', '2025-05-21', '2025-05-28',
-  '2025-06-04', '2025-06-11', '2025-06-18', '2025-06-25',
-  '2025-07-02', '2025-07-09', '2025-07-16', '2025-07-23', '2025-07-30',
-  '2025-08-06', '2025-08-13', '2025-08-20', '2025-08-27',
-  '2025-09-03', '2025-09-10', '2025-09-17', '2025-09-24',
-  '2025-10-01', '2025-10-08', '2025-10-15', '2025-10-22', '2025-10-29',
-  '2025-11-05', '2025-11-12', '2025-11-19', '2025-11-26',
-  '2025-12-03', '2025-12-10', '2025-12-17', '2025-12-24', '2025-12-31',
-  '2026-01-07', '2026-01-14', '2026-01-21', '2026-01-28',
-  '2026-02-04', '2026-02-11', '2026-02-18', '2026-02-25',
-  '2026-03-04', '2026-03-11', '2026-03-18',
-];
-
-const INTL_PRICES = {
-  // GBP/litre (UK unleaded)
-  uk: [
-    1.49, 1.50, 1.50,
-    1.49, 1.48, 1.47, 1.46, 1.46,
-    1.45, 1.44, 1.43, 1.44,
-    1.45, 1.46, 1.47, 1.47,
-    1.46, 1.45, 1.44, 1.44, 1.45,
-    1.46, 1.47, 1.47, 1.47,
-    1.47, 1.47, 1.47, 1.47,
-    1.47, 1.47, 1.46, 1.45, 1.44,
-    1.45, 1.46, 1.47, 1.48,
-    1.48, 1.49, 1.50, 1.50, 1.49,
-    1.48, 1.47, 1.46, 1.45,
-    1.44, 1.46, 1.48, 1.47,
-    1.45, null, null,
-  ],
-  // AUD/litre (Australia regular unleaded)
-  au: [
-    1.82, 1.84, 1.85,
-    1.83, 1.80, 1.79, 1.81, 1.83,
-    1.84, 1.85, 1.84, 1.82,
-    1.80, 1.81, 1.83, 1.85,
-    1.87, 1.88, 1.87, 1.85, 1.84,
-    1.85, 1.86, 1.88, 1.89,
-    1.90, 1.91, 1.91, 1.92,
-    1.92, 1.95, 1.90, 1.86, 1.83,
-    1.88, 1.93, 1.97, 1.94,
-    1.91, 1.89, 1.86, 1.88, 1.91,
-    1.95, 1.88, 1.85, 1.87,
-    1.90, 1.93, 1.91, 1.88,
-    1.90, null, null,
-  ],
-  // SGD/litre (Singapore RON 95)
-  sg: [
-    2.62, 2.63, 2.63,
-    2.62, 2.61, 2.61, 2.62, 2.63,
-    2.63, 2.64, 2.64, 2.63,
-    2.62, 2.63, 2.64, 2.65,
-    2.65, 2.65, 2.66, 2.66, 2.65,
-    2.65, 2.66, 2.67, 2.68,
-    2.68, 2.69, 2.69, 2.70,
-    2.70, 2.68, 2.66, 2.64, 2.63,
-    2.65, 2.67, 2.68, 2.70,
-    2.71, 2.69, 2.67, 2.65, 2.63,
-    2.65, 2.68, 2.71, 2.69,
-    2.65, 2.63, 2.66, 2.70,
-    2.72, null, null,
-  ],
-};
-
-// Per-series chart config (en/bm labels + light/dark colors)
-const INTL_SERIES = [
-  { key: 'ron95', en: 'RON95 (Malaysia)',  bm: 'RON95 (Malaysia)',  color: '#b478ff', lightColor: '#9333ea', width: 3 },
-  { key: 'sg',     en: 'Singapore',           bm: 'Singapura',          color: '#ff4466', lightColor: '#ef4444', width: 2 },
-  { key: 'au',     en: 'Australia',           bm: 'Australia',          color: '#00ff64', lightColor: '#16a34a', width: 2 },
-  { key: 'uk',     en: 'United Kingdom',      bm: 'United Kingdom',     color: '#00d4ff', lightColor: '#0ea5e9', width: 2 },
-];
 
 // ── i18n ─────────────────────────────────────────────────────────
 const I18N = {
@@ -207,8 +130,6 @@ let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
-let exchangeRates = null;
-let intlChart     = null;
 let evChargeType  = localStorage.getItem('evCharge') || 'ac';
 
 // ── Theme ─────────────────────────────────────────────────────────
@@ -230,7 +151,6 @@ window.toggleTheme = function() {
   applyTheme(currentTheme);
   updateThemeBtn();
   if (rawData.length) renderCards(rawData);
-  renderIntlChart();
 };
 
 // Follow system preference only if user hasn't manually chosen
@@ -240,7 +160,6 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
   applyTheme(currentTheme);
   updateThemeBtn();
   if (rawData.length) renderCards(rawData);
-  renderIntlChart();
 });
 
 // ── Boot ─────────────────────────────────────────────────────────
@@ -252,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
   loadData();
-  loadExchangeRates();
   startCountdown();
   // Auto-refresh disabled — prices only update Wednesdays, no need to poll
   // refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
@@ -266,7 +184,6 @@ window.setLang = function(lang) {
   closeLangDropdown();
   applyLang(lang);
   if (rawData.length) renderCards(rawData);
-  renderIntlChart();
 };
 
 window.toggleLangDropdown = function() {
@@ -432,7 +349,6 @@ async function loadData(isRefresh = false) {
 
     renderCards(rawData);
     setMeta(rawData);
-    renderIntlChart();
     statusDot.classList.remove('error');
     statusText.textContent = 'Connected';
   } catch (err) {
@@ -647,135 +563,6 @@ function renderEVCard() {
   `;
 
   grid.appendChild(card);
-}
-
-// ── Exchange Rates ────────────────────────────────────────────────
-async function loadExchangeRates() {
-  try {
-    const res  = await fetch('https://api.exchangerate-api.com/v4/latest/MYR');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    exchangeRates = json.rates;
-    renderIntlChart();
-  } catch (err) {
-    console.error('Exchange rate fetch error:', err);
-    const badge = document.getElementById('intl-rate-status');
-    if (badge) badge.textContent = 'Rate fetch failed';
-  }
-}
-
-// ── International Comparison Chart ───────────────────────────────
-function renderIntlChart() {
-  if (!exchangeRates || !rawData.length) return;
-
-  const isDark    = currentTheme === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
-  const tickColor = isDark ? '#888888' : '#666666';
-  const tooltipBg = isDark ? 'rgba(10,10,10,0.92)' : 'rgba(255,255,255,0.97)';
-  const tooltipTx = isDark ? '#f0f0f0' : '#1a1a1a';
-  const legendTx  = isDark ? '#f0f0f0' : '#1a1a1a';
-
-  // Convert to RM/L (rates are: 1 MYR = N foreign, so 1 foreign = 1/rate MYR)
-  const toRMperL = {
-    uk: INTL_PRICES.uk.map(p => p == null ? null : +(p / exchangeRates.GBP).toFixed(3)),
-    au: INTL_PRICES.au.map(p => p == null ? null : +(p / exchangeRates.AUD).toFixed(3)),
-    sg: INTL_PRICES.sg.map(p => p == null ? null : +(p / exchangeRates.SGD).toFixed(3)),
-  };
-
-  // RON95 from rawData aligned with INTL_WEEKS by index (oldest → newest)
-  const ron95Raw = rawData.map(r => r.ron95 || null).reverse();
-  const ron95 = INTL_WEEKS.map((_, i) => ron95Raw[i] ?? null);
-
-  const labels = INTL_WEEKS.map(d =>
-    new Date(d).toLocaleDateString(
-      currentLang === 'bm' ? 'ms-MY' : 'en-MY',
-      { month: 'short', day: 'numeric' }
-    )
-  );
-
-  const datasets = INTL_SERIES.map((s, i) => {
-    const color = (isDark || !s.lightColor) ? s.color : s.lightColor;
-    const data  = s.key === 'ron95' ? ron95 : toRMperL[s.key];
-    // Country lines fill towards BUDI95 (index 0) to show the subsidy gap
-    const fill  = i === 0 ? false : { target: 0, above: color + '28', below: color + '28' };
-    return {
-      label:                ' ' + s[currentLang],
-      data,
-      borderColor:          color,
-      borderWidth:          s.width,
-      pointRadius:          0,
-      pointHoverRadius:     4,
-      pointBackgroundColor: color,
-      fill,
-      tension:              0.6,
-      spanGaps:             true,
-    };
-  });
-
-  if (intlChart) { intlChart.destroy(); intlChart = null; }
-  const canvas = document.getElementById('intl-chart');
-  if (!canvas) return;
-
-  intlChart = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 600 },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: {
-            color:         legendTx,
-            font:          { family: 'JetBrains Mono', size: 11 },
-            usePointStyle: true,
-            pointStyle:    'circle',
-            boxWidth:      8,
-            boxHeight:     8,
-            padding:       16,
-          },
-        },
-        tooltip: {
-          backgroundColor: tooltipBg,
-          borderColor:     isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
-          borderWidth:     1,
-          titleColor:      isDark ? '#aaaaaa' : '#555555',
-          bodyColor:       tooltipTx,
-          titleFont:       { family: 'JetBrains Mono', size: 11 },
-          bodyFont:        { family: 'JetBrains Mono', size: 12 },
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: RM ${ctx.parsed.y.toFixed(2)}/L`,
-          },
-        },
-      },
-      scales: {
-        x: {
-          grid:  { color: gridColor },
-          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 8 },
-        },
-        y: {
-          grid:  { color: gridColor },
-          ticks: {
-            color: tickColor,
-            font:  { family: 'JetBrains Mono', size: 10 },
-            maxTicksLimit: 5,
-            callback: v => `RM ${v.toFixed(2)}`,
-          },
-        },
-      },
-    },
-  });
-
-  const badge = document.getElementById('intl-rate-status');
-  if (badge) {
-    const ts = new Date().toLocaleTimeString(
-      currentLang === 'bm' ? 'ms-MY' : 'en-MY',
-      { hour: '2-digit', minute: '2-digit' }
-    );
-    badge.textContent = `Live rates · ${ts}`;
-  }
 }
 
 // ── Sparkline Charts ──────────────────────────────────────────────
