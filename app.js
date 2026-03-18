@@ -425,7 +425,7 @@ function renderFuelCards(data, skipAnimation = false) {
     const series = data
       .map(row => row[activeKey])
       .filter(v => v !== null && v !== undefined && v > 0)
-      .slice(0, 3)
+      .slice(0, 5)
       .reverse();
 
     const current = series[series.length - 1];
