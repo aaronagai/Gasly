@@ -42,7 +42,6 @@ const I18N = {
     nextUpdate:  'Next Update',
     dataSource:  'Data source',
     unchanged:   'Unchanged',
-    thisWeek:    'Weekly Change',
     loading:     'Fetching live data…',
     error:       'Failed to load data. Retrying…',
     peninsular:  'SEMENANJUNG',
@@ -85,7 +84,6 @@ const I18N = {
     nextUpdate:  'Kemaskini Seterusnya',
     dataSource:  'Sumber data',
     unchanged:   'Harga tidak berubah',
-    thisWeek:    'Perubahan Mingguan',
     loading:     'Mendapatkan data terkini…',
     error:       'Gagal memuatkan data. Cuba semula…',
     peninsular:  'SEMENANJUNG',
@@ -465,7 +463,7 @@ function renderFuelCards(data, skipAnimation = false) {
       </div>
       <div class="card-change ${changeClass}">
         <span class="change-arrow">${arrow}</span>
-        <span>${changeLabel}</span><span class="change-week">${t.thisWeek}</span>
+        <span>${changeLabel}</span>
       </div>
       <div class="card-chart-wrap">
         <canvas id="chart-${key}" height="64"></canvas>
