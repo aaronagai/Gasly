@@ -462,6 +462,11 @@ header {
   border: 1px solid rgba(107,143,114,0.15);
 }
 
+.change-week {
+  opacity: 0.55;
+  font-size: 0.72rem;
+}
+
 .change-arrow {
   font-size: 1rem;
   line-height: 1;

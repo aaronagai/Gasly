@@ -42,6 +42,7 @@ const I18N = {
     nextUpdate:  'Next Update',
     dataSource:  'Data source',
     unchanged:   'Unchanged',
+    thisWeek:    'change this week',
     loading:     'Fetching live data…',
     error:       'Failed to load data. Retrying…',
     peninsular:  'SEMENANJUNG',
@@ -84,6 +85,7 @@ const I18N = {
     nextUpdate:  'Kemaskini Seterusnya',
     dataSource:  'Sumber data',
     unchanged:   'Harga tidak berubah',
+    thisWeek:    'perubahan minggu ini',
     loading:     'Mendapatkan data terkini…',
     error:       'Gagal memuatkan data. Cuba semula…',
     peninsular:  'SEMENANJUNG',
@@ -423,7 +425,7 @@ function renderFuelCards(data, skipAnimation = false) {
     const series = data
       .map(row => row[activeKey])
       .filter(v => v !== null && v !== undefined && v > 0)
-      .slice(0, 13)
+      .slice(0, 3)
       .reverse();
 
     const current = series[series.length - 1];
@@ -435,7 +437,7 @@ function renderFuelCards(data, skipAnimation = false) {
     const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
     const changeLabel = diff === 0
       ? t.unchanged
-      : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} RM`;
+      : `${diff > 0 ? '+' : '-'}RM${Math.abs(diff).toFixed(2)}`;
 
     const badgeStyle  = `color:${activeAccent};border-color:${activeAccent}40;background:${activeAccent}12;`;
     const displayName = t.fuelNames[key];
@@ -463,7 +465,7 @@ function renderFuelCards(data, skipAnimation = false) {
       </div>
       <div class="card-change ${changeClass}">
         <span class="change-arrow">${arrow}</span>
-        <span>${changeLabel}</span>
+        <span>${changeLabel}</span>${diff !== 0 ? `<span class="change-week">${t.thisWeek}</span>` : ''}
       </div>
       <div class="card-chart-wrap">
         <canvas id="chart-${key}" height="64"></canvas>
