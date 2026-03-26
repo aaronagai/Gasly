@@ -1140,10 +1140,14 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 
 .history-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.history-export-btn {
+  color: var(--text-muted);
 }
 
 .history-chart-wrap {

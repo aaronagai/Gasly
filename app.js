@@ -929,28 +929,299 @@ function generateStoryCanvas(key, activeKey) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(selectedRegion === 'east' ? t.eastMY : t.peninsular, W / 2, 1270);
 
+  // ── History sparkline ─────────────────────────────────────────────
+  ctx.font = '400 24px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#363636';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('── 3-MONTH HISTORY ──', W / 2, 1316);
+  drawStoryChart(ctx, activeKey, PAD, 1330, W - 2 * PAD, 220, accent);
+
   // ── Footer ────────────────────────────────────────────────────────
   ctx.strokeStyle = accent + '28';
   ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(PAD, 1580); ctx.lineTo(W - PAD, 1580); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD, 1596); ctx.lineTo(W - PAD, 1596); ctx.stroke();
 
   const d = rawData.length ? new Date(rawData[0].date) : new Date();
   const dateStr = d.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' });
 
   ctx.font = '400 28px "JetBrains Mono", monospace';
   ctx.fillStyle = '#3e3e3e';
-  ctx.fillText(`Updated ${dateStr}`, W / 2, 1648);
+  ctx.fillText(`Updated ${dateStr}`, W / 2, 1664);
 
   ctx.font = '400 25px "JetBrains Mono", monospace';
   ctx.fillStyle = '#343434';
-  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1710);
+  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1726);
 
   ctx.font = '500 28px "JetBrains Mono", monospace';
   ctx.fillStyle = accent + '72';
-  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1780);
+  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1796);
 
   return cv;
 }
+
+// Single-fuel sparkline drawn on story canvas
+function drawStoryChart(ctx, activeKey, x, y, w, h, accent) {
+  const WEEKS  = 13;
+  const rows   = rawData.filter(r => r[activeKey] != null && r[activeKey] > 0).slice(0, WEEKS).reverse();
+  if (rows.length < 2) return;
+
+  const vals   = rows.map(r => r[activeKey]);
+  const minVal = Math.min(...vals);
+  const maxVal = Math.max(...vals);
+  const range  = maxVal - minVal || 0.05;
+
+  const padT = 10, padB = 44, padLR = 8;
+  const cw   = w - padLR * 2;
+  const ch   = h - padT - padB;
+
+  const pts = vals.map((v, i) => ({
+    x: x + padLR + (i / (vals.length - 1)) * cw,
+    y: y + padT  + (1 - (v - minVal) / range) * ch,
+  }));
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, y + padT, 0, y + padT + ch);
+  grad.addColorStop(0, accent + '44');
+  grad.addColorStop(1, accent + '00');
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    const cpx = (pts[i - 1].x + pts[i].x) / 2;
+    ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+  }
+  ctx.lineTo(pts[pts.length - 1].x, y + padT + ch);
+  ctx.lineTo(pts[0].x, y + padT + ch);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    const cpx = (pts[i - 1].x + pts[i].x) / 2;
+    ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+  }
+  ctx.strokeStyle = accent;
+  ctx.lineWidth   = 4;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  // Endpoint glow dots
+  ctx.shadowColor = accent; ctx.shadowBlur = 16;
+  ctx.fillStyle   = accent;
+  [pts[0], pts[pts.length - 1]].forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.shadowBlur = 0;
+
+  // Date labels
+  ctx.font          = '400 22px "JetBrains Mono", monospace';
+  ctx.fillStyle     = '#424242';
+  ctx.textBaseline  = 'alphabetic';
+  const lo = new Date(rows[0].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
+  const hi = new Date(rows[rows.length - 1].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
+  ctx.textAlign = 'left';  ctx.fillText(lo, pts[0].x, y + h - 6);
+  ctx.textAlign = 'right'; ctx.fillText(hi, pts[pts.length - 1].x, y + h - 6);
+}
+
+// 3-line chart for history story canvas
+function drawStoryMultilineChart(ctx, x, y, w, h) {
+  const WEEKS     = 13;
+  const dieselKey = selectedRegion === 'east' ? 'diesel_eastmsia' : 'diesel';
+  const fuels     = [
+    { key: 'ron95',   label: 'RON95',  color: '#00ff64' },
+    { key: 'ron97',   label: 'RON97',  color: '#00d4ff' },
+    { key: dieselKey, label: 'Diesel', color: '#ffaa00' },
+  ];
+
+  const rows = rawData
+    .filter(r => r.ron95 != null && r.ron97 != null && r[dieselKey] != null)
+    .slice(0, WEEKS)
+    .reverse();
+  if (rows.length < 2) return;
+
+  const allVals = rows.flatMap(r => [r.ron95, r.ron97, r[dieselKey]]);
+  const minVal  = Math.min(...allVals);
+  const maxVal  = Math.max(...allVals);
+  const range   = maxVal - minVal || 0.05;
+
+  const legendH = 80, padT = legendH + 24, padB = 64, padLR = 48;
+  const cw = w - padLR * 2;
+  const ch = h - padT - padB;
+
+  // Subtle grid lines + y-axis labels
+  const gridCount = 4;
+  for (let i = 0; i <= gridCount; i++) {
+    const gy  = y + padT + (i / gridCount) * ch;
+    const val = maxVal - (i / gridCount) * range;
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + w, gy); ctx.stroke();
+    ctx.font         = '400 22px "JetBrains Mono", monospace';
+    ctx.fillStyle    = '#383838';
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`RM ${val.toFixed(2)}`, x, gy);
+  }
+
+  // Draw each line
+  fuels.forEach(({ key, color }) => {
+    const vals = rows.map(r => r[key]);
+    const pts  = vals.map((v, i) => ({
+      x: x + padLR + (i / (vals.length - 1)) * cw,
+      y: y + padT  + (1 - (v - minVal) / range) * ch,
+    }));
+
+    const grad = ctx.createLinearGradient(0, y + padT, 0, y + padT + ch);
+    grad.addColorStop(0, color + '28');
+    grad.addColorStop(1, color + '00');
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i - 1].x + pts[i].x) / 2;
+      ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+    }
+    ctx.lineTo(pts[pts.length - 1].x, y + padT + ch);
+    ctx.lineTo(pts[0].x, y + padT + ch);
+    ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const cpx = (pts[i - 1].x + pts[i].x) / 2;
+      ctx.bezierCurveTo(cpx, pts[i - 1].y, cpx, pts[i].y, pts[i].x, pts[i].y);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+
+    ctx.shadowColor = color; ctx.shadowBlur = 14;
+    ctx.fillStyle   = color;
+    [pts[0], pts[pts.length - 1]].forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+  });
+
+  // Date labels
+  const lo = new Date(rows[0].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
+  const hi = new Date(rows[rows.length - 1].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
+  const dateY = y + padT + ch + 44;
+  ctx.font = '400 24px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#424242'; ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';  ctx.fillText(lo, x + padLR, dateY);
+  ctx.textAlign = 'right'; ctx.fillText(hi, x + padLR + cw, dateY);
+
+  // Legend (top of chart area)
+  ctx.font = '600 28px "JetBrains Mono", monospace';
+  ctx.textBaseline = 'middle';
+  const legY = y + legendH / 2;
+  const itemWidths = fuels.map(f => ctx.measureText(f.label).width + 36 + 32);
+  const totalW = itemWidths.reduce((a, b) => a + b, 0) - 32;
+  let lx = x + w / 2 - totalW / 2;
+  fuels.forEach(({ label, color }, i) => {
+    ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(lx + 10, legY, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#aaaaaa'; ctx.textAlign = 'left';
+    ctx.fillText(label, lx + 26, legY);
+    lx += itemWidths[i];
+  });
+}
+
+// History story (3-line) canvas
+function generateHistoryStoryCanvas() {
+  const W = 1080, H = 1920;
+  const cv  = document.createElement('canvas');
+  cv.width  = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const t   = I18N[currentLang];
+  const PAD = 84;
+  const bgAccent = '#00d4ff';
+
+  ctx.fillStyle = '#090909';
+  ctx.fillRect(0, 0, W, H);
+
+  const glow = ctx.createRadialGradient(W / 2, H * 0.5, 0, W / 2, H * 0.5, 700);
+  glow.addColorStop(0, bgAccent + '14'); glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.055)';
+  for (let y = 0; y < H; y += 4) ctx.fillRect(0, y + 2, W, 2);
+
+  // Branding
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '400 52px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+  const myW = ctx.measureText('My').width;
+  ctx.fillText('My', PAD, 146);
+  ctx.font = '700 52px "JetBrains Mono", monospace';
+  ctx.fillText('FuelPrice', PAD + myW, 146);
+  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#555555';
+  ctx.fillText('Malaysia Live Fuel Prices', PAD, 198);
+  ctx.strokeStyle = bgAccent + '38'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, 226); ctx.lineTo(W - PAD, 226); ctx.stroke();
+
+  // Title
+  ctx.font = '700 42px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#cccccc'; ctx.textAlign = 'center';
+  ctx.fillText(t.historyTitle || '3-Month Price History', W / 2, 316);
+  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#464646';
+  ctx.fillText(selectedRegion === 'east' ? t.eastMY : t.peninsular, W / 2, 368);
+
+  // Chart
+  drawStoryMultilineChart(ctx, PAD, 414, W - 2 * PAD, 1130);
+
+  // Footer
+  ctx.strokeStyle = bgAccent + '28'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, 1590); ctx.lineTo(W - PAD, 1590); ctx.stroke();
+
+  const d = rawData.length ? new Date(rawData[0].date) : new Date();
+  const dateStr = d.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' });
+  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#3e3e3e'; ctx.textAlign = 'center';
+  ctx.fillText(`Updated ${dateStr}`, W / 2, 1660);
+  ctx.font = '400 25px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#343434';
+  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1722);
+  ctx.font = '500 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = bgAccent + '72';
+  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1793);
+
+  return cv;
+}
+
+window.showHistoryExportModal = async function() {
+  const modal   = document.getElementById('export-modal');
+  const preview = document.getElementById('export-preview');
+  const spinner = document.getElementById('export-spinner');
+  const hint    = document.getElementById('export-hint');
+  const saveBtn = document.getElementById('export-save-btn');
+
+  _exportURL = null; _exportKey = 'history';
+  modal.classList.add('open');
+  preview.removeAttribute('src'); preview.style.opacity = '0';
+  spinner.style.display = 'flex';
+  hint.textContent = 'Generating…'; saveBtn.disabled = true;
+
+  await document.fonts.ready;
+
+  const canvas = generateHistoryStoryCanvas();
+  _exportURL   = canvas.toDataURL('image/png');
+  preview.onload = () => { preview.style.opacity = '1'; };
+  preview.src    = _exportURL;
+  spinner.style.display = 'none';
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  hint.textContent = isIOS ? 'Tap & hold the image → Save to Photos' : 'Tap the button below to save or share';
+  saveBtn.disabled = false;
+};
 
 function storyRoundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
