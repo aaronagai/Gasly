@@ -77,6 +77,7 @@ const I18N = {
     evDC:           'DC FAST',
     evNote:         'Indicative · rate varies by provider & location',
     evCompareSub:   'per 100km · EV @ 6km/kWh · Petrol @ 10L/100km',
+    historyTitle:   '3-Month Price History',
   },
   bm: {
     subtitle:    'Harga Minyak Malaysia Terkini',
@@ -119,6 +120,7 @@ const I18N = {
     evDC:           'DC PANTAS',
     evNote:         'Anggaran · kadar berbeza mengikut pembekal & lokasi',
     evCompareSub:   'per 100km · EV @ 6km/kWh · Minyak @ 10L/100km',
+    historyTitle:   'Sejarah Harga 3 Bulan',
   },
 };
 
@@ -232,6 +234,7 @@ window.setRegion = function(region) {
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
   if (rawData.length) renderFuelCards(rawData, true); // fuel cards only — EV handled separately
   animateEVRegionChange(prevRegion, region);
+  if (rawData.length) renderHistoryChart();
 };
 
 // ── EV Charge Type Toggle ─────────────────────────────────────────
@@ -399,6 +402,7 @@ function updateCountdown() {
 function renderCards(data) {
   renderFuelCards(data);
   renderEVCard();
+  renderHistoryChart();
 }
 
 // Renders only the fuel price cards, preserving the EV card across re-renders
@@ -614,6 +618,110 @@ function renderSparkline(key, series, accent) {
       scales: {
         x: { display: false },
         y: { display: false, grace: '10%' },
+      },
+    },
+  });
+}
+
+// ── 3-Month History Chart ──────────────────────────────────────────
+function renderHistoryChart() {
+  const canvas = document.getElementById('history-chart');
+  if (!canvas || !rawData.length) return;
+
+  if (charts['history']) { charts['history'].destroy(); delete charts['history']; }
+
+  const WEEKS = 13; // ~3 months of weekly data
+  const dieselKey = selectedRegion === 'east' ? 'diesel_eastmsia' : 'diesel';
+
+  const slice = rawData.slice(0, WEEKS).reverse();
+  const labels = slice.map(row => {
+    const d = new Date(row.date);
+    return d.toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
+  });
+
+  const isLight   = currentTheme === 'light';
+  const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+  const tickColor = isLight ? '#888888'           : '#666666';
+
+  const ron95Color  = isLight ? '#16a34a' : '#00ff64';
+  const ron97Color  = isLight ? '#0ea5e9' : '#00d4ff';
+  const dieselColor = isLight ? '#ea580c' : '#ffaa00';
+
+  const ctx = canvas.getContext('2d');
+
+  const makeDataset = (label, dataKey, color) => ({
+    label,
+    data: slice.map(r => r[dataKey] ?? null),
+    borderColor: color,
+    backgroundColor: color + '18',
+    borderWidth: 2,
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointBackgroundColor: color,
+    fill: false,
+    tension: 0.4,
+  });
+
+  charts['history'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        makeDataset('RON95',  'ron95',   ron95Color),
+        makeDataset('RON97',  'ron97',   ron97Color),
+        makeDataset('Diesel', dieselKey, dieselColor),
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      animation: { duration: 500 },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: tickColor,
+            font: { family: 'JetBrains Mono', size: 11 },
+            boxWidth: 24,
+            padding: 16,
+            usePointStyle: true,
+            pointStyle: 'line',
+          },
+        },
+        tooltip: {
+          backgroundColor: isLight ? 'rgba(255,255,255,0.97)' : 'rgba(10,10,10,0.92)',
+          borderColor:     isLight ? 'rgba(0,0,0,0.1)'        : 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: isLight ? '#1a1a1a' : '#f0f0f0',
+          bodyColor:  isLight ? '#555555' : '#aaaaaa',
+          titleFont: { family: 'JetBrains Mono', size: 11 },
+          bodyFont:  { family: 'JetBrains Mono', size: 11 },
+          callbacks: {
+            label: c => ` ${c.dataset.label}: RM ${c.parsed.y.toFixed(2)}/L`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font: { family: 'JetBrains Mono', size: 10 },
+            maxRotation: 0,
+          },
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font: { family: 'JetBrains Mono', size: 10 },
+            callback: v => `RM ${v.toFixed(2)}`,
+          },
+          grace: '5%',
+        },
       },
     },
   });
