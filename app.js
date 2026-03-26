@@ -945,6 +945,9 @@ function generateStoryCanvas(key, activeKey) {
   const d = rawData.length ? new Date(rawData[0].date) : new Date();
   const dateStr = d.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
   ctx.font = '400 28px "JetBrains Mono", monospace';
   ctx.fillStyle = '#3e3e3e';
   ctx.fillText(`Updated ${dateStr}`, W / 2, 1664);
@@ -962,6 +965,7 @@ function generateStoryCanvas(key, activeKey) {
 
 // Single-fuel sparkline drawn on story canvas
 function drawStoryChart(ctx, activeKey, x, y, w, h, accent) {
+  ctx.save();
   const WEEKS  = 13;
   const rows   = rawData.filter(r => r[activeKey] != null && r[activeKey] > 0).slice(0, WEEKS).reverse();
   if (rows.length < 2) return;
@@ -1026,10 +1030,12 @@ function drawStoryChart(ctx, activeKey, x, y, w, h, accent) {
   const hi = new Date(rows[rows.length - 1].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
   ctx.textAlign = 'left';  ctx.fillText(lo, pts[0].x, y + h - 6);
   ctx.textAlign = 'right'; ctx.fillText(hi, pts[pts.length - 1].x, y + h - 6);
+  ctx.restore();
 }
 
 // 3-line chart for history story canvas
 function drawStoryMultilineChart(ctx, x, y, w, h) {
+  ctx.save();
   const WEEKS     = 13;
   const dieselKey = selectedRegion === 'east' ? 'diesel_eastmsia' : 'diesel';
   const fuels     = [
@@ -1132,6 +1138,7 @@ function drawStoryMultilineChart(ctx, x, y, w, h) {
     ctx.fillText(label, lx + 26, legY);
     lx += itemWidths[i];
   });
+  ctx.restore();
 }
 
 // History story (3-line) canvas
