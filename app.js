@@ -468,7 +468,6 @@ function renderFuelCards(data, skipAnimation = false) {
           <span class="card-type-badge" style="${badgeStyle}">${label || key.toUpperCase().replace(/_/g, ' ')}</span>
           <button class="card-export-btn" onclick="showExportModal('${key}','${activeKey}')" aria-label="Share as Instagram Story" style="color:${activeAccent}">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><polyline points="8 7 12 3 16 7"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-            STORY
           </button>
         </div>
       </div>
