@@ -77,6 +77,7 @@ const I18N = {
     evDC:           'DC FAST',
     evNote:         'Indicative · rate varies by provider & location',
     evCompareSub:   'per 100km · EV @ 6km/kWh · Petrol @ 10L/100km',
+    evTeaserLabel:  'Compare EV charging rates',
     historyTitle:   '3-Month Price History',
   },
   bm: {
@@ -120,6 +121,7 @@ const I18N = {
     evDC:           'DC PANTAS',
     evNote:         'Anggaran · kadar berbeza mengikut pembekal & lokasi',
     evCompareSub:   'per 100km · EV @ 6km/kWh · Minyak @ 10L/100km',
+    evTeaserLabel:  'Bandingkan kadar cas EV',
     historyTitle:   'Sejarah Harga 3 Bulan',
   },
 };
@@ -235,6 +237,12 @@ window.setRegion = function(region) {
   if (rawData.length) renderFuelCards(rawData, true); // fuel cards only — EV handled separately
   animateEVRegionChange(prevRegion, region);
   if (rawData.length) renderHistoryChart();
+};
+
+// ── EV Card Expand ────────────────────────────────────────────────
+window.expandEVCard = function() {
+  const card = document.getElementById('ev-card');
+  if (card) card.classList.remove('ev-card--collapsed');
 };
 
 // ── EV Charge Type Toggle ─────────────────────────────────────────
@@ -542,28 +550,35 @@ function renderEVCard() {
     </div>`;
 
   const card = document.createElement('div');
-  card.className = 'fuel-card ev-card';
+  card.className = 'fuel-card ev-card ev-card--collapsed';
   card.id = 'ev-card';
   card.style.setProperty('--card-accent', accent);
 
   card.innerHTML = `
-    <div class="card-header">
-      <div>
-        <div class="card-name">${t.evName}</div>
-        <div class="card-name-sub" id="ev-charge-label">${provider} · ${chargeLabel}</div>
+    <button class="ev-teaser" onclick="expandEVCard()" style="--ev-accent:${accent}">
+      <span class="ev-teaser-icon" style="color:${accent}">⚡</span>
+      <span class="ev-teaser-text">${t.evTeaserLabel}</span>
+      <span class="ev-teaser-arrow" style="color:${accent}">→</span>
+    </button>
+    <div class="ev-card-body">
+      <div class="card-header">
+        <div>
+          <div class="card-name">${t.evName}</div>
+          <div class="card-name-sub" id="ev-charge-label">${provider} · ${chargeLabel}</div>
+        </div>
+        <div class="card-header-right">
+          <span class="card-type-badge" style="${badgeStyle}">EV</span>
+        </div>
       </div>
-      <div class="card-header-right">
-        <span class="card-type-badge" style="${badgeStyle}">EV</span>
+      <div class="card-price-row">
+        <span class="card-currency">RM</span>
+        <span class="card-price" id="ev-rate-value" style="color:${accent}">${rate.toFixed(2)}</span>
+        <span class="card-currency">/kWh</span>
       </div>
+      ${compareHTML}
+      ${toggleHTML}
+      <div class="ev-note">${t.evNote}</div>
     </div>
-    <div class="card-price-row">
-      <span class="card-currency">RM</span>
-      <span class="card-price" id="ev-rate-value" style="color:${accent}">${rate.toFixed(2)}</span>
-      <span class="card-currency">/kWh</span>
-    </div>
-    ${compareHTML}
-    ${toggleHTML}
-    <div class="ev-note">${t.evNote}</div>
   `;
 
   grid.appendChild(card);
