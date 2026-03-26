@@ -466,6 +466,10 @@ function renderFuelCards(data, skipAnimation = false) {
         </div>
         <div class="card-header-right">
           <span class="card-type-badge" style="${badgeStyle}">${label || key.toUpperCase().replace(/_/g, ' ')}</span>
+          <button class="card-export-btn" onclick="showExportModal('${key}','${activeKey}')" aria-label="Share as Instagram Story" style="color:${activeAccent}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><polyline points="8 7 12 3 16 7"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+            STORY
+          </button>
         </div>
       </div>
       <div class="card-price-row">
@@ -740,4 +744,225 @@ function renderHistoryChart() {
       },
     },
   });
+}
+
+// ── Export / Instagram Story ──────────────────────────────────────
+let _exportURL  = null;
+let _exportKey  = '';
+
+window.showExportModal = async function(key, activeKey) {
+  const modal   = document.getElementById('export-modal');
+  const preview = document.getElementById('export-preview');
+  const spinner = document.getElementById('export-spinner');
+  const hint    = document.getElementById('export-hint');
+  const saveBtn = document.getElementById('export-save-btn');
+
+  _exportURL = null;
+  _exportKey = key;
+  modal.classList.add('open');
+  preview.removeAttribute('src');
+  preview.style.opacity = '0';
+  spinner.style.display = 'flex';
+  hint.textContent = 'Generating…';
+  saveBtn.disabled = true;
+
+  await document.fonts.ready;
+
+  const canvas = generateStoryCanvas(key, activeKey);
+  _exportURL   = canvas.toDataURL('image/png');
+
+  preview.onload = () => { preview.style.opacity = '1'; };
+  preview.src    = _exportURL;
+  spinner.style.display = 'none';
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  hint.textContent = isIOS
+    ? 'Tap & hold the image → Save to Photos'
+    : 'Tap the button below to save or share';
+  saveBtn.disabled = false;
+};
+
+window.closeExportModal = function() {
+  document.getElementById('export-modal').classList.remove('open');
+};
+
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeExportModal();
+});
+
+window.saveStoryImage = async function() {
+  if (!_exportURL) return;
+  const blob = await (await fetch(_exportURL)).blob();
+  const file = new File([blob], `myfuelprice-${_exportKey}.png`, { type: 'image/png' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Malaysia Fuel Price' }); return; }
+    catch (_) { /* cancelled — fall through */ }
+  }
+  const a   = document.createElement('a');
+  a.href    = _exportURL;
+  a.download = `myfuelprice-${_exportKey}.png`;
+  a.click();
+};
+
+function generateStoryCanvas(key, activeKey) {
+  const W = 1080, H = 1920;
+  const cv  = document.createElement('canvas');
+  cv.width  = W;
+  cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  const fuelDef = FUEL_KEYS.find(f => f.key === key);
+  const accent  = fuelDef.accent;               // always dark-theme accent
+  const t       = I18N[currentLang];
+
+  const series = rawData
+    .map(r => r[activeKey])
+    .filter(v => v != null && v > 0)
+    .slice(0, 5)
+    .reverse();
+  const current = series[series.length - 1];
+  const prev    = series[series.length - 2];
+  const diff    = prev !== undefined ? +(current - prev).toFixed(3) : 0;
+
+  // ── Background ────────────────────────────────────────────────────
+  ctx.fillStyle = '#090909';
+  ctx.fillRect(0, 0, W, H);
+
+  // Accent radial glow
+  const glow = ctx.createRadialGradient(W / 2, H * 0.46, 0, W / 2, H * 0.46, 700);
+  glow.addColorStop(0, accent + '22');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0,0,0,0.055)';
+  for (let y = 0; y < H; y += 4) ctx.fillRect(0, y + 2, W, 2);
+
+  const PAD = 84;
+
+  // ── Branding ──────────────────────────────────────────────────────
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '400 52px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  const myW = ctx.measureText('My').width;
+  ctx.fillText('My', PAD, 146);
+  ctx.font = '700 52px "JetBrains Mono", monospace';
+  ctx.fillText('FuelPrice', PAD + myW, 146);
+
+  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#555555';
+  ctx.fillText('Malaysia Live Fuel Prices', PAD, 198);
+
+  // Top divider
+  ctx.strokeStyle = accent + '38';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, 226); ctx.lineTo(W - PAD, 226); ctx.stroke();
+
+  // ── Fuel badge + name ─────────────────────────────────────────────
+  const badgeLabel = fuelDef.label || key.toUpperCase().replace(/_/g, ' ');
+  ctx.font = '700 34px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const bTW = ctx.measureText(badgeLabel).width;
+  const bW = bTW + 56, bH = 60, bR = 13;
+  const bX = W / 2 - bW / 2, bY = 640;
+
+  storyRoundRect(ctx, bX, bY, bW, bH, bR);
+  ctx.fillStyle = accent + '1C'; ctx.fill();
+  ctx.strokeStyle = accent + '55'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = accent;
+  ctx.fillText(badgeLabel, W / 2, bY + bH / 2);
+
+  ctx.font = '500 54px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#cccccc';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(t.fuelNames[key] || key, W / 2, 790);
+
+  // ── Price ─────────────────────────────────────────────────────────
+  const priceText = current.toFixed(2);
+  ctx.font = '700 230px "JetBrains Mono", monospace';
+  const priceW = ctx.measureText(priceText).width;
+  const priceX = W / 2, priceY = 1060;
+
+  // Glow
+  ctx.shadowColor = accent; ctx.shadowBlur = 52;
+  ctx.fillStyle = accent;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(priceText, priceX, priceY);
+  ctx.shadowBlur = 0;
+
+  // RM (left of price) + /L (right of price) — aligned to price baseline
+  ctx.font = '400 70px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#4a4a4a';
+  ctx.textAlign = 'right';
+  ctx.fillText('RM', priceX - priceW / 2 - 14, priceY);
+  ctx.textAlign = 'left';
+  ctx.fillText('/L', priceX + priceW / 2 + 14, priceY);
+
+  // ── Change badge ──────────────────────────────────────────────────
+  const changeColor = diff > 0 ? '#ff4466' : diff < 0 ? '#00e676' : '#606060';
+  const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
+  const changeLabel = diff === 0
+    ? `─  ${t.unchanged}`
+    : `${arrow}  ${diff > 0 ? '+' : '−'}RM${Math.abs(diff).toFixed(2)}`;
+
+  ctx.font = '600 40px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const cTW = ctx.measureText(changeLabel).width;
+  const cW = cTW + 52, cH = 68, cR = 12;
+  const cX = W / 2 - cW / 2, cY = 1140;
+
+  storyRoundRect(ctx, cX, cY, cW, cH, cR);
+  ctx.fillStyle = changeColor + '1A'; ctx.fill();
+  ctx.strokeStyle = changeColor + '48'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = changeColor;
+  ctx.fillText(changeLabel, W / 2, cY + cH / 2);
+
+  // Region
+  ctx.font = '400 30px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#484848';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(selectedRegion === 'east' ? t.eastMY : t.peninsular, W / 2, 1270);
+
+  // ── Footer ────────────────────────────────────────────────────────
+  ctx.strokeStyle = accent + '28';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, 1580); ctx.lineTo(W - PAD, 1580); ctx.stroke();
+
+  const d = rawData.length ? new Date(rawData[0].date) : new Date();
+  const dateStr = d.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#3e3e3e';
+  ctx.fillText(`Updated ${dateStr}`, W / 2, 1648);
+
+  ctx.font = '400 25px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#343434';
+  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1710);
+
+  ctx.font = '500 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = accent + '72';
+  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1780);
+
+  return cv;
+}
+
+function storyRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y,     x + w, y + r,     r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h,     x, y + h - r,     r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y,         x + r, y,         r);
+  ctx.closePath();
 }

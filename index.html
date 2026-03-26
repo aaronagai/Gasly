@@ -99,6 +99,24 @@
     </footer>
   </div>
 
+  <!-- Export / Instagram Story Modal -->
+  <div id="export-modal" class="export-modal" role="dialog" aria-modal="true" aria-label="Share as Instagram Story">
+    <div class="export-backdrop" onclick="closeExportModal()"></div>
+    <div class="export-sheet">
+      <button class="export-close" onclick="closeExportModal()" aria-label="Close">✕</button>
+      <p class="export-hint" id="export-hint">Generating…</p>
+      <div class="export-preview-wrap">
+        <div class="export-spinner" id="export-spinner">
+          <span class="export-spinner-dot"></span>
+          <span class="export-spinner-dot"></span>
+          <span class="export-spinner-dot"></span>
+        </div>
+        <img id="export-preview" class="export-preview-img" alt="Story preview" />
+      </div>
+      <button class="export-save-btn" id="export-save-btn" onclick="saveStoryImage()">Save / Share</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
