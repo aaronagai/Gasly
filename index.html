@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gasly — World Live Fuel Prices</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function(){
+      var t = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <style>
@@ -429,7 +436,63 @@
     .footer-text a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
     .footer-text a:hover { color: var(--text); opacity: 1; }
 
-    /* ── Tooltip ───────────────────────���─────────────────────── */
+    /* ── Theme button ─────────────────────────────────────────── */
+    .theme-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 8px;
+      color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .theme-btn:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── Light mode ────────────────────────────────────────────── */
+    [data-theme="light"] {
+      --bg:         #f5f4f0;
+      --bg-card:    rgba(255,255,255,0.92);
+      --text:       #1a1a1a;
+      --text-muted: #555;
+      --border:     rgba(0,0,0,0.1);
+    }
+    [data-theme="light"] body { background: var(--bg); }
+    [data-theme="light"] body::before {
+      background: radial-gradient(ellipse at 58% 45%, rgba(0,150,180,0.04) 0%, transparent 60%);
+    }
+    [data-theme="light"] .scanlines { display: none; }
+    [data-theme="light"] .title-regular,
+    [data-theme="light"] .title-bold { color: #1a1a1a; }
+    [data-theme="light"] .site-subtitle { color: #777; }
+
+    /* Map — light */
+    [data-theme="light"] .sphere     { fill: rgba(0,170,210,0.07); }
+    [data-theme="light"] .graticule  { stroke: rgba(0,0,0,0.06); }
+    [data-theme="light"] .country    { fill: rgba(0,0,0,0.055); stroke: rgba(0,0,0,0.22); }
+    [data-theme="light"] .country:hover { fill: rgba(0,0,0,0.11); stroke: rgba(0,0,0,0.4); }
+    [data-theme="light"] .country.sea   { fill: rgba(0,0,0,0.04); stroke: rgba(0,0,0,0.32); }
+    [data-theme="light"] .country.sea:hover { fill: rgba(0,0,0,0.1); stroke: rgba(0,0,0,0.52); }
+    [data-theme="light"] .cname.sea-name      { fill: rgba(0,0,0,0.5); }
+    [data-theme="light"] .cname.neighbor-name { fill: rgba(0,0,0,0.22); }
+    [data-theme="light"] .map-vignette {
+      background:
+        linear-gradient(to right,  rgba(245,244,240,0.9) 0%, transparent 13%, transparent 87%, rgba(245,244,240,0.9) 100%),
+        linear-gradient(to bottom, rgba(245,244,240,0.75) 0%, transparent 16%, transparent 78%, rgba(245,244,240,0.9) 100%);
+    }
+
+    /* Cards — light */
+    [data-theme="light"] .countries-section { background: var(--bg); }
+    [data-theme="light"] .cc              { background: rgba(255,255,255,0.9); }
+    [data-theme="light"] .cc-fuel-pill    { border-color: rgba(0,0,0,0.12); color: #666; }
+    [data-theme="light"] .cc-see-more-card { background: rgba(0,0,0,0.02); }
+    [data-theme="light"] footer           { background: var(--bg); }
+    [data-theme="light"] .theme-btn:hover { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.2); }
+
+    /* ── Tooltip ──────────────────────────────────────────────── */
     #tooltip {
       position: fixed; z-index: 500; pointer-events: none;
       opacity: 0; transition: opacity 0.12s ease;
@@ -501,9 +564,12 @@
           <p class="site-subtitle">World Live Fuel Prices</p>
         </div>
       </div>
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span>1 country live</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>1 country live</span>
+        </div>
       </div>
     </header>
 
@@ -549,9 +615,26 @@
   </div>
 
   <script>
-    /* ─────────────────��───────────────────────────────────────
-       COUNTRY CARDS DATA
-    ───────────────────────────────────────────────────────── */
+    /* ── Theme ───────────────────────────────────────────────── */
+    const ICON_SUN  = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Zm11.394-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75Zm-3.916 5.834a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18Zm-4.242-.697a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12Zm.697-4.243a.75.75 0 0 0 1.06-1.06L6.166 5.106a.75.75 0 0 0-1.06 1.06l1.59 1.591Z"/></svg>`;
+    const ICON_MOON = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/></svg>`;
+
+    let currentTheme = localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+    function updateThemeBtn() {
+      const btn = document.getElementById('theme-btn');
+      if (btn) btn.innerHTML = currentTheme === 'dark' ? ICON_SUN : ICON_MOON;
+    }
+    window.toggleTheme = function() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      updateThemeBtn();
+    };
+    updateThemeBtn();
+
+    /* ── Country cards data ───────────────────────────────────── */
     const COUNTRIES = [
       { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: ['RON95','RON97','Diesel'],                              currency: 'MYR / L', url: './malaysia.html', live: true  },
       { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: ['RON92','RON95','RON98','Premium','Diesel'],           currency: 'SGD / L', url: './singapore.html', live: false },
