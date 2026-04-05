@@ -15,7 +15,8 @@
   --green:       #00e676;
   --text:        #f0f0f0;
   --text-muted:  #888888;
-  --font:        'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font:        'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
   --radius:      14px;
   --glow:        none;
   --shadow:      none;
@@ -151,6 +152,7 @@ header {
   letter-spacing: 0.1em;
   line-height: 1;
   color: var(--text);
+  font-family: var(--font-mono);
 }
 
 .title-regular { font-weight: 400; color: #ffffff !important; }
@@ -313,6 +315,7 @@ header {
   color: var(--text);
   font-weight: 500;
   white-space: nowrap;
+  font-family: var(--font-mono);
 }
 
 .status-dot {
@@ -420,6 +423,7 @@ header {
   font-weight: 700;
   line-height: 1;
   color: var(--text);
+  font-family: var(--font-mono);
   text-shadow: 0 0 16px rgba(255,255,255,0.1);
 }
 
@@ -430,6 +434,7 @@ header {
   color: var(--text-muted);
   padding-bottom: 4px;
   font-weight: 400;
+  font-family: var(--font-mono);
 }
 
 /* Card Change Indicator */
@@ -439,6 +444,7 @@ header {
   gap: 6px;
   font-size: 0.78rem;
   font-weight: 600;
+  font-family: var(--font-mono);
   padding: 4px 10px;
   border-radius: 6px;
   width: fit-content;
