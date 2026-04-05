@@ -175,15 +175,15 @@
     }
     .country.live:hover { fill: rgba(0,212,255,0.26); stroke: #00d4ff; }
 
-    /* Malaysia glow halo */
+    /* Country glow halo */
     .glow-halo {
-      fill: rgba(0,212,255,0.06); stroke: rgba(0,212,255,0.35); stroke-width: 5;
+      fill: rgba(0,212,255,0.55); stroke: none;
       pointer-events: none;
-      animation: haloPulse 2.8s ease-in-out infinite;
+      animation: haloPulse 3s ease-in-out infinite;
     }
     @keyframes haloPulse {
-      0%, 100% { opacity: 0.4; stroke-width: 5; }
-      50%       { opacity: 1;   stroke-width: 9; }
+      0%, 100% { opacity: 0.25; }
+      50%       { opacity: 0.6; }
     }
 
     /* Ping rings */
@@ -1080,15 +1080,26 @@
       .attr('viewBox', `0 0 ${W} ${H}`)
       .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    const defs   = svg.append('defs');
-    const filter = defs.append('filter')
+    const defs = svg.append('defs');
+
+    /* Dot/label glow — blur + sharp original on top */
+    const dotFilter = defs.append('filter')
       .attr('id', 'blur-glow')
       .attr('x', '-60%').attr('y', '-60%')
       .attr('width', '220%').attr('height', '220%');
-    filter.append('feGaussianBlur').attr('stdDeviation', mobile ? 5 : 7).attr('result', 'blur');
-    const merge = filter.append('feMerge');
-    merge.append('feMergeNode').attr('in', 'blur');
-    merge.append('feMergeNode').attr('in', 'SourceGraphic');
+    dotFilter.append('feGaussianBlur').attr('stdDeviation', mobile ? 5 : 7).attr('result', 'blur');
+    const dotMerge = dotFilter.append('feMerge');
+    dotMerge.append('feMergeNode').attr('in', 'blur');
+    dotMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    /* Country halo glow — pure gaussian spread, no hard edge */
+    const haloFilter = defs.append('filter')
+      .attr('id', 'country-glow')
+      .attr('x', '-120%').attr('y', '-120%')
+      .attr('width', '340%').attr('height', '340%');
+    haloFilter.append('feGaussianBlur')
+      .attr('in', 'SourceGraphic')
+      .attr('stdDeviation', mobile ? 14 : 22);
 
     const projection = d3.geoMercator()
       .center(CENTER).scale(SCALE).translate([W / 2, H / 2]);
@@ -1138,7 +1149,7 @@
           .data(countries.features.filter(d => LIVE[+d.id]))
           .enter().append('path')
           .attr('class', 'glow-halo').attr('d', path)
-          .attr('filter', 'url(#blur-glow)');
+          .attr('filter', 'url(#country-glow)');
 
         /* Rest of world */
         mapG.selectAll('.bg')
