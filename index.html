@@ -436,6 +436,28 @@
     .footer-text a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
     .footer-text a:hover { color: var(--text); opacity: 1; }
 
+    /* ── Currency toggle ──────────────────────────────────────── */
+    .currency-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .curr-opt {
+      background: none; border: none; cursor: pointer;
+      padding: 5px 10px;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .curr-opt + .curr-opt { border-left: 1px solid var(--border); }
+    .curr-opt.active {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+    }
+    [data-theme="light"] .curr-opt.active { background: rgba(0,0,0,0.08); }
+
     /* ── Theme button ─────────────────────────────────────────── */
     .theme-btn {
       background: none;
@@ -565,6 +587,10 @@
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
+        <div class="currency-toggle" role="group" aria-label="Currency display">
+          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')">$USD</button>
+          <button class="curr-opt" data-curr="local"  onclick="setCurrency('local')">Local</button>
+        </div>
         <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
         <div class="status-pill">
           <span class="status-dot"></span>
@@ -633,6 +659,21 @@
       updateThemeBtn();
     };
     updateThemeBtn();
+
+    /* ── Currency ─────────────────────────────────────────────── */
+    let currentCurrency = localStorage.getItem('currency') || 'usd';
+
+    function updateCurrencyBtns() {
+      document.querySelectorAll('.curr-opt').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.curr === currentCurrency);
+      });
+    }
+    window.setCurrency = function(c) {
+      currentCurrency = c;
+      localStorage.setItem('currency', c);
+      updateCurrencyBtns();
+    };
+    updateCurrencyBtns();
 
     /* ── Country cards data ───────────────────────────────────── */
     const COUNTRIES = [
