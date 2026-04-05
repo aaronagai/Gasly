@@ -207,16 +207,6 @@
       filter: drop-shadow(0 0 5px rgba(0,212,255,0.9));
     }
 
-    /* Country name labels */
-    .cname {
-      font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em;
-      text-anchor: middle; dominant-baseline: middle;
-      pointer-events: none; text-transform: uppercase;
-    }
-    .cname.sea-name      { fill: rgba(255,255,255,0.45); }
-    .cname.neighbor-name { fill: rgba(255,255,255,0.13); }
-
-
     /* ── Hero overlay text ─────────────────────────────────────── */
     .hero-overlay {
       position: absolute;
@@ -706,8 +696,7 @@
     [data-theme="light"] .country:hover { fill: rgba(0,0,0,0.11); stroke: rgba(0,0,0,0.4); }
     [data-theme="light"] .country.sea   { fill: rgba(0,0,0,0.04); stroke: rgba(0,0,0,0.32); }
     [data-theme="light"] .country.sea:hover { fill: rgba(0,0,0,0.1); stroke: rgba(0,0,0,0.52); }
-    [data-theme="light"] .cname.sea-name      { fill: rgba(0,0,0,0.5); }
-    [data-theme="light"] .cname.neighbor-name { fill: rgba(0,0,0,0.22); }
+
     [data-theme="light"] .map-vignette {
       background:
         linear-gradient(to right,  rgba(245,244,240,0.9) 0%, transparent 13%, transparent 87%, rgba(245,244,240,0.9) 100%),
@@ -1187,17 +1176,7 @@
           });
 
         /* Country labels */
-        const labelSize = mobile ? 9 : 8;
-        countries.features.forEach(f => {
-          const id = +f.id, name = MAP_LABELS[id];
-          if (!name) return;
-          const [lx, ly] = path.centroid(f);
-          if (isNaN(lx) || isNaN(ly) || lx < 0 || lx > W || ly < 0 || ly > H) return;
-          mapG.append('text')
-            .attr('class', SEA_LABEL_IDS.has(id) ? 'cname sea-name' : 'cname neighbor-name')
-            .attr('x', lx).attr('y', ly).attr('font-size', labelSize)
-            .text(name);
-        });
+
 
         /* Singapore pin */
         const [sgx, sgy] = projection([103.82, 1.35]);
@@ -1219,12 +1198,6 @@
             .attr('filter', 'url(#blur-glow)')
             .attr('pointer-events', 'none');
 
-          sg.append('text')
-            .attr('class', 'cname sea-name')
-            .attr('x', lx).attr('y', ly).attr('text-anchor', 'middle')
-            .attr('font-size', mobile ? 7 : 6.5).attr('pointer-events', 'none')
-            .attr('fill', 'rgba(0,212,255,0.9)')
-            .text('SGP');
 
           sg.append('circle')
             .attr('cx', sgx).attr('cy', sgy).attr('r', mobile ? 18 : 14)
