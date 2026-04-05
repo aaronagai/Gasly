@@ -420,7 +420,71 @@
       animation: blink 2s ease-in-out infinite;
     }
 
-    /* ══════════════════���════════════════════════���═══════════════
+    /* ═══════════════════════════════════════════════════════════
+       EXPORT SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .export-section {
+      position: relative; z-index: 2;
+      background: var(--bg);
+      padding: 52px 28px 56px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; text-align: center;
+    }
+
+    .export-section-badge {
+      font-size: 0.56rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .export-section-title {
+      font-size: 1.3rem; font-weight: 700;
+      letter-spacing: 0.04em; color: var(--text);
+      line-height: 1.2;
+    }
+
+    .export-section-sub {
+      font-size: 0.68rem; color: var(--text-muted);
+      letter-spacing: 0.06em; line-height: 1.7;
+      max-width: 400px; opacity: 0.7;
+    }
+
+    .export-format-list {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    }
+
+    .export-fmt {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 6px 14px; border-radius: 8px;
+      border: 1px dashed rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .export-cta-btn {
+      margin-top: 4px;
+      padding: 10px 24px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.3);
+      font-family: var(--font); font-size: 0.7rem;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: not-allowed;
+    }
+
+    [data-theme="light"] .export-section-badge { border-color: rgba(0,0,0,0.1); color: rgba(0,0,0,0.35); background: rgba(0,0,0,0.03); }
+    [data-theme="light"] .export-fmt           { border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.3); background: rgba(0,0,0,0.02); }
+    [data-theme="light"] .export-cta-btn       { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); color: rgba(0,0,0,0.3); }
+
+    @media (max-width: 639px) {
+      .export-section { padding: 40px 16px 44px; }
+      .export-section-title { font-size: 1.1rem; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
        FOOTER
     ═══════════════════════════════════════════════════════════ */
     footer {
@@ -622,7 +686,23 @@
     </div>
   </section>
 
-  <!-- ── Footer ───────────────────────────────��──────────────── -->
+  <!-- ── Export section ────────────────────────────────────────── -->
+  <section class="export-section">
+    <span class="export-section-badge">○ Coming soon</span>
+    <div class="export-section-title">Export All Data</div>
+    <div class="export-section-sub">
+      Download the full historical price dataset across all countries in your preferred format. Great for research, analysis, or building your own tools on top.
+    </div>
+    <div class="export-format-list">
+      <span class="export-fmt">CSV</span>
+      <span class="export-fmt">JSON</span>
+      <span class="export-fmt">Excel</span>
+      <span class="export-fmt">API</span>
+    </div>
+    <button class="export-cta-btn" disabled>Download — Coming Soon</button>
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
   <footer>
     <span class="footer-text">Southeast Asia · expanding globally</span>
     <span class="footer-text">
