@@ -1,6 +1,6 @@
 /* ============================================================
-   MY FUEL PRICE — app.js
-   Malaysia live fuel prices from api.data.gov.my
+   GASLY — app.js
+   World live fuel prices
    ============================================================ */
 
 'use strict';
@@ -37,7 +37,7 @@ const EV_KM_PER_KWH = 6; // avg efficiency for Malaysia conditions
 // ── i18n ─────────────────────────────────────────────────────────
 const I18N = {
   en: {
-    subtitle:    'Malaysia Live Fuel Prices',
+    subtitle:    'World Live Fuel Prices',
     lastUpdated: 'Last Updated',
     nextUpdate:  'Next Update',
     dataSource:  'Data source',
@@ -63,11 +63,11 @@ const I18N = {
     },
     myRegion:     'My Region',
     regionHint:   'Affects RON95, RON97 & Diesel',
-    tagline:      'Built with open government data. Free & open source forever.',
+    tagline:      'Global fuel prices, free & open source forever.',
     viewOnGithub: 'View on GitHub',
     openSource:   'Open Source',
     mitLicense:   'MIT License',
-    creditLine:     'Data sourced from the Official Malaysia Open Data Portal — data.gov.my, provided by the Ministry of Finance (MOF) Malaysia',
+    creditLine:     'Data sourced from open government data portals worldwide',
     intlTitle:      'Global Price Comparison (RM/L)',
     intlDisclaimer: 'International prices updated weekly. Source: GlobalPetrolPrices.com',
     intlRateNote:   'Live exchange rates via exchangerate-api.com',
@@ -81,7 +81,7 @@ const I18N = {
     historyTitle:   '3-Month Price History',
   },
   bm: {
-    subtitle:    'Harga Minyak Malaysia Terkini',
+    subtitle:    'Harga Minyak Dunia Terkini',
     lastUpdated: 'Kemaskini Terakhir',
     nextUpdate:  'Kemaskini Seterusnya',
     dataSource:  'Sumber data',
@@ -107,11 +107,11 @@ const I18N = {
     },
     myRegion:     'Kawasan Saya',
     regionHint:   'Mempengaruhi RON95, RON97 & Diesel',
-    tagline:      'Dibina dengan data kerajaan terbuka. Percuma & sumber terbuka selama-lamanya.',
+    tagline:      'Harga minyak global, percuma & sumber terbuka selama-lamanya.',
     viewOnGithub: 'Lihat di GitHub',
     openSource:   'Sumber Terbuka',
     mitLicense:   'Lesen MIT',
-    creditLine:     'Data bersumber dari Portal Data Terbuka Rasmi Malaysia — data.gov.my, disediakan oleh Kementerian Kewangan (MOF) Malaysia',
+    creditLine:     'Data bersumber dari portal data terbuka kerajaan seluruh dunia',
     intlTitle:      'Perbandingan Harga Antarabangsa (RM/L)',
     intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
     intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
@@ -796,7 +796,7 @@ window.saveStoryImage = async function() {
   const file = new File([blob], `myfuelprice-${_exportKey}.png`, { type: 'image/png' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Malaysia Fuel Price' }); return; }
+    try { await navigator.share({ files: [file], title: 'Gasly — World Fuel Prices' }); return; }
     catch (_) { /* cancelled — fall through */ }
   }
   const a   = document.createElement('a');
@@ -847,14 +847,14 @@ function generateStoryCanvas(key, activeKey) {
   ctx.font = '400 52px "JetBrains Mono", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'left';
-  const myW = ctx.measureText('My').width;
-  ctx.fillText('My', PAD, 146);
+  const myW = ctx.measureText('Gas').width;
+  ctx.fillText('Gas', PAD, 146);
   ctx.font = '700 52px "JetBrains Mono", monospace';
-  ctx.fillText('FuelPrice', PAD + myW, 146);
+  ctx.fillText('ly', PAD + myW, 146);
 
   ctx.font = '400 28px "JetBrains Mono", monospace';
   ctx.fillStyle = '#555555';
-  ctx.fillText('Malaysia Live Fuel Prices', PAD, 198);
+  ctx.fillText('World Live Fuel Prices', PAD, 198);
 
   // Top divider
   ctx.strokeStyle = accent + '38';
@@ -954,11 +954,11 @@ function generateStoryCanvas(key, activeKey) {
 
   ctx.font = '400 25px "JetBrains Mono", monospace';
   ctx.fillStyle = '#343434';
-  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1726);
+  ctx.fillText('gasly.app — open source fuel tracker', W / 2, 1726);
 
   ctx.font = '500 28px "JetBrains Mono", monospace';
   ctx.fillStyle = accent + '72';
-  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1796);
+  ctx.fillText('github.com/aaronagai/Gasly', W / 2, 1796);
 
   return cv;
 }
@@ -1165,13 +1165,13 @@ function generateHistoryStoryCanvas() {
   ctx.textBaseline = 'alphabetic';
   ctx.font = '400 52px "JetBrains Mono", monospace';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
-  const myW = ctx.measureText('My').width;
-  ctx.fillText('My', PAD, 146);
+  const myW2 = ctx.measureText('Gas').width;
+  ctx.fillText('Gas', PAD, 146);
   ctx.font = '700 52px "JetBrains Mono", monospace';
-  ctx.fillText('FuelPrice', PAD + myW, 146);
+  ctx.fillText('ly', PAD + myW2, 146);
   ctx.font = '400 28px "JetBrains Mono", monospace';
   ctx.fillStyle = '#555555';
-  ctx.fillText('Malaysia Live Fuel Prices', PAD, 198);
+  ctx.fillText('World Live Fuel Prices', PAD, 198);
   ctx.strokeStyle = bgAccent + '38'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(PAD, 226); ctx.lineTo(W - PAD, 226); ctx.stroke();
 
@@ -1197,10 +1197,10 @@ function generateHistoryStoryCanvas() {
   ctx.fillText(`Updated ${dateStr}`, W / 2, 1660);
   ctx.font = '400 25px "JetBrains Mono", monospace';
   ctx.fillStyle = '#343434';
-  ctx.fillText('data.gov.my · Ministry of Finance Malaysia', W / 2, 1722);
+  ctx.fillText('gasly.app — open source fuel tracker', W / 2, 1722);
   ctx.font = '500 28px "JetBrains Mono", monospace';
   ctx.fillStyle = bgAccent + '72';
-  ctx.fillText('aaronagai.github.io/my-fuel-price', W / 2, 1793);
+  ctx.fillText('github.com/aaronagai/Gasly', W / 2, 1793);
 
   return cv;
 }
