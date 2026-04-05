@@ -17,22 +17,6 @@ const FUEL_KEYS = [
   { key: 'diesel',       icon: '🟠', accent: '#ffaa00', lightAccent: '#ea580c', regionAlt: 'diesel_eastmsia' },
 ];
 
-// ── EV Charging Data ─────────────────────────────────────────────
-// Peninsular: ChargEV (TNB) — update manually if rates change
-// East MY: Gentari × SEB — DC only (no AC rate published). Source: SoyaCincau
-const EV_RATES = {
-  peninsular: {
-    ac: { rate: 0.90, label: 'AC Slow', labelBM: 'AC Perlahan' },
-    dc: { rate: 1.40, label: 'DC Fast', labelBM: 'DC Pantas'   },
-    provider: 'ChargEV (TNB)',
-  },
-  east: {
-    dc: { rate: 1.40, label: 'DC Fast', labelBM: 'DC Pantas' },
-    provider: 'Gentari × SEB',
-  },
-};
-const EV_KM_PER_KWH = 6; // avg efficiency for Malaysia conditions
-
 
 // ── i18n ─────────────────────────────────────────────────────────
 const I18N = {
@@ -71,13 +55,6 @@ const I18N = {
     intlTitle:      'Global Price Comparison (RM/L)',
     intlDisclaimer: 'International prices updated weekly. Source: GlobalPetrolPrices.com',
     intlRateNote:   'Live exchange rates via exchangerate-api.com',
-    evName:         'EV Charging',
-    evSub:          'ChargEV (TNB)',
-    evAC:           'AC SLOW',
-    evDC:           'DC FAST',
-    evNote:         'Indicative · rate varies by provider & location',
-    evCompareSub:   'per 100km · EV @ 6km/kWh · Petrol @ 10L/100km',
-    evTeaserLabel:  'Compare EV charging rates',
     historyTitle:   '3-Month Price History',
   },
   bm: {
@@ -115,13 +92,6 @@ const I18N = {
     intlTitle:      'Perbandingan Harga Antarabangsa (RM/L)',
     intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
     intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
-    evName:         'Cas EV',
-    evSub:          'ChargEV (TNB)',
-    evAC:           'AC PERLAHAN',
-    evDC:           'DC PANTAS',
-    evNote:         'Anggaran · kadar berbeza mengikut pembekal & lokasi',
-    evCompareSub:   'per 100km · EV @ 6km/kWh · Minyak @ 10L/100km',
-    evTeaserLabel:  'Bandingkan kadar cas EV',
     historyTitle:   'Sejarah Harga 3 Bulan',
   },
 };
@@ -134,7 +104,6 @@ let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
-let evChargeType  = localStorage.getItem('evCharge') || 'ac';
 
 // ── Theme ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -229,59 +198,12 @@ function applyLang(lang) {
 
 // ── Region Toggle ─────────────────────────────────────────────────
 window.setRegion = function(region) {
-  const prevRegion = selectedRegion;
-  selectedRegion   = region;
+  selectedRegion = region;
   localStorage.setItem('region', region);
   document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
   document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
-  if (rawData.length) renderFuelCards(rawData, true); // fuel cards only — EV handled separately
-  animateEVRegionChange(prevRegion, region);
+  if (rawData.length) renderFuelCards(rawData, true);
   if (rawData.length) renderHistoryChart();
-};
-
-// ── EV Card Expand ────────────────────────────────────────────────
-window.expandEVCard = function() {
-  const card = document.getElementById('ev-card');
-  if (card) card.classList.remove('ev-card--collapsed');
-};
-
-// ── EV Charge Type Toggle ─────────────────────────────────────────
-window.setEvCharge = function(type) {
-  const regionRates = EV_RATES[selectedRegion];
-  const oldRate     = regionRates[evChargeType].rate;
-
-  evChargeType = type;
-  localStorage.setItem('evCharge', type);
-
-  // Update button active states
-  document.getElementById('ev-btn-ac')?.classList.toggle('active', type === 'ac');
-  document.getElementById('ev-btn-dc')?.classList.toggle('active', type === 'dc');
-
-  const rateData    = regionRates[type];
-  const newRate     = rateData.rate;
-  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
-  const accent      = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
-
-  // Animate the rate number
-  const priceEl = document.getElementById('ev-rate-value');
-  if (priceEl) animateNumber(priceEl, oldRate, newRate, 2);
-
-  // Update sub-label
-  const labelEl = document.getElementById('ev-charge-label');
-  if (labelEl) labelEl.textContent = `${regionRates.provider} · ${chargeLabel}`;
-
-  // Animate cost comparison
-  const ron95Price = rawData.length ? rawData[0].ron95 : null;
-  const oldCost    = oldRate / EV_KM_PER_KWH * 100;
-  const newCost    = newRate / EV_KM_PER_KWH * 100;
-  const petrolCost = ron95Price ? ron95Price * 10 : null;
-  const newPct     = petrolCost ? Math.round(newCost / petrolCost * 100) : 50;
-
-  const barEl = document.getElementById('ev-bar-fill');
-  if (barEl) barEl.style.width = `${newPct}%`;
-
-  const costEl = document.getElementById('ev-cost-amount');
-  if (costEl) animateNumber(costEl, oldCost, newCost, 2);
 };
 
 // ── Number Counter Animation ──────────────────────────────────────
@@ -294,52 +216,6 @@ function animateNumber(el, from, to, decimals, duration = 380) {
     if (t < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
-}
-
-// ── EV Card Region Animation ──────────────────────────────────────
-function animateEVRegionChange(prevRegion, newRegion) {
-  const evCard = document.getElementById('ev-card');
-  if (!evCard) { renderEVCard(); return; }
-
-  const prevRates  = EV_RATES[prevRegion];
-  const newRates   = EV_RATES[newRegion];
-  const isEast     = newRegion === 'east';
-  const prevType   = prevRegion === 'east' ? 'dc' : evChargeType;
-  const newType    = isEast ? 'dc' : evChargeType;
-  const oldRate    = prevRates[prevType].rate;
-  const newRate    = newRates[newType].rate;
-  const rateData   = newRates[newType];
-  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
-  const accent      = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
-
-  // Sub-label (provider + charge type)
-  const labelEl = document.getElementById('ev-charge-label');
-  if (labelEl) labelEl.textContent = `${newRates.provider} · ${chargeLabel}`;
-
-  // Animate rate number
-  const priceEl = document.getElementById('ev-rate-value');
-  if (priceEl) animateNumber(priceEl, oldRate, newRate, 2);
-
-  // Animate cost comparison
-  const ron95Price = rawData.length ? rawData[0].ron95 : null;
-  const oldCost    = oldRate / EV_KM_PER_KWH * 100;
-  const newCost    = newRate / EV_KM_PER_KWH * 100;
-  const petrolCost = ron95Price ? ron95Price * 10 : null;
-  const newPct     = petrolCost ? Math.round(newCost / petrolCost * 100) : 50;
-
-  const barEl = document.getElementById('ev-bar-fill');
-  if (barEl) barEl.style.width = `${newPct}%`;
-
-  const costEl = document.getElementById('ev-cost-amount');
-  if (costEl) animateNumber(costEl, oldCost, newCost, 2);
-
-  // Slide AC/DC toggle in or out
-  const toggleEl = evCard.querySelector('.ev-toggle');
-  if (toggleEl) toggleEl.classList.toggle('ev-toggle--hidden', isEast);
-
-  // Update AC/DC button active state (in case evChargeType changed while on east)
-  document.getElementById('ev-btn-ac')?.classList.toggle('active', evChargeType === 'ac');
-  document.getElementById('ev-btn-dc')?.classList.toggle('active', evChargeType === 'dc');
 }
 
 // ── Data Fetch ───────────────────────────────────────────────────
@@ -409,24 +285,18 @@ function updateCountdown() {
 // ── Render Cards ─────────────────────────────────────────────────
 function renderCards(data) {
   renderFuelCards(data);
-  renderEVCard();
   renderHistoryChart();
 }
 
-// Renders only the fuel price cards, preserving the EV card across re-renders
 function renderFuelCards(data, skipAnimation = false) {
-  const t      = I18N[currentLang];
-  const grid   = document.getElementById('cards-grid');
-  const evCard = document.getElementById('ev-card');
+  const t    = I18N[currentLang];
+  const grid = document.getElementById('cards-grid');
 
   // Capture old diesel price before clearing so we can animate it after re-render
   const oldDieselEl    = document.getElementById('price-diesel');
   const oldDieselPrice = oldDieselEl ? parseFloat(oldDieselEl.textContent) : null;
 
-  // Remove only fuel cards — leave EV card untouched so it never re-animates
-  Array.from(grid.children).forEach(child => {
-    if (child.id !== 'ev-card') child.remove();
-  });
+  grid.innerHTML = '';
 
   FUEL_KEYS.forEach(({ key, icon, accent, lightAccent, regionAlt, label }) => {
     const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
@@ -485,8 +355,7 @@ function renderFuelCards(data, skipAnimation = false) {
       </div>
     `;
 
-    // Insert before EV card so it stays last; insertBefore(x, null) = appendChild
-    grid.insertBefore(card, evCard || null);
+    grid.appendChild(card);
     requestAnimationFrame(() => renderSparkline(key, series, activeAccent));
   });
 
@@ -499,92 +368,6 @@ function renderFuelCards(data, skipAnimation = false) {
         animateNumber(newDieselEl, oldDieselPrice, newDieselPrice, 2);
     }
   }
-}
-
-// ── EV Card ───────────────────────────────────────────────────────
-function renderEVCard() {
-  const t      = I18N[currentLang];
-  const grid   = document.getElementById('cards-grid');
-  const accent = currentTheme === 'light' ? '#14b8a6' : '#00ffcc';
-
-  const existing = document.getElementById('ev-card');
-  if (existing) existing.remove();
-
-  const regionRates = EV_RATES[selectedRegion];
-  const isEast      = selectedRegion === 'east';
-  // East MY only has DC; Peninsular has AC/DC toggle
-  const activeType  = isEast ? 'dc' : evChargeType;
-  const rateData    = regionRates[activeType];
-  const rate        = rateData.rate;
-  const chargeLabel = currentLang === 'bm' ? rateData.labelBM : rateData.label;
-  const provider    = regionRates.provider;
-  const badgeStyle  = `color:${accent};border-color:${accent}40;background:${accent}12;`;
-
-  // Cost comparison bars
-  const ron95Price  = rawData.length ? rawData[0].ron95 : null;
-  const evCost      = rate / EV_KM_PER_KWH * 100;
-  const petrolCost  = ron95Price ? ron95Price * 10 : null;
-  const evPct       = petrolCost ? Math.round(evCost / petrolCost * 100) : 50;
-  const refBarColor = currentTheme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)';
-  const compareHTML = `
-    <div class="ev-compare">
-      <div class="ev-compare-row">
-        <span class="ev-compare-label">EV</span>
-        <div class="ev-compare-track">
-          <div class="ev-compare-fill" id="ev-bar-fill" style="width:${evPct}%;background:${accent}"></div>
-        </div>
-        <span class="ev-compare-cost" id="ev-cost-amount" style="color:${accent}">RM ${evCost.toFixed(2)}</span>
-      </div>
-      <div class="ev-compare-row">
-        <span class="ev-compare-label">RON95</span>
-        <div class="ev-compare-track">
-          <div class="ev-compare-fill" style="width:100%;background:${refBarColor}"></div>
-        </div>
-        <span class="ev-compare-cost">${petrolCost ? `RM ${petrolCost.toFixed(2)}` : '—'}</span>
-      </div>
-      <div class="ev-compare-note">${t.evCompareSub}</div>
-    </div>`;
-
-  // Always render toggle; hidden for East MY so it can animate in/out
-  const toggleHTML = `
-    <div class="ev-toggle${isEast ? ' ev-toggle--hidden' : ''}">
-      <button id="ev-btn-ac" class="ev-btn${evChargeType === 'ac' ? ' active' : ''}" onclick="setEvCharge('ac')">${t.evAC}</button>
-      <button id="ev-btn-dc" class="ev-btn${evChargeType === 'dc' ? ' active' : ''}" onclick="setEvCharge('dc')">${t.evDC}</button>
-    </div>`;
-
-  const card = document.createElement('div');
-  card.className = 'fuel-card ev-card ev-card--collapsed';
-  card.id = 'ev-card';
-  card.style.setProperty('--card-accent', accent);
-
-  card.innerHTML = `
-    <button class="ev-teaser" onclick="expandEVCard()" style="--ev-accent:${accent}">
-      <span class="ev-teaser-icon" style="color:${accent}">⚡</span>
-      <span class="ev-teaser-text">${t.evTeaserLabel}</span>
-      <span class="ev-teaser-arrow" style="color:${accent}">→</span>
-    </button>
-    <div class="ev-card-body">
-      <div class="card-header">
-        <div>
-          <div class="card-name">${t.evName}</div>
-          <div class="card-name-sub" id="ev-charge-label">${provider} · ${chargeLabel}</div>
-        </div>
-        <div class="card-header-right">
-          <span class="card-type-badge" style="${badgeStyle}">EV</span>
-        </div>
-      </div>
-      <div class="card-price-row">
-        <span class="card-currency">RM</span>
-        <span class="card-price" id="ev-rate-value" style="color:${accent}">${rate.toFixed(2)}</span>
-        <span class="card-currency">/kWh</span>
-      </div>
-      ${compareHTML}
-      ${toggleHTML}
-      <div class="ev-note">${t.evNote}</div>
-    </div>
-  `;
-
-  grid.appendChild(card);
 }
 
 // ── Sparkline Charts ──────────────────────────────────────────────
