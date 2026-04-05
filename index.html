@@ -365,10 +365,10 @@
     const H = mobile ? 820  : 500;
 
     // Projection: Mercator centered on Southeast Asia
-    // Center lon=115 (Borneo), lat=3 (near equator)
-    // Scale tuned so SEA fills most of the frame with neighbours as glimpses
-    const SCALE  = mobile ? 680 : 820;
-    const CENTER = [115, mobile ? 2 : 3];
+    // Shifted north (lat 9) + reduced scale so Myanmar's north (~28°N) is visible.
+    // Desktop height coverage ≈ ±20° → -11°S to 29°N.
+    const SCALE  = mobile ? 640 : 730;
+    const CENTER = [115, mobile ? 6 : 9];
 
     /* ── SVG setup ─────────────────────────────────────────────── */
     const svg = d3.select('#map-wrap')
@@ -518,11 +518,66 @@
             .text(name);
         });
 
+        /* ── Singapore pin ───────────────────────────────────────
+           Singapore's path is only ~5px at this scale, so we add a
+           labelled pin with a large invisible tap/click target.       */
+        const SG_GEO = [103.82, 1.35]; // geographic centre
+        const [sgx, sgy] = projection(SG_GEO);
+
+        // Only draw if the projected point is inside the viewBox
+        if (sgx > 0 && sgx < W && sgy > 0 && sgy < H) {
+          const pinOX = mobile ? 18 : 22; // label offset x
+          const pinOY = mobile ? 18 : 22; // label offset y
+          const lx = sgx - pinOX, ly = sgy - pinOY;
+
+          const sg = svg.append('g').attr('class', 'sg-pin');
+
+          // Connector line from dot to label
+          sg.append('line')
+            .attr('x1', sgx).attr('y1', sgy)
+            .attr('x2', lx + (mobile ? 16 : 20)).attr('y2', ly)
+            .attr('stroke', 'rgba(255,255,255,0.3)')
+            .attr('stroke-width', 0.6)
+            .attr('pointer-events', 'none');
+
+          // Dot at Singapore's actual location
+          sg.append('circle')
+            .attr('cx', sgx).attr('cy', sgy)
+            .attr('r', mobile ? 2 : 2.5)
+            .attr('fill', 'rgba(255,255,255,0.55)')
+            .attr('stroke', 'rgba(255,255,255,0.8)')
+            .attr('stroke-width', 0.5)
+            .attr('pointer-events', 'none');
+
+          // "SGP" label
+          sg.append('text')
+            .attr('class', 'cname sea-name')
+            .attr('x', lx).attr('y', ly)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', mobile ? 7 : 6.5)
+            .attr('pointer-events', 'none')
+            .text('SGP');
+
+          // Large invisible hit area for easy tap/hover
+          sg.append('circle')
+            .attr('cx', sgx).attr('cy', sgy)
+            .attr('r', mobile ? 18 : 14)
+            .attr('fill', 'transparent')
+            .attr('cursor', 'pointer')
+            .on('mousemove', e => showTip(e, 702))
+            .on('mouseleave', hideTip)
+            .on('touchstart', e => {
+              e.stopPropagation();
+              const t = e.touches[0];
+              showTip({ clientX: t.clientX, clientY: t.clientY }, 702);
+            }, { passive: true });
+        }
+
         /* ── Ping rings + LIVE badge at Malaysia centroid ─────── */
         const MY = countries.features.find(f => +f.id === 458);
         if (MY) {
           const [cx, cy] = path.centroid(MY);
-          const ringMax   = mobile ? 32 : 38;
+          const ringMax   = mobile ? 28 : 32;
           const dotR      = mobile ? 3.5 : 4;
           const tagSize   = mobile ? 8 : 7;
 
