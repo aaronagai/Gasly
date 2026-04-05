@@ -221,27 +221,30 @@
     /* ── Hero overlay text ─────────────────────────────────────── */
     .hero-overlay {
       position: absolute;
-      bottom: 44px; left: 32px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
       z-index: 2; pointer-events: none;
-      max-width: 360px;
+      text-align: center;
+      width: 90%; max-width: 620px;
     }
     .hero-headline {
-      font-size: 1.6rem; font-weight: 700;
-      letter-spacing: -0.02em; line-height: 1.2;
+      font-size: 2.8rem; font-weight: 700;
+      letter-spacing: -0.03em; line-height: 1.15;
       color: #fff;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.6);
     }
-    [data-theme="light"] .hero-headline { color: var(--text); }
+    [data-theme="light"] .hero-headline { color: #fff; }
     .hero-subhead {
-      font-size: 0.75rem; color: rgba(255,255,255,0.6);
-      letter-spacing: 0.02em; line-height: 1.65;
+      font-size: 0.88rem; color: rgba(255,255,255,0.65);
+      letter-spacing: 0.01em; line-height: 1.7;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
     }
-    [data-theme="light"] .hero-subhead { color: var(--text-muted); }
+    [data-theme="light"] .hero-subhead { color: rgba(255,255,255,0.7); }
 
     @media (max-width: 639px) {
-      .hero-overlay { bottom: 22px; left: 18px; max-width: 240px; }
-      .hero-headline { font-size: 1.15rem; }
-      .hero-subhead  { font-size: 0.68rem; }
+      .hero-headline { font-size: 1.75rem; }
+      .hero-subhead  { font-size: 0.78rem; }
     }
 
     /* Edge vignette */
