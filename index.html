@@ -610,6 +610,62 @@
     }
     [data-theme="light"] .curr-opt.active { background: rgba(0,0,0,0.08); }
 
+    /* ── Nav links ─────────────────────────────────────────────── */
+    .nav-links {
+      display: flex; align-items: center; gap: 28px;
+    }
+    .nav-links a {
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: #fff; }
+    [data-theme="light"] .nav-links a { color: rgba(0,0,0,0.45); }
+    [data-theme="light"] .nav-links a:hover { color: #111; }
+
+    /* ── Hamburger ──────────────────────────────────────────────── */
+    .nav-hamburger {
+      display: none;
+      background: none; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; padding: 6px 8px; cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .nav-hamburger:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+    [data-theme="light"] .nav-hamburger { border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.5); }
+
+    /* ── Mobile dropdown ────────────────────────────────────────── */
+    .mobile-nav {
+      display: none;
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      background: rgba(12,12,12,0.94);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 6px 0; z-index: 200;
+    }
+    .mobile-nav.open { display: block; }
+    .mobile-nav a {
+      display: block; padding: 11px 22px;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255,255,255,0.6); text-decoration: none;
+      transition: color 0.12s, background 0.12s;
+    }
+    .mobile-nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    [data-theme="light"] .mobile-nav {
+      background: rgba(248,248,248,0.96);
+      border-color: rgba(0,0,0,0.1);
+    }
+    [data-theme="light"] .mobile-nav a { color: rgba(0,0,0,0.55); }
+    [data-theme="light"] .mobile-nav a:hover { color: #111; background: rgba(0,0,0,0.04); }
+
+    @media (max-width: 700px) {
+      .nav-links     { display: none; }
+      .nav-hamburger { display: flex; }
+    }
+
     /* ── Theme button ─────────────────────────────────────────── */
     .theme-btn {
       background: none;
@@ -736,9 +792,31 @@
         <p class="site-subtitle">World Live Fuel Prices</p>
       </div>
     </div>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#countries">Countries</a>
+      <a href="#trends">Trends</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#about">About</a>
+    </nav>
+
     <div style="display:flex;align-items:center;gap:10px;">
-      <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+      <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+      <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
     </div>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+      <a href="#countries" onclick="closeMobileNav()">Countries</a>
+      <a href="#trends"    onclick="closeMobileNav()">Trends</a>
+      <a href="#pricing"   onclick="closeMobileNav()">Pricing</a>
+      <a href="#about"     onclick="closeMobileNav()">About</a>
+    </nav>
   </header>
 
   <!-- ── Hero: full viewport ───────────────────��─────────────── -->
@@ -1201,6 +1279,21 @@
         hdr.classList.toggle('scrolled', window.scrollY > 50);
       }, { passive: true });
     })();
+
+    /* ── Mobile nav ──────────────────────────────────────────── */
+    window.toggleMobileNav = function() {
+      const nav = document.getElementById('mobile-nav');
+      const btn = document.querySelector('.nav-hamburger');
+      const open = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+    };
+    window.closeMobileNav = function() {
+      document.getElementById('mobile-nav').classList.remove('open');
+      document.querySelector('.nav-hamburger').setAttribute('aria-expanded', 'false');
+    };
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('header')) closeMobileNav();
+    });
   </script>
 </body>
 </html>
