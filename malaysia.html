@@ -26,6 +26,10 @@
         </a>
       </div>
       <div class="header-right">
+        <div class="currency-toggle" role="group" aria-label="Currency display">
+          <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">RM</button>
+          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
+        </div>
 <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
         <div class="lang-dropdown" id="lang-dropdown">
           <button class="lang-dropdown-btn" id="lang-dropdown-btn" onclick="toggleLangDropdown()" aria-haspopup="listbox" aria-expanded="false">

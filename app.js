@@ -99,11 +99,24 @@ const I18N = {
 // ── State ────────────────────────────────────────────────────────
 let currentLang    = localStorage.getItem('lang')      || 'en';
 let selectedRegion = localStorage.getItem('region')    || 'peninsular';
-let currentTheme   = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+let currentTheme    = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+let currentCurrency = localStorage.getItem('currency') || 'local';
+const MYR_TO_USD    = 0.22;
 let rawData        = [];
 let charts        = {};
 let refreshTimer  = null;
 let countdownTimer = null;
+
+// ── Currency ──────────────────────────────────────────────────────
+function updateCurrencyBtns() {
+  document.querySelectorAll('.curr-opt').forEach(b => b.classList.toggle('active', b.dataset.curr === currentCurrency));
+}
+window.setCurrency = function(c) {
+  currentCurrency = c;
+  localStorage.setItem('currency', c);
+  updateCurrencyBtns();
+  if (rawData.length) renderCards(rawData);
+};
 
 // ── Theme ─────────────────────────────────────────────────────────
 function applyTheme(theme) {
@@ -139,6 +152,7 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentTheme);
   updateThemeBtn();
+  updateCurrencyBtns();
   applyLang(currentLang);
   document.getElementById('lang-current').textContent = currentLang.toUpperCase();
   document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
@@ -312,12 +326,18 @@ function renderFuelCards(data, skipAnimation = false) {
     const prev    = series[series.length - 2];
     if (current === undefined) return;
 
-    const diff        = prev !== undefined ? +(current - prev).toFixed(3) : 0;
+    const isUSD = currentCurrency === 'usd';
+    const rate  = isUSD ? MYR_TO_USD : 1;
+    const sym   = isUSD ? 'USD' : 'RM';
+    const disp  = current * rate;
+    const dispP = prev !== undefined ? prev * rate : undefined;
+
+    const diff        = dispP !== undefined ? +(disp - dispP).toFixed(3) : 0;
     const changeClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
     const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
     const changeLabel = diff === 0
       ? t.unchanged
-      : `${diff > 0 ? '+' : '-'}RM${Math.abs(diff).toFixed(2)}`;
+      : `${diff > 0 ? '+' : '-'}${sym} ${Math.abs(diff).toFixed(2)}`;
 
     const badgeStyle  = `color:${activeAccent};border-color:${activeAccent}40;background:${activeAccent}12;`;
     const displayName = t.fuelNames[key];
@@ -342,8 +362,8 @@ function renderFuelCards(data, skipAnimation = false) {
         </div>
       </div>
       <div class="card-price-row">
-        <span class="card-currency">RM</span>
-        <span class="card-price" style="color:${activeAccent}" ${key === 'diesel' ? 'id="price-diesel"' : ''}>${current.toFixed(2)}</span>
+        <span class="card-currency">${sym}</span>
+        <span class="card-price" style="color:${activeAccent}" ${key === 'diesel' ? 'id="price-diesel"' : ''}>${disp.toFixed(2)}</span>
         <span class="card-currency">/L</span>
       </div>
       <div class="card-change ${changeClass}">

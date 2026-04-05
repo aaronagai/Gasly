@@ -69,6 +69,10 @@
         </a>
       </div>
       <div class="header-right">
+        <div class="currency-toggle" role="group" aria-label="Currency display">
+          <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">B$</button>
+          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
+        </div>
         <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
       </div>
     </header>
@@ -139,6 +143,20 @@
     };
     updateThemeBtn();
 
+    /* ── Currency ── */
+    const BND_TO_USD = 0.74;
+    let currentCurrency = localStorage.getItem('currency') || 'local';
+    function updateCurrencyBtns() {
+      document.querySelectorAll('.curr-opt').forEach(b => b.classList.toggle('active', b.dataset.curr === currentCurrency));
+    }
+    window.setCurrency = function(c) {
+      currentCurrency = c;
+      localStorage.setItem('currency', c);
+      updateCurrencyBtns();
+      if (window._bnData) renderCards(window._bnData);
+    };
+    updateCurrencyBtns();
+
     /* ── Fuel config ── */
     const FUEL_KEYS = [
       { key: 'gasoline',        label: 'Gasoline',        accent: '#00ff64', lightAccent: '#16a34a' },
@@ -176,12 +194,18 @@
         const prev    = prices[prices.length - 2];
         if (current === undefined) return;
 
-        const diff        = prev !== undefined ? +(current - prev).toFixed(3) : 0;
+        const isUSD = currentCurrency === 'usd';
+        const rate  = isUSD ? BND_TO_USD : 1;
+        const sym   = isUSD ? 'USD' : 'B$';
+        const disp  = current * rate;
+        const dispP = prev !== undefined ? prev * rate : undefined;
+
+        const diff        = dispP !== undefined ? +(disp - dispP).toFixed(3) : 0;
         const changeClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
         const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
         const changeLabel = diff === 0
           ? 'Unchanged'
-          : `${diff > 0 ? '+' : ''}B$${diff.toFixed(2)}`;
+          : `${diff > 0 ? '+' : ''}${sym} ${Math.abs(diff).toFixed(2)}`;
 
         const card = document.createElement('div');
         card.className = 'fuel-card';
@@ -195,8 +219,8 @@
             <span class="card-type-badge" style="color:${activeAccent};border-color:${activeAccent}40;background:${activeAccent}12;">${label.split(' ')[0]}</span>
           </div>
           <div class="card-price-row">
-            <span class="card-currency">B$</span>
-            <span class="card-price" style="color:${activeAccent}">${current.toFixed(2)}</span>
+            <span class="card-currency">${sym}</span>
+            <span class="card-price" style="color:${activeAccent}">${disp.toFixed(2)}</span>
             <span class="card-currency">/L</span>
           </div>
           <div class="card-change ${changeClass}">
