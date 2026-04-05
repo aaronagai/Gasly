@@ -156,24 +156,35 @@
 
     /* Rest of world */
     .country {
-      fill: rgba(255,255,255,0.018); stroke: rgba(255,255,255,0.2); stroke-width: 0.5;
-      cursor: default; transition: fill 0.12s, stroke 0.12s;
+      fill: rgba(255,255,255,0.018); stroke: none;
+      cursor: default; transition: fill 0.12s;
     }
-    .country:hover { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.3); }
+    .country:hover { fill: rgba(255,255,255,0.05); }
 
     /* Southeast Asia */
     .country.sea {
-      fill: rgba(255,255,255,0.02); stroke: rgba(255,255,255,0.28); stroke-width: 0.5;
+      fill: rgba(255,255,255,0.02); stroke: none;
       cursor: pointer;
     }
-    .country.sea:hover { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.5); }
+    .country.sea:hover { fill: rgba(255,255,255,0.07); }
 
     /* Malaysia — live */
     .country.live {
-      fill: rgba(0,212,255,0.16); stroke: rgba(0,212,255,0.88); stroke-width: 0.5;
+      fill: rgba(0,212,255,0.16); stroke: none;
       cursor: pointer;
     }
-    .country.live:hover { fill: rgba(0,212,255,0.26); stroke: #00d4ff; }
+    .country.live:hover { fill: rgba(0,212,255,0.26); }
+
+    /* Single border mesh — every edge drawn exactly once */
+    .border-mesh {
+      fill: none; stroke: rgba(255,255,255,0.22); stroke-width: 0.5;
+      pointer-events: none;
+    }
+    /* Live country border overlay */
+    .border-live {
+      fill: none; stroke: rgba(0,212,255,0.85); stroke-width: 0.5;
+      pointer-events: none;
+    }
 
     /* Country glow halo */
     .glow-halo {
@@ -1186,6 +1197,17 @@
             e.preventDefault();
             const c = LIVE[+d.id]; if (c) window.location.href = c.url;
           });
+
+        /* Border mesh — every shared/coastal edge drawn exactly once */
+        mapG.append('path')
+          .datum(topojson.mesh(world, world.objects.countries))
+          .attr('class', 'border-mesh').attr('d', path);
+
+        /* Live country borders drawn on top in cyan */
+        mapG.selectAll('.border-live-p')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'border-live').attr('d', path);
 
         /* Country labels */
 
