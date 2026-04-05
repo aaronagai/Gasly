@@ -483,6 +483,138 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
+       CALCULATOR SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .calc-section {
+      position: relative; z-index: 2;
+      background: var(--bg);
+      padding: 52px 28px 56px;
+      border-top: 1px solid var(--border);
+    }
+
+    .calc-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .calc-badge {
+      display: inline-block;
+      font-size: 0.56rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 5px;
+      border: 1px solid rgba(0,212,255,0.25);
+      color: rgba(0,212,255,0.7);
+      background: rgba(0,212,255,0.06);
+      margin-bottom: 12px;
+    }
+
+    .calc-title {
+      font-size: 1.3rem; font-weight: 700;
+      letter-spacing: 0.04em; color: var(--text);
+    }
+
+    .calc-sub {
+      font-size: 0.68rem; color: var(--text-muted);
+      margin-top: 6px; opacity: 0.7;
+    }
+
+    .calc-card {
+      max-width: 680px;
+      margin: 0 auto;
+      background: var(--bg-card, rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .calc-fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .calc-field label {
+      display: block;
+      font-size: 0.58rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .calc-input-wrap {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      transition: border-color 0.15s;
+    }
+
+    .calc-input-wrap:focus-within {
+      border-color: rgba(0,212,255,0.4);
+    }
+
+    .calc-input-wrap input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    .calc-unit {
+      padding: 0 10px;
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .calc-result {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.15);
+    }
+
+    .calc-result-label {
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(0,212,255,0.6);
+    }
+
+    .calc-result-value {
+      font-family: var(--font-mono);
+      font-size: 1.4rem; font-weight: 700;
+      color: #00d4ff;
+      letter-spacing: -0.02em;
+    }
+
+    .calc-result-litres {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .calc-result-right { text-align: right; }
+
+    @media (max-width: 639px) {
+      .calc-section { padding: 40px 16px 44px; }
+      .calc-fields  { grid-template-columns: 1fr 1fr; }
+      .calc-card    { padding: 20px 16px; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
        EXPORT SECTION
     ═══════════════════════════════════════════════════════════ */
     .export-section {
@@ -780,7 +912,7 @@
       <a href="#trends"       onclick="closeMobileNav()">Trends</a>
       <a href="#pricing"      onclick="closeMobileNav()">Pricing</a>
       <a href="#about"        onclick="closeMobileNav()">About</a>
-      <a href="calculator.html" onclick="closeMobileNav()">Calculator</a>
+      <a href="#calculator" onclick="closeMobileNav()">Calculator</a>
     </nav>
   </header>
 
@@ -811,6 +943,47 @@
     </div>
     <div class="cs-scroll" id="cs-scroll">
       <!-- Injected by JS -->
+    </div>
+  </section>
+
+  <!-- ── Calculator section ───────────────────────────────────── -->
+  <section class="calc-section" id="calculator">
+    <div class="calc-header">
+      <div class="calc-badge">⚡ Fuel Calculator</div>
+      <div class="calc-title">How much will your trip cost?</div>
+      <div class="calc-sub">Enter your distance, efficiency, and fuel price to estimate cost.</div>
+    </div>
+    <div class="calc-card">
+      <div class="calc-fields">
+        <div class="calc-field">
+          <label>Distance</label>
+          <div class="calc-input-wrap">
+            <input type="number" id="calc-distance" placeholder="100" min="0" step="1" oninput="calcUpdate()" />
+            <span class="calc-unit">km</span>
+          </div>
+        </div>
+        <div class="calc-field">
+          <label>Fuel use</label>
+          <div class="calc-input-wrap">
+            <input type="number" id="calc-efficiency" placeholder="10" min="0.1" step="0.1" oninput="calcUpdate()" />
+            <span class="calc-unit">L/100km</span>
+          </div>
+        </div>
+        <div class="calc-field">
+          <label>Price per litre</label>
+          <div class="calc-input-wrap">
+            <input type="number" id="calc-price" placeholder="2.05" min="0" step="0.01" oninput="calcUpdate()" />
+            <span class="calc-unit">RM</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-result">
+        <span class="calc-result-label">Estimated cost</span>
+        <div class="calc-result-right">
+          <div class="calc-result-value" id="calc-result-value">—</div>
+          <div class="calc-result-litres" id="calc-result-litres"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -999,6 +1172,25 @@
       const el = document.getElementById('cs-scroll');
       el.scrollBy({ left: dir * 230, behavior: 'smooth' });
     }
+
+    /* ── Calculator ──────────────────────────────────────────── */
+    window.calcUpdate = function() {
+      const dist = parseFloat(document.getElementById('calc-distance').value);
+      const eff  = parseFloat(document.getElementById('calc-efficiency').value);
+      const price = parseFloat(document.getElementById('calc-price').value);
+      const resVal = document.getElementById('calc-result-value');
+      const resLit = document.getElementById('calc-result-litres');
+
+      if (!isNaN(dist) && !isNaN(eff) && !isNaN(price) && dist > 0 && eff > 0 && price > 0) {
+        const litres = (dist / 100) * eff;
+        const cost   = litres * price;
+        resVal.textContent = `RM ${cost.toFixed(2)}`;
+        resLit.textContent = `${litres.toFixed(1)} L used`;
+      } else {
+        resVal.textContent = '—';
+        resLit.textContent = '';
+      }
+    };
 
     /* ──────────────────────────���───────────────────���──────────
        MAP
