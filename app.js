@@ -134,25 +134,16 @@ function applyLang(lang) {
     const key = el.dataset.i18n;
     if (t[key] !== undefined) el.textContent = t[key];
   });
-  const map = {
-    'footer-tagline':    'tagline',
-    'footer-credit':     'creditLine',
-    'github-btn-label':  'viewOnGithub',
-    'open-source-label': 'openSource',
-    'mit-label':         'mitLicense',
-  };
-  Object.entries(map).forEach(([id, key]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = t[key];
-  });
+  const el = document.getElementById('footer-tagline');
+  if (el) el.textContent = t.tagline;
 }
 
 // ── Region Toggle ─────────────────────────────────────────────────
 window.setRegion = function(region) {
   selectedRegion = region;
   localStorage.setItem('region', region);
-  document.getElementById('rbtn-peninsular').classList.toggle('active', region === 'peninsular');
-  document.getElementById('rbtn-east').classList.toggle('active', region === 'east');
+  document.getElementById('rbtn-peninsular')?.classList.toggle('active', region === 'peninsular');
+  document.getElementById('rbtn-east')?.classList.toggle('active', region === 'east');
   if (rawData.length) renderFuelCards(rawData, true);
   if (rawData.length) renderHistoryChart();
 };
@@ -599,17 +590,14 @@ function generateStoryCanvas(key, activeKey) {
 
   // ── Branding ──────────────────────────────────────────────────────
   ctx.textBaseline = 'alphabetic';
-  ctx.font = '400 52px "JetBrains Mono", monospace';
+  ctx.font = '700 52px "DM Mono", monospace';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'left';
-  const myW = ctx.measureText('Gas').width;
-  ctx.fillText('Gas', PAD, 146);
-  ctx.font = '700 52px "JetBrains Mono", monospace';
-  ctx.fillText('ly', PAD + myW, 146);
+  ctx.fillText('PetrolPrice', PAD, 146);
 
-  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.font = '400 28px "DM Mono", monospace';
   ctx.fillStyle = '#555555';
-  ctx.fillText('World Live Fuel Prices', PAD, 198);
+  ctx.fillText('petrolprice.xyz — live fuel prices', PAD, 198);
 
   // Top divider
   ctx.strokeStyle = accent + '38';
@@ -618,7 +606,7 @@ function generateStoryCanvas(key, activeKey) {
 
   // ── Fuel badge + name ─────────────────────────────────────────────
   const badgeLabel = fuelDef.label || key.toUpperCase().replace(/_/g, ' ');
-  ctx.font = '700 34px "JetBrains Mono", monospace';
+  ctx.font = '700 34px "DM Mono", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const bTW = ctx.measureText(badgeLabel).width;
@@ -631,14 +619,14 @@ function generateStoryCanvas(key, activeKey) {
   ctx.fillStyle = accent;
   ctx.fillText(badgeLabel, W / 2, bY + bH / 2);
 
-  ctx.font = '500 54px "JetBrains Mono", monospace';
+  ctx.font = '500 54px "DM Mono", monospace';
   ctx.fillStyle = '#cccccc';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(t.fuelNames[key] || key, W / 2, 790);
 
   // ── Price ─────────────────────────────────────────────────────────
   const priceText = current.toFixed(2);
-  ctx.font = '700 230px "JetBrains Mono", monospace';
+  ctx.font = '700 230px "DM Mono", monospace';
   const priceW = ctx.measureText(priceText).width;
   const priceX = W / 2, priceY = 1060;
 
@@ -651,7 +639,7 @@ function generateStoryCanvas(key, activeKey) {
   ctx.shadowBlur = 0;
 
   // RM (left of price) + /L (right of price) — aligned to price baseline
-  ctx.font = '400 70px "JetBrains Mono", monospace';
+  ctx.font = '400 70px "DM Mono", monospace';
   ctx.fillStyle = '#4a4a4a';
   ctx.textAlign = 'right';
   ctx.fillText('RM', priceX - priceW / 2 - 14, priceY);
@@ -665,7 +653,7 @@ function generateStoryCanvas(key, activeKey) {
     ? `─  ${t.unchanged}`
     : `${arrow}  ${diff > 0 ? '+' : '−'}RM${Math.abs(diff).toFixed(2)}`;
 
-  ctx.font = '600 40px "JetBrains Mono", monospace';
+  ctx.font = '600 40px "DM Mono", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const cTW = ctx.measureText(changeLabel).width;
@@ -679,13 +667,13 @@ function generateStoryCanvas(key, activeKey) {
   ctx.fillText(changeLabel, W / 2, cY + cH / 2);
 
   // Region
-  ctx.font = '400 30px "JetBrains Mono", monospace';
+  ctx.font = '400 30px "DM Mono", monospace';
   ctx.fillStyle = '#484848';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(selectedRegion === 'east' ? t.eastMY : t.peninsular, W / 2, 1270);
 
   // ── History sparkline ─────────────────────────────────────────────
-  ctx.font = '400 24px "JetBrains Mono", monospace';
+  ctx.font = '400 24px "DM Mono", monospace';
   ctx.fillStyle = '#363636';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -703,17 +691,17 @@ function generateStoryCanvas(key, activeKey) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
-  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.font = '400 28px "DM Mono", monospace';
   ctx.fillStyle = '#3e3e3e';
   ctx.fillText(`Updated ${dateStr}`, W / 2, 1664);
 
-  ctx.font = '400 25px "JetBrains Mono", monospace';
+  ctx.font = '400 25px "DM Mono", monospace';
   ctx.fillStyle = '#343434';
   ctx.fillText('petrolprice.xyz — open source fuel tracker', W / 2, 1726);
 
-  ctx.font = '500 28px "JetBrains Mono", monospace';
+  ctx.font = '500 28px "DM Mono", monospace';
   ctx.fillStyle = accent + '72';
-  ctx.fillText('github.com/aaronagai/Gasly', W / 2, 1796);
+  ctx.fillText('github.com/aaronagai/PetrolPrice.xyz', W / 2, 1796);
 
   return cv;
 }
@@ -778,7 +766,7 @@ function drawStoryChart(ctx, activeKey, x, y, w, h, accent) {
   ctx.shadowBlur = 0;
 
   // Date labels
-  ctx.font          = '400 22px "JetBrains Mono", monospace';
+  ctx.font          = '400 22px "DM Mono", monospace';
   ctx.fillStyle     = '#424242';
   ctx.textBaseline  = 'alphabetic';
   const lo = new Date(rows[0].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
@@ -822,7 +810,7 @@ function drawStoryMultilineChart(ctx, x, y, w, h) {
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth   = 1;
     ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + w, gy); ctx.stroke();
-    ctx.font         = '400 22px "JetBrains Mono", monospace';
+    ctx.font         = '400 22px "DM Mono", monospace';
     ctx.fillStyle    = '#383838';
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'middle';
@@ -873,13 +861,13 @@ function drawStoryMultilineChart(ctx, x, y, w, h) {
   const lo = new Date(rows[0].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
   const hi = new Date(rows[rows.length - 1].date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' });
   const dateY = y + padT + ch + 44;
-  ctx.font = '400 24px "JetBrains Mono", monospace';
+  ctx.font = '400 24px "DM Mono", monospace';
   ctx.fillStyle = '#424242'; ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';  ctx.fillText(lo, x + padLR, dateY);
   ctx.textAlign = 'right'; ctx.fillText(hi, x + padLR + cw, dateY);
 
   // Legend (top of chart area)
-  ctx.font = '600 28px "JetBrains Mono", monospace';
+  ctx.font = '600 28px "DM Mono", monospace';
   ctx.textBaseline = 'middle';
   const legY = y + legendH / 2;
   const itemWidths = fuels.map(f => ctx.measureText(f.label).width + 36 + 32);
@@ -918,23 +906,20 @@ function generateHistoryStoryCanvas() {
 
   // Branding
   ctx.textBaseline = 'alphabetic';
-  ctx.font = '400 52px "JetBrains Mono", monospace';
+  ctx.font = '700 52px "DM Mono", monospace';
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
-  const myW2 = ctx.measureText('Gas').width;
-  ctx.fillText('Gas', PAD, 146);
-  ctx.font = '700 52px "JetBrains Mono", monospace';
-  ctx.fillText('ly', PAD + myW2, 146);
-  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.fillText('PetrolPrice', PAD, 146);
+  ctx.font = '400 28px "DM Mono", monospace';
   ctx.fillStyle = '#555555';
-  ctx.fillText('World Live Fuel Prices', PAD, 198);
+  ctx.fillText('petrolprice.xyz — live fuel prices', PAD, 198);
   ctx.strokeStyle = bgAccent + '38'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(PAD, 226); ctx.lineTo(W - PAD, 226); ctx.stroke();
 
   // Title
-  ctx.font = '700 42px "JetBrains Mono", monospace';
+  ctx.font = '700 42px "DM Mono", monospace';
   ctx.fillStyle = '#cccccc'; ctx.textAlign = 'center';
   ctx.fillText(t.historyTitle || '3-Month Price History', W / 2, 316);
-  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.font = '400 28px "DM Mono", monospace';
   ctx.fillStyle = '#464646';
   ctx.fillText(selectedRegion === 'east' ? t.eastMY : t.peninsular, W / 2, 368);
 
@@ -947,15 +932,15 @@ function generateHistoryStoryCanvas() {
 
   const d = rawData.length ? new Date(rawData[0].date) : new Date();
   const dateStr = d.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' });
-  ctx.font = '400 28px "JetBrains Mono", monospace';
+  ctx.font = '400 28px "DM Mono", monospace';
   ctx.fillStyle = '#3e3e3e'; ctx.textAlign = 'center';
   ctx.fillText(`Updated ${dateStr}`, W / 2, 1660);
-  ctx.font = '400 25px "JetBrains Mono", monospace';
+  ctx.font = '400 25px "DM Mono", monospace';
   ctx.fillStyle = '#343434';
   ctx.fillText('petrolprice.xyz — open source fuel tracker', W / 2, 1722);
-  ctx.font = '500 28px "JetBrains Mono", monospace';
+  ctx.font = '500 28px "DM Mono", monospace';
   ctx.fillStyle = bgAccent + '72';
-  ctx.fillText('github.com/aaronagai/Gasly', W / 2, 1793);
+  ctx.fillText('github.com/aaronagai/PetrolPrice.xyz', W / 2, 1793);
 
   return cv;
 }

@@ -252,86 +252,6 @@ header.scrolled {
   color: var(--text);
 }
 
-/* ── Lang Dropdown ───────────────────────────────────────────── */
-.lang-dropdown {
-  position: relative;
-}
-
-.lang-dropdown-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 10px;
-  color: var(--text-muted);
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-.lang-dropdown-btn:hover {
-  color: var(--accent);
-  background: rgba(255,255,255,0.08);
-}
-
-.lang-chevron {
-  transition: transform 0.2s ease;
-}
-
-.lang-dropdown-menu.open + * .lang-chevron,
-.lang-dropdown-btn[aria-expanded="true"] .lang-chevron {
-  transform: rotate(180deg);
-}
-
-.lang-dropdown-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  z-index: 100;
-  min-width: 70px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.lang-dropdown-menu.open {
-  display: block;
-}
-
-.lang-option {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  color: var(--text-muted);
-  font-family: var(--font);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  text-align: left;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-.lang-option:hover {
-  color: var(--accent);
-  background: rgba(255,255,255,0.07);
-}
-
-[data-theme="light"] .lang-dropdown-btn:hover,
-[data-theme="light"] .lang-option:hover {
-  background: rgba(0,0,0,0.06);
-}
 
 /* ── Refresh Indicator ──────────────────────────────────────── */
 .refresh-wrap {
@@ -760,32 +680,6 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   margin-bottom: 10px;
 }
 
-.footer-source {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.footer-api {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  opacity: 0.7;
-  margin-bottom: 12px;
-}
-
-.footer-api code {
-  color: var(--accent);
-  background: rgba(255,255,255,0.08);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-family: var(--font);
-}
-
-.footer-meta {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  opacity: 0.65;
-}
 
 .footer-nav {
   display: flex; align-items: center; justify-content: center;
@@ -804,20 +698,6 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
 }
 
 
-/* ── International Comparison Section ───────────────────────────── */
-.intl-section {
-  margin-bottom: 40px;
-}
-
-.intl-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
 .section-title {
   font-size: 0.82rem;
   font-weight: 700;
@@ -826,44 +706,8 @@ footer a:hover { color: var(--accent); text-decoration: underline; }
   letter-spacing: 0.14em;
 }
 
-.intl-rate-status {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  opacity: 0.6;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.intl-chart-wrap {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 20px 12px;
-  height: 320px;
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-[data-theme="light"] .intl-chart-wrap {
-  box-shadow: var(--shadow);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.intl-disclaimer {
-  font-size: 0.67rem;
-  color: var(--text-muted);
-  opacity: 0.65;
-  margin-top: 10px;
-  letter-spacing: 0.03em;
-  text-align: center;
-}
-
 @media (max-width: 599px) {
-  .intl-chart-wrap { height: 260px; padding: 14px 12px 10px; }
-  .section-title   { font-size: 0.75rem; }
-  .intl-header     { gap: 6px; }
+  .section-title { font-size: 0.75rem; }
 }
 
 /* ── Card Export Button ──────────────────────────────────────────── */
