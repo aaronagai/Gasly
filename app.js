@@ -1,5 +1,5 @@
 /* ============================================================
-   GASLY — app.js
+   PetrolPrice — app.js
    World live fuel prices
    ============================================================ */
 
@@ -154,9 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateThemeBtn();
   updateCurrencyBtns();
   applyLang(currentLang);
-  document.getElementById('lang-current').textContent = currentLang.toUpperCase();
-  document.getElementById('rbtn-peninsular').classList.toggle('active', selectedRegion === 'peninsular');
-  document.getElementById('rbtn-east').classList.toggle('active', selectedRegion === 'east');
+  const langEl = document.getElementById('lang-current');
+  if (langEl) langEl.textContent = currentLang.toUpperCase();
+  document.getElementById('rbtn-peninsular')?.classList.toggle('active', selectedRegion === 'peninsular');
+  document.getElementById('rbtn-east')?.classList.toggle('active', selectedRegion === 'east');
   loadData();
   startCountdown();
   // Auto-refresh disabled — prices only update Wednesdays, no need to poll
@@ -233,7 +234,7 @@ function animateNumber(el, from, to, decimals, duration = 380) {
 }
 
 // ── Data Fetch ───────────────────────────────────────────────────
-const CACHE_KEY = 'gasly_my_data';
+const CACHE_KEY = 'petrolprice_my_data';
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (prices update weekly)
 
 async function loadData(isRefresh = false) {
@@ -614,7 +615,7 @@ window.saveStoryImage = async function() {
   const file = new File([blob], `myfuelprice-${_exportKey}.png`, { type: 'image/png' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Gasly — World Fuel Prices' }); return; }
+    try { await navigator.share({ files: [file], title: 'PetrolPrice — World Fuel Prices' }); return; }
     catch (_) { /* cancelled — fall through */ }
   }
   const a   = document.createElement('a');
@@ -772,7 +773,7 @@ function generateStoryCanvas(key, activeKey) {
 
   ctx.font = '400 25px "JetBrains Mono", monospace';
   ctx.fillStyle = '#343434';
-  ctx.fillText('gasly.app — open source fuel tracker', W / 2, 1726);
+  ctx.fillText('petrolprice.xyz — open source fuel tracker', W / 2, 1726);
 
   ctx.font = '500 28px "JetBrains Mono", monospace';
   ctx.fillStyle = accent + '72';
@@ -1015,7 +1016,7 @@ function generateHistoryStoryCanvas() {
   ctx.fillText(`Updated ${dateStr}`, W / 2, 1660);
   ctx.font = '400 25px "JetBrains Mono", monospace';
   ctx.fillStyle = '#343434';
-  ctx.fillText('gasly.app — open source fuel tracker', W / 2, 1722);
+  ctx.fillText('petrolprice.xyz — open source fuel tracker', W / 2, 1722);
   ctx.font = '500 28px "JetBrains Mono", monospace';
   ctx.fillStyle = bgAccent + '72';
   ctx.fillText('github.com/aaronagai/Gasly', W / 2, 1793);
