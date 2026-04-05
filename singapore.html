@@ -59,21 +59,12 @@
 
   <div class="container">
     <header>
-      <div class="header-left">
-        <a href="./index.html" class="logo-block" style="text-decoration:none;color:inherit;" aria-label="Home">
-          <img src="logo.svg" alt="Gasly logo" class="site-logo" />
-          <div>
-            <h1 class="site-title"><span class="title-regular">Gas</span><span class="title-bold">ly</span></h1>
-            <p class="site-subtitle">World Live Fuel Prices</p>
-          </div>
-        </a>
-      </div>
-      <div class="header-right">
-        <div class="currency-toggle" role="group" aria-label="Currency display">
-          <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">S$</button>
-          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
-        </div>
-        <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+      <a href="./index.html" aria-label="Home">
+        <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+      </a>
+      <div class="currency-toggle" role="group" aria-label="Currency display">
+        <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">S$</button>
+        <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
       </div>
     </header>
 

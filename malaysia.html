@@ -16,31 +16,12 @@
   <div class="container">
     <!-- Header -->
     <header>
-      <div class="header-left">
-        <a href="./index.html" class="logo-block" style="text-decoration:none;color:inherit;" aria-label="Home">
-          <img src="logo.svg" alt="Gasly logo" class="site-logo" />
-          <div>
-            <h1 class="site-title"><span class="title-regular">Gas</span><span class="title-bold">ly</span></h1>
-            <p class="site-subtitle" data-i18n="subtitle">World Live Fuel Prices</p>
-          </div>
-        </a>
-      </div>
-      <div class="header-right">
-        <div class="currency-toggle" role="group" aria-label="Currency display">
-          <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">RM</button>
-          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
-        </div>
-<button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
-        <div class="lang-dropdown" id="lang-dropdown">
-          <button class="lang-dropdown-btn" id="lang-dropdown-btn" onclick="toggleLangDropdown()" aria-haspopup="listbox" aria-expanded="false">
-            <span id="lang-current">EN</span>
-            <svg class="lang-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.41 6.59 10 8 8.59l4 4 4-4L17.41 10z"/></svg>
-          </button>
-          <div class="lang-dropdown-menu" id="lang-dropdown-menu" role="listbox">
-            <button class="lang-option" onclick="setLang('en')">EN</button>
-            <button class="lang-option" onclick="setLang('bm')">BM</button>
-          </div>
-        </div>
+      <a href="./index.html" aria-label="Home">
+        <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+      </a>
+      <div class="currency-toggle" role="group" aria-label="Currency display">
+        <button class="curr-opt" data-curr="local" onclick="setCurrency('local')">RM</button>
+        <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')"  >USD</button>
       </div>
     </header>
 
