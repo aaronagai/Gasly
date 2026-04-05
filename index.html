@@ -65,12 +65,26 @@
       display: flex; flex-direction: column;
     }
 
-    /* ── Header ────────────���────────────────────────────────── */
+    /* ── Sticky Navbar ─────────────────────────────────────────── */
     header {
-      flex-shrink: 0;
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      width: calc(100% - 32px);
+      max-width: 1020px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 28px 16px;
-      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      background: rgba(10,10,10,0.55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+    }
+    [data-theme="light"] header {
+      background: rgba(248,248,248,0.72);
+      border-color: rgba(0,0,0,0.1);
     }
 
     .logo-block { display: flex; align-items: center; gap: 10px; }
@@ -79,7 +93,7 @@
     .site-title {
       font-size: 0.95rem; font-weight: 700;
       letter-spacing: 0.1em; line-height: 1;
-      font-family: var(--font-mono);
+      font-family: var(--font);
     }
     .title-regular { font-weight: 400; color: #fff; }
     .title-bold    { font-weight: 700; color: #fff; }
@@ -211,6 +225,32 @@
     @media (max-width: 639px) {
       .zoom-controls { bottom: 14px; right: 12px; }
       .zoom-btn { width: 26px; height: 26px; font-size: 1rem; }
+    }
+
+    /* ── Hero overlay text ─────────────────────────────────────── */
+    .hero-overlay {
+      position: absolute;
+      bottom: 44px; left: 32px;
+      z-index: 2; pointer-events: none;
+      max-width: 360px;
+    }
+    .hero-headline {
+      font-size: 1.6rem; font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1.2;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    [data-theme="light"] .hero-headline { color: var(--text); }
+    .hero-subhead {
+      font-size: 0.75rem; color: rgba(255,255,255,0.6);
+      letter-spacing: 0.02em; line-height: 1.65;
+    }
+    [data-theme="light"] .hero-subhead { color: var(--text-muted); }
+
+    @media (max-width: 639px) {
+      .hero-overlay { bottom: 22px; left: 18px; max-width: 240px; }
+      .hero-headline { font-size: 1.15rem; }
+      .hero-subhead  { font-size: 0.68rem; }
     }
 
     /* Edge vignette */
@@ -720,6 +760,10 @@
       <div class="zoom-controls">
         <button class="zoom-btn" onclick="mapZoomIn()"  aria-label="Zoom in">+</button>
         <button class="zoom-btn" onclick="mapZoomOut()" aria-label="Zoom out">−</button>
+      </div>
+      <div class="hero-overlay">
+        <h2 class="hero-headline">Know what you pay at the pump.</h2>
+        <p class="hero-subhead">Real-time fuel prices across Southeast Asia, sourced from official government data.</p>
       </div>
     </div>
   </div>
