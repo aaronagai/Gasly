@@ -436,6 +436,14 @@
       opacity: 0.55; letter-spacing: 0.08em; margin-top: 2px;
     }
 
+    /* Sparkline */
+    .cc-spark {
+      margin-top: 4px;
+      height: 36px; width: 100%;
+      overflow: hidden;
+    }
+    .cc-spark svg { display: block; }
+
     /* Live pulsing dot in card */
     .cc-live-dot {
       display: inline-block;
@@ -815,6 +823,7 @@
         const pillsHtml = shown.map(f => `<span class="cc-fuel-pill">${f}</span>`).join('');
         const moreHtml  = extra > 0 ? `<span class="cc-see-more">+${extra} more</span>` : '';
 
+        card.dataset.countryId = c.id;
         card.innerHTML = `
           <div class="cc-top">
             <span class="cc-flag">${c.flag}</span>
@@ -823,6 +832,7 @@
           <div class="cc-name">${c.name}</div>
           <div class="cc-fuel-list">${pillsHtml}${moreHtml}</div>
           <div class="cc-currency">${c.currency}</div>
+          <div class="cc-spark" id="spark-${c.id}"></div>
           ${ctaHtml}
         `;
         scroll.appendChild(card);
@@ -843,6 +853,76 @@
     }
 
     renderCountryCards();
+
+    /* ── Sparklines ───────────────────────────────────────────── */
+    function drawSparkline(id, values, color) {
+      const el = document.getElementById(`spark-${id}`);
+      if (!el) return;
+      if (!values || values.length < 2) {
+        el.innerHTML = `<svg width="100%" height="36" preserveAspectRatio="none">
+          <line x1="0" y1="18" x2="100%" y2="18" stroke="${color}44" stroke-width="1" stroke-dasharray="4,3"/>
+        </svg>`;
+        return;
+      }
+      const min = Math.min(...values), max = Math.max(...values);
+      const range = max - min || 1;
+      const W = 200, H = 32;
+      const pts = values.map((v, i) => {
+        const x = (i / (values.length - 1)) * W;
+        const y = H - ((v - min) / range) * (H - 6) - 3;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="36" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="sg-${id}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${color}" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+      </svg>`;
+    }
+
+    function parseCSVSimple(text) {
+      const rows = text.trim().split('\n').map(r =>
+        r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
+      );
+      const headers = rows[0];
+      return rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = r[i]; });
+        return obj;
+      });
+    }
+
+    const SHEET_ID = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
+
+    /* Malaysia — RON95 from gov API */
+    fetch('https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=52')
+      .then(r => r.json())
+      .then(json => {
+        const vals = json
+          .filter(r => r.series_type === 'level')
+          .map(r => r.ron95).filter(v => v > 0).reverse().slice(-12);
+        drawSparkline(458, vals, '#00ff64');
+      }).catch(() => drawSparkline(458, null, '#00ff64'));
+
+    /* Singapore — RON95 from Sheets */
+    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`)
+      .then(r => r.text())
+      .then(text => {
+        const vals = parseCSVSimple(text).map(r => parseFloat(r.ron95)).filter(v => !isNaN(v));
+        drawSparkline(702, vals, '#00d4ff');
+      }).catch(() => drawSparkline(702, null, '#00d4ff'));
+
+    /* Brunei — Gasoline from Sheets */
+    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`)
+      .then(r => r.text())
+      .then(text => {
+        const vals = parseCSVSimple(text).map(r => parseFloat(r.gasoline)).filter(v => !isNaN(v));
+        drawSparkline(96, vals, '#b478ff');
+      }).catch(() => drawSparkline(96, null, '#b478ff'));
 
     /* Arrow scroll (desktop) */
     function scrollCards(dir) {
