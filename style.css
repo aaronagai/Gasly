@@ -1,5 +1,5 @@
 /* ============================================================
-   GASLY — Dark Terminal Theme
+   PetrolPrice — Dark Terminal Theme
    ============================================================ */
 
 /* ── Dark theme (default) ───────────────────────────────────── */
@@ -176,6 +176,17 @@ header.scrolled {
 .site-logo {
   height: 42px;
   width: auto;
+}
+
+.country-page-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .site-title {
