@@ -13,13 +13,12 @@
       display: flex; align-items: center; gap: 10px;
       padding: 10px 0 4px;
       border-bottom: 1px solid rgba(255,255,255,0.07);
-      margin-bottom: 2px;
+      margin-bottom: 16px;
     }
     .country-flag { font-size: 1.25rem; line-height: 1; }
     .country-name {
       font-size: 0.8rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--text, #f0f0f0);
     }
     .country-status-pill {
       margin-left: auto;
@@ -29,6 +28,12 @@
       border: 1px solid rgba(255,255,255,0.15);
       color: rgba(255,255,255,0.4);
       background: rgba(255,255,255,0.04);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .country-status-pill.live {
+      color: #00d4ff;
+      border-color: rgba(0,212,255,0.3);
+      background: rgba(0,212,255,0.08);
     }
     .back-link {
       display: inline-flex; align-items: center; gap: 5px;
@@ -39,59 +44,15 @@
     }
     .back-link:hover { color: var(--text, #f0f0f0); }
 
-    .coming-soon-wrap {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 18px; padding: 52px 24px 48px; text-align: center;
-    }
-    .cs-icon { font-size: 2.8rem; line-height: 1; }
-    .cs-heading {
-      font-size: 1rem; font-weight: 700;
-      letter-spacing: 0.08em; color: var(--text, #f0f0f0);
-    }
-    .cs-body {
-      font-size: 0.68rem; color: var(--text-muted, #888);
-      letter-spacing: 0.06em; line-height: 1.7; max-width: 340px;
-    }
-
-    .fuel-preview-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px; width: 100%; max-width: 560px;
-    }
-    .fuel-preview-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px dashed rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 16px 16px 14px;
-      display: flex; flex-direction: column; gap: 6px;
-      opacity: 0.65;
-    }
-    .fpc-icon  { font-size: 1.2rem; }
-    .fpc-name  { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; color: var(--text, #f0f0f0); }
-    .fpc-price {
-      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em;
-      color: rgba(255,255,255,0.2);
-    }
-    .fpc-sub   { font-size: 0.58rem; color: var(--text-muted, #888); letter-spacing: 0.07em; }
-    .fpc-badge {
-      margin-top: 4px; display: inline-block; align-self: flex-start;
-      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.3);
-    }
-
-    .notify-strip {
-      width: 100%; max-width: 400px;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px; padding: 14px 18px;
-      font-size: 0.62rem; color: var(--text-muted, #888);
-      letter-spacing: 0.07em; line-height: 1.6;
-      text-align: center;
-    }
-    .notify-strip a { color: #00d4ff; text-decoration: none; }
-    .notify-strip a:hover { text-decoration: underline; }
+    [data-theme="light"] .country-bar { border-color: rgba(0,0,0,0.08); }
   </style>
+  <script>
+    (function(){
+      var t = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -112,6 +73,18 @@
       </div>
     </header>
 
+    <!-- Meta bar -->
+    <div class="meta-bar">
+      <div class="meta-item">
+        <span class="meta-label">Last Updated</span>
+        <span class="meta-value" id="last-updated">—</span>
+      </div>
+      <div class="meta-item">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="meta-value" id="status-text">Loading…</span>
+      </div>
+    </div>
+
     <a href="./index.html" class="back-link">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
       All countries
@@ -119,54 +92,17 @@
 
     <div class="country-bar">
       <span class="country-flag">🇧🇳</span>
-      <span class="country-name">Brunei</span>
-      <span class="country-status-pill">○ Coming soon</span>
+      <span class="country-name">Brunei Darussalam</span>
+      <span class="country-status-pill" id="country-status">Loading…</span>
     </div>
 
-    <div class="coming-soon-wrap">
-      <div class="cs-icon">🛢️</div>
-      <div class="cs-heading">Brunei data coming soon</div>
-      <div class="cs-body">
-        We're sourcing live pump price data for Brunei Darussalam.<br />
-        Brunei maintains some of the most subsidised fuel prices in the world — prices will appear here once the feed is connected.
-      </div>
-
-      <div class="fuel-preview-grid">
-        <div class="fuel-preview-card">
-          <span class="fpc-icon">🟢</span>
-          <span class="fpc-name">Gasoline</span>
-          <span class="fpc-price">B$ —</span>
-          <span class="fpc-sub">per litre</span>
-          <span class="fpc-badge">Pending data</span>
-        </div>
-        <div class="fuel-preview-card">
-          <span class="fpc-icon">🟠</span>
-          <span class="fpc-name">Diesel</span>
-          <span class="fpc-price">B$ —</span>
-          <span class="fpc-sub">per litre</span>
-          <span class="fpc-badge">Pending data</span>
-        </div>
-        <div class="fuel-preview-card">
-          <span class="fpc-icon">⭐</span>
-          <span class="fpc-name">V-Power Gasoline</span>
-          <span class="fpc-price">B$ —</span>
-          <span class="fpc-sub">per litre</span>
-          <span class="fpc-badge">Pending data</span>
-        </div>
-        <div class="fuel-preview-card">
-          <span class="fpc-icon">🔵</span>
-          <span class="fpc-name">V-Power Diesel</span>
-          <span class="fpc-price">B$ —</span>
-          <span class="fpc-sub">per litre</span>
-          <span class="fpc-badge">Pending data</span>
-        </div>
-      </div>
-
-      <div class="notify-strip">
-        Know a reliable Brunei pump price source?<br />
-        <a href="https://github.com/aaronagai/Gasly/issues" target="_blank" rel="noopener">Open an issue on GitHub</a> to help us add it faster.
-      </div>
-    </div>
+    <!-- Fuel Cards -->
+    <main class="cards-grid" id="cards-grid">
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+    </main>
 
     <footer>
       <p class="footer-powered">Powered by Open Government Data</p>
@@ -180,13 +116,13 @@
   </div>
 
   <script>
+    /* ── Theme ── */
     const ICON_SUN  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Zm11.394-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75Zm-3.916 5.834a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18Zm-4.242-.697a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12Zm.697-4.243a.75.75 0 0 0 1.06-1.06L6.166 5.106a.75.75 0 0 0-1.06 1.06l1.59 1.591Z"/></svg>`;
     const ICON_MOON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/></svg>`;
 
     let currentTheme = localStorage.getItem('theme') ||
       (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
-    function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); }
     function updateThemeBtn() {
       const btn = document.getElementById('theme-btn');
       if (btn) btn.innerHTML = currentTheme === 'dark' ? ICON_SUN : ICON_MOON;
@@ -194,32 +130,121 @@
     window.toggleTheme = function() {
       currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('theme', currentTheme);
-      applyTheme(currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
       updateThemeBtn();
+      if (window._bnData) renderCards(window._bnData);
     };
-
-    applyTheme(currentTheme);
     updateThemeBtn();
 
-    /*
-     * ── TODO: Brunei data feed ─────────────────────────────────────
-     *
-     * const BN_API_URL = '<url>';
-     *
-     * const BN_FUEL_KEYS = [
-     *   { key: 'gasoline',       icon: '🟢', accent: '#00ff64', label: 'Gasoline'         },
-     *   { key: 'diesel',         icon: '🟠', accent: '#ffaa00', label: 'Diesel'            },
-     *   { key: 'vpower_gasoline',icon: '⭐', accent: '#b478ff', label: 'V-Power Gasoline'  },
-     *   { key: 'vpower_diesel',  icon: '🔵', accent: '#00d4ff', label: 'V-Power Diesel'   },
-     * ];
-     *
-     * async function fetchBNData() { ... }
-     * function renderBNCards(data) { ... }
-     *
-     * fetchBNData();
-     * setInterval(fetchBNData, 60_000);
-     * ──────────────────────────────────────────────────────────────
-     */
+    /* ── Fuel config ── */
+    const FUEL_KEYS = [
+      { key: 'gasoline',        label: 'Gasoline',        accent: '#00ff64', lightAccent: '#16a34a' },
+      { key: 'diesel',          label: 'Diesel',          accent: '#ffaa00', lightAccent: '#ea580c' },
+      { key: 'vpower_gasoline', label: 'V-Power Gasoline', accent: '#b478ff', lightAccent: '#9333ea' },
+      { key: 'vpower_diesel',   label: 'V-Power Diesel',  accent: '#00d4ff', lightAccent: '#0ea5e9' },
+    ];
+
+    /* ── CSV parser ── */
+    function parseCSV(text) {
+      const rows = text.trim().split('\n').map(r =>
+        r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
+      );
+      const headers = rows[0];
+      return rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = r[i]; });
+        return obj;
+      });
+    }
+
+    /* ── Render ── */
+    function renderCards(data) {
+      const grid = document.getElementById('cards-grid');
+      grid.innerHTML = '';
+
+      FUEL_KEYS.forEach(({ key, label, accent, lightAccent }) => {
+        const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
+
+        const prices = data
+          .map(row => parseFloat(row[key]))
+          .filter(v => !isNaN(v) && v > 0);
+
+        const current = prices[prices.length - 1];
+        const prev    = prices[prices.length - 2];
+        if (current === undefined) return;
+
+        const diff        = prev !== undefined ? +(current - prev).toFixed(3) : 0;
+        const changeClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+        const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
+        const changeLabel = diff === 0
+          ? 'Unchanged'
+          : `${diff > 0 ? '+' : ''}B$${diff.toFixed(2)}`;
+
+        const card = document.createElement('div');
+        card.className = 'fuel-card';
+        card.style.setProperty('--card-accent', activeAccent);
+        card.innerHTML = `
+          <div class="card-header">
+            <div>
+              <div class="card-name">${label}</div>
+              <div class="card-name-sub">Brunei-Wide</div>
+            </div>
+            <span class="card-type-badge" style="color:${activeAccent};border-color:${activeAccent}40;background:${activeAccent}12;">${label.split(' ')[0]}</span>
+          </div>
+          <div class="card-price-row">
+            <span class="card-currency">B$</span>
+            <span class="card-price" style="color:${activeAccent}">${current.toFixed(2)}</span>
+            <span class="card-currency">/L</span>
+          </div>
+          <div class="card-change ${changeClass}">
+            <span class="change-arrow">${arrow}</span>
+            <span class="change-label">${changeLabel}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    /* ── Fetch ── */
+    const SHEET_ID   = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
+    const SHEET_NAME = 'Brunei';
+    const SHEET_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+
+    async function loadData() {
+      const statusDot   = document.getElementById('status-dot');
+      const statusText  = document.getElementById('status-text');
+      const countryPill = document.getElementById('country-status');
+
+      try {
+        const res  = await fetch(SHEET_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const data = parseCSV(text);
+        window._bnData = data;
+
+        renderCards(data);
+
+        const lastRow = data[data.length - 1];
+        if (lastRow?.date) {
+          document.getElementById('last-updated').textContent =
+            new Date(lastRow.date).toLocaleDateString('en-BN', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        statusDot.classList.remove('error');
+        statusText.textContent = 'Connected';
+        countryPill.textContent = '● Live';
+        countryPill.classList.add('live');
+      } catch (err) {
+        console.error(err);
+        statusDot.classList.add('error');
+        statusText.textContent = 'Failed to load. Retrying…';
+        countryPill.textContent = '○ Error';
+        document.getElementById('cards-grid').innerHTML =
+          `<p class="error-msg">Could not load Brunei data. Please try again later.</p>`;
+      }
+    }
+
+    loadData();
   </script>
 </body>
 </html>
