@@ -1219,20 +1219,6 @@
           const lx = sgx - ox, ly = sgy - oy;
           const sg = mapG.append('g').attr('class', 'sg-pin');
 
-          sg.append('line')
-            .attr('x1', sgx).attr('y1', sgy)
-            .attr('x2', lx + (mobile ? 16 : 20)).attr('y2', ly)
-            .attr('stroke', 'rgba(0,212,255,0.5)').attr('stroke-width', 0.7)
-            .attr('pointer-events', 'none');
-
-          sg.append('circle')
-            .attr('cx', sgx).attr('cy', sgy).attr('r', mobile ? 2 : 2.5)
-            .attr('fill', '#00d4ff')
-            .attr('stroke', 'rgba(0,212,255,0.9)').attr('stroke-width', 0.5)
-            .attr('filter', 'url(#blur-glow)')
-            .attr('pointer-events', 'none');
-
-
           sg.append('circle')
             .attr('cx', sgx).attr('cy', sgy).attr('r', mobile ? 18 : 14)
             .attr('fill', 'transparent').attr('cursor', 'pointer')
