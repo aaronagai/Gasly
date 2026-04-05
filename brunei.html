@@ -249,5 +249,14 @@
 
     loadData();
   </script>
+
+  <script>
+    (function() {
+      var hdr = document.querySelector('header');
+      window.addEventListener('scroll', function() {
+        hdr.classList.toggle('scrolled', window.scrollY > 50);
+      }, { passive: true });
+    })();
+  </script>
 </body>
 </html>

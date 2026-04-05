@@ -114,34 +114,51 @@ body {
   position: relative; z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 16px 48px; /* top padding accounts for fixed navbar */
+  padding: 72px 16px 48px; /* top padding accounts for fixed navbar */
 }
 
 /* ── Sticky Navbar ──────────────────────────────────────────── */
 header {
   position: fixed;
-  top: 12px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  width: calc(100% - 32px);
-  max-width: 1020px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 14px 28px;
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: top 0.38s ease, width 0.38s ease, border-radius 0.38s ease,
+              background 0.38s ease, padding 0.38s ease, border-color 0.38s ease;
+}
+
+header.scrolled {
+  top: 12px;
+  width: calc(100% - 32px);
+  max-width: 1020px;
   padding: 10px 20px;
   background: rgba(10,10,10,0.55);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom: none;
+  outline: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 [data-theme="light"] header {
+  background: #f8f8f8;
+  border-bottom-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] header.scrolled {
   background: rgba(248,248,248,0.72);
-  border-color: rgba(0,0,0,0.1);
+  outline-color: rgba(0,0,0,0.1);
 }
 
 .header-left, .header-right {
