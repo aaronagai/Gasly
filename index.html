@@ -62,7 +62,6 @@
       position: relative; z-index: 2;
       height: 100vh;
       height: 100svh; /* respects mobile browser chrome */
-      display: flex; flex-direction: column;
     }
 
     /* ── Sticky Navbar ─────────────────────────────────────────── */
@@ -727,26 +726,27 @@
 <body>
   <div class="scanlines" aria-hidden="true"></div>
 
+  <header>
+    <div class="logo-block">
+      <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+      <div>
+        <h1 class="site-title">
+          <span class="title-regular">Gas</span><span class="title-bold">ly</span>
+        </h1>
+        <p class="site-subtitle">World Live Fuel Prices</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="currency-toggle" role="group" aria-label="Currency display">
+        <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')">$USD</button>
+        <button class="curr-opt" data-curr="local"  onclick="setCurrency('local')">Local</button>
+      </div>
+      <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+    </div>
+  </header>
+
   <!-- ── Hero: full viewport ───────────────────��─────────────── -->
   <div class="hero">
-    <header>
-      <div class="logo-block">
-        <img src="logo.svg" alt="Gasly logo" class="site-logo" />
-        <div>
-          <h1 class="site-title">
-            <span class="title-regular">Gas</span><span class="title-bold">ly</span>
-          </h1>
-          <p class="site-subtitle">World Live Fuel Prices</p>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="currency-toggle" role="group" aria-label="Currency display">
-          <button class="curr-opt" data-curr="usd"   onclick="setCurrency('usd')">$USD</button>
-          <button class="curr-opt" data-curr="local"  onclick="setCurrency('local')">Local</button>
-        </div>
-        <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
-      </div>
-    </header>
 
     <div class="map-wrap" id="map-wrap">
       <div class="map-vignette"></div>
