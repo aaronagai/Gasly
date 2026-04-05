@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gasly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Scanline overlay -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <div class="logo-block">
+          <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+          <div>
+            <h1 class="site-title"><span class="title-regular">Gas</span><span class="title-bold">ly</span></h1>
+            <p class="site-subtitle" data-i18n="subtitle">World Live Fuel Prices</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+<button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-dropdown-btn" id="lang-dropdown-btn" onclick="toggleLangDropdown()" aria-haspopup="listbox" aria-expanded="false">
+            <span id="lang-current">EN</span>
+            <svg class="lang-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.41 6.59 10 8 8.59l4 4 4-4L17.41 10z"/></svg>
+          </button>
+          <div class="lang-dropdown-menu" id="lang-dropdown-menu" role="listbox">
+            <button class="lang-option" onclick="setLang('en')">EN</button>
+            <button class="lang-option" onclick="setLang('bm')">BM</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Meta bar -->
+    <div class="meta-bar">
+      <div class="meta-item">
+        <span class="meta-label" data-i18n="lastUpdated">Last Updated</span>
+        <span class="meta-value" id="last-updated">—</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label" data-i18n="nextUpdate">Next Update</span>
+        <span class="meta-value" id="next-update-countdown">—</span>
+        <span class="status-dot" id="status-dot"></span>
+        <span class="meta-value" id="status-text">Loading…</span>
+      </div>
+    </div>
+
+    <!-- Region Toggle -->
+    <div class="region-strip">
+      <button id="rbtn-peninsular" class="region-btn active" onclick="setRegion('peninsular')">SEMENANJUNG</button>
+      <span class="region-sep">/</span>
+      <button id="rbtn-east" class="region-btn" onclick="setRegion('east')">SABAH/SARAWAK</button>
+    </div>
+
+    <!-- Fuel Cards Grid -->
+    <main class="cards-grid" id="cards-grid">
+      <!-- Cards injected by JS -->
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+      <div class="skeleton-card" aria-busy="true"></div>
+    </main>
+
+    <!-- 3-Month Price History Chart -->
+    <section class="history-section">
+      <div class="history-header">
+        <span class="section-title" data-i18n="historyTitle">3-Month Price History</span>
+        <button class="card-export-btn history-export-btn" onclick="showHistoryExportModal()" aria-label="Share history as Instagram Story">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><polyline points="8 7 12 3 16 7"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        </button>
+      </div>
+      <div class="history-chart-wrap">
+        <canvas id="history-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p class="footer-powered">Powered by Open Government Data</p>
+
+      <p class="footer-source">
+        Data &rarr; <a href="https://data.gov.my" target="_blank" rel="noopener">data.gov.my</a>
+        &amp; global sources
+      </p>
+
+      <p class="footer-meta">
+        <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">Open Source</a> &nbsp;&bull;&nbsp;
+        <a href="https://github.com/aaronagai/Gasly/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        &nbsp;&bull;&nbsp;
+        Built by <a href="https://github.com/aaronagai" target="_blank" rel="noopener">@aaronagai</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Export / Instagram Story Modal -->
+  <div id="export-modal" class="export-modal" role="dialog" aria-modal="true" aria-label="Share as Instagram Story">
+    <div class="export-backdrop" onclick="closeExportModal()"></div>
+    <div class="export-sheet">
+      <button class="export-close" onclick="closeExportModal()" aria-label="Close">✕</button>
+      <p class="export-hint" id="export-hint">Generating…</p>
+      <div class="export-preview-wrap">
+        <div class="export-spinner" id="export-spinner">
+          <span class="export-spinner-dot"></span>
+          <span class="export-spinner-dot"></span>
+          <span class="export-spinner-dot"></span>
+        </div>
+        <img id="export-preview" class="export-preview-img" alt="Story preview" />
+      </div>
+      <button class="export-save-btn" id="export-save-btn" onclick="saveStoryImage()">Save / Share</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

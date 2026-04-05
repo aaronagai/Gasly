@@ -1,125 +1,475 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gasly</title>
+  <title>Gasly — World Live Fuel Prices</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <style>
+    :root {
+      --bg:         #0a0a0a;
+      --text:       #f0f0f0;
+      --text-muted: #888888;
+      --blue:       #00d4ff;
+      --green:      #00ff64;
+      --border:     rgba(255,255,255,0.08);
+      --font:       'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    /* Ambient glow */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 55% 50%, rgba(0,212,255,0.05) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* Scanlines */
+    .scanlines {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+      );
+    }
+
+    /* Page shell */
+    .page {
+      position: relative; z-index: 2;
+      width: 100vw; height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────── */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 32px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-block {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .site-logo { height: 38px; width: auto; }
+
+    .site-title {
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.1em; line-height: 1;
+    }
+    .title-regular { font-weight: 400; color: #ffffff; }
+    .title-bold    { font-weight: 700; color: #ffffff; }
+
+    .site-subtitle {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .status-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px;
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 20px;
+      background: rgba(0,212,255,0.06);
+      font-size: 0.65rem;
+      color: var(--blue);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 6px var(--blue);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Map ─────────────────────────────────────────────────────── */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-wrap svg {
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* Ocean */
+    .sphere { fill: rgba(0,212,255,0.012); }
+
+    /* Graticule grid lines */
+    .graticule {
+      fill: none;
+      stroke: rgba(255,255,255,0.035);
+      stroke-width: 0.3;
+    }
+
+    /* Country paths */
+    .country {
+      fill: transparent;
+      stroke: rgba(255,255,255,0.13);
+      stroke-width: 0.35;
+      cursor: default;
+      transition: fill 0.12s ease, stroke 0.12s ease;
+    }
+
+    .country:hover {
+      fill: rgba(255,255,255,0.045);
+      stroke: rgba(255,255,255,0.28);
+    }
+
+    /* Live country — Malaysia */
+    .country.live {
+      fill: rgba(0,212,255,0.14);
+      stroke: rgba(0,212,255,0.9);
+      stroke-width: 0.7;
+      cursor: pointer;
+    }
+
+    .country.live:hover {
+      fill: rgba(0,212,255,0.24);
+      stroke: #00d4ff;
+      stroke-width: 1;
+    }
+
+    /* Glow filter applied via SVG <filter> */
+    .country-glow-layer {
+      fill: rgba(0,212,255,0.07);
+      stroke: rgba(0,212,255,0.5);
+      stroke-width: 2;
+      pointer-events: none;
+      animation: glowPulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; stroke-width: 2; }
+      50%       { opacity: 1;   stroke-width: 4; }
+    }
+
+    /* Ping rings on Malaysia centroid */
+    .ping-ring {
+      fill: none;
+      stroke: #00d4ff;
+      stroke-width: 1.2;
+      animation: pingOut 2.4s ease-out infinite;
+    }
+    .ping-ring:nth-child(2) { animation-delay: 0.8s; }
+    .ping-ring:nth-child(3) { animation-delay: 1.6s; }
+
+    @keyframes pingOut {
+      0%   { r: 2; opacity: 0.9; }
+      100% { r: 18; opacity: 0; }
+    }
+
+    /* Center dot */
+    .ping-dot {
+      fill: #00d4ff;
+      filter: drop-shadow(0 0 3px #00d4ff) drop-shadow(0 0 6px #00d4ff80);
+    }
+
+    /* LIVE label */
+    .live-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      fill: #00d4ff;
+      dominant-baseline: middle;
+      text-anchor: start;
+      filter: drop-shadow(0 0 4px rgba(0,212,255,0.8));
+    }
+
+    /* ── Tooltip ─────────────────────────────────────────────────── */
+    #tooltip {
+      position: fixed;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      background: rgba(8,8,8,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 9px 14px 8px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      min-width: 140px;
+    }
+    #tooltip.show { opacity: 1; }
+
+    .tt-country {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+
+    .tt-status {
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .tt-status.live { color: var(--blue); }
+    .tt-status.soon { color: var(--text-muted); opacity: 0.7; }
+
+    /* ── Hint ────────────────────────────────────────────────────── */
+    .map-hint {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-text {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      letter-spacing: 0.06em;
+    }
+
+    .footer-text a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-text a:hover { color: var(--text); }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      header { padding: 14px 16px 12px; gap: 8px; flex-wrap: wrap; }
+      footer { padding: 8px 16px; }
+      .status-pill { font-size: 0.58rem; padding: 4px 10px; }
+      .map-hint { font-size: 0.55rem; bottom: 12px; }
+    }
+  </style>
 </head>
 <body>
-  <!-- Scanline overlay -->
   <div class="scanlines" aria-hidden="true"></div>
 
-  <div class="container">
+  <div class="page">
     <!-- Header -->
     <header>
-      <div class="header-left">
-        <div class="logo-block">
-          <img src="logo.svg" alt="Gasly logo" class="site-logo" />
-          <div>
-            <h1 class="site-title"><span class="title-regular">Gas</span><span class="title-bold">ly</span></h1>
-            <p class="site-subtitle" data-i18n="subtitle">World Live Fuel Prices</p>
-          </div>
+      <div class="logo-block">
+        <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+        <div>
+          <h1 class="site-title">
+            <span class="title-regular">Gas</span><span class="title-bold">ly</span>
+          </h1>
+          <p class="site-subtitle">World Live Fuel Prices</p>
         </div>
       </div>
-      <div class="header-right">
-<button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
-        <div class="lang-dropdown" id="lang-dropdown">
-          <button class="lang-dropdown-btn" id="lang-dropdown-btn" onclick="toggleLangDropdown()" aria-haspopup="listbox" aria-expanded="false">
-            <span id="lang-current">EN</span>
-            <svg class="lang-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 15.41 6.59 10 8 8.59l4 4 4-4L17.41 10z"/></svg>
-          </button>
-          <div class="lang-dropdown-menu" id="lang-dropdown-menu" role="listbox">
-            <button class="lang-option" onclick="setLang('en')">EN</button>
-            <button class="lang-option" onclick="setLang('bm')">BM</button>
-          </div>
-        </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>1 country live</span>
       </div>
     </header>
 
-    <!-- Meta bar -->
-    <div class="meta-bar">
-      <div class="meta-item">
-        <span class="meta-label" data-i18n="lastUpdated">Last Updated</span>
-        <span class="meta-value" id="last-updated">—</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label" data-i18n="nextUpdate">Next Update</span>
-        <span class="meta-value" id="next-update-countdown">—</span>
-        <span class="status-dot" id="status-dot"></span>
-        <span class="meta-value" id="status-text">Loading…</span>
-      </div>
+    <!-- Map -->
+    <div class="map-wrap" id="map-wrap">
+      <div class="map-hint">Click the glowing country to view live prices</div>
     </div>
 
-    <!-- Region Toggle -->
-    <div class="region-strip">
-      <button id="rbtn-peninsular" class="region-btn active" onclick="setRegion('peninsular')">SEMENANJUNG</button>
-      <span class="region-sep">/</span>
-      <button id="rbtn-east" class="region-btn" onclick="setRegion('east')">SABAH/SARAWAK</button>
+    <!-- Tooltip -->
+    <div id="tooltip">
+      <span class="tt-country" id="tt-country"></span>
+      <span class="tt-status" id="tt-status"></span>
     </div>
-
-    <!-- Fuel Cards Grid -->
-    <main class="cards-grid" id="cards-grid">
-      <!-- Cards injected by JS -->
-      <div class="skeleton-card" aria-busy="true"></div>
-      <div class="skeleton-card" aria-busy="true"></div>
-      <div class="skeleton-card" aria-busy="true"></div>
-      <div class="skeleton-card" aria-busy="true"></div>
-      <div class="skeleton-card" aria-busy="true"></div>
-    </main>
-
-    <!-- 3-Month Price History Chart -->
-    <section class="history-section">
-      <div class="history-header">
-        <span class="section-title" data-i18n="historyTitle">3-Month Price History</span>
-        <button class="card-export-btn history-export-btn" onclick="showHistoryExportModal()" aria-label="Share history as Instagram Story">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><polyline points="8 7 12 3 16 7"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-        </button>
-      </div>
-      <div class="history-chart-wrap">
-        <canvas id="history-chart"></canvas>
-      </div>
-    </section>
 
     <!-- Footer -->
     <footer>
-      <p class="footer-powered">Powered by Open Government Data</p>
-
-      <p class="footer-source">
-        Data &rarr; <a href="https://data.gov.my" target="_blank" rel="noopener">data.gov.my</a>
-        &amp; global sources
-      </p>
-
-      <p class="footer-meta">
-        <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">Open Source</a> &nbsp;&bull;&nbsp;
-        <a href="https://github.com/aaronagai/Gasly/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
-        &nbsp;&bull;&nbsp;
-        Built by <a href="https://github.com/aaronagai" target="_blank" rel="noopener">@aaronagai</a>
-      </p>
+      <span class="footer-text">Global fuel price tracker &mdash; open source</span>
+      <span class="footer-text">
+        <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">github.com/aaronagai/Gasly</a>
+      </span>
     </footer>
   </div>
 
-  <!-- Export / Instagram Story Modal -->
-  <div id="export-modal" class="export-modal" role="dialog" aria-modal="true" aria-label="Share as Instagram Story">
-    <div class="export-backdrop" onclick="closeExportModal()"></div>
-    <div class="export-sheet">
-      <button class="export-close" onclick="closeExportModal()" aria-label="Close">✕</button>
-      <p class="export-hint" id="export-hint">Generating…</p>
-      <div class="export-preview-wrap">
-        <div class="export-spinner" id="export-spinner">
-          <span class="export-spinner-dot"></span>
-          <span class="export-spinner-dot"></span>
-          <span class="export-spinner-dot"></span>
-        </div>
-        <img id="export-preview" class="export-preview-img" alt="Story preview" />
-      </div>
-      <button class="export-save-btn" id="export-save-btn" onclick="saveStoryImage()">Save / Share</button>
-    </div>
-  </div>
+  <script>
+    // Countries with live data
+    const LIVE = {
+      458: { name: 'Malaysia', url: './malaysia.html' },
+    };
 
-  <script src="app.js"></script>
+    // ISO 3166-1 numeric → name lookup
+    const NAMES = {
+      4:'Afghanistan',8:'Albania',12:'Algeria',24:'Angola',32:'Argentina',
+      36:'Australia',40:'Austria',50:'Bangladesh',56:'Belgium',68:'Bolivia',
+      76:'Brazil',100:'Bulgaria',116:'Cambodia',120:'Cameroon',124:'Canada',
+      144:'Sri Lanka',152:'Chile',156:'China',170:'Colombia',188:'Costa Rica',
+      191:'Croatia',203:'Czech Republic',208:'Denmark',218:'Ecuador',818:'Egypt',
+      231:'Ethiopia',246:'Finland',250:'France',276:'Germany',288:'Ghana',
+      300:'Greece',348:'Hungary',356:'India',360:'Indonesia',364:'Iran',
+      368:'Iraq',372:'Ireland',376:'Israel',380:'Italy',392:'Japan',
+      400:'Jordan',398:'Kazakhstan',404:'Kenya',410:'South Korea',414:'Kuwait',
+      418:'Laos',458:'Malaysia',484:'Mexico',504:'Morocco',524:'Nepal',
+      528:'Netherlands',554:'New Zealand',566:'Nigeria',578:'Norway',
+      586:'Pakistan',604:'Peru',608:'Philippines',616:'Poland',620:'Portugal',
+      634:'Qatar',643:'Russia',682:'Saudi Arabia',702:'Singapore',703:'Slovakia',
+      710:'South Africa',724:'Spain',752:'Sweden',756:'Switzerland',764:'Thailand',
+      792:'Turkey',804:'Ukraine',784:'United Arab Emirates',826:'United Kingdom',
+      840:'United States',858:'Uruguay',704:'Vietnam',887:'Yemen',716:'Zimbabwe',
+    };
+
+    const tooltip    = document.getElementById('tooltip');
+    const ttCountry  = document.getElementById('tt-country');
+    const ttStatus   = document.getElementById('tt-status');
+
+    function showTip(e, id) {
+      const name = NAMES[id];
+      if (!name) return;
+      const live = !!LIVE[id];
+      ttCountry.textContent = name;
+      ttStatus.textContent  = live ? '● Live data' : '○ Coming soon';
+      ttStatus.className    = 'tt-status ' + (live ? 'live' : 'soon');
+      tooltip.classList.add('show');
+      moveTip(e);
+    }
+
+    function moveTip(e) {
+      const pad = 16;
+      let x = e.clientX + 14;
+      let y = e.clientY - 44;
+      if (x + 160 > window.innerWidth)  x = e.clientX - 160;
+      if (y < pad) y = e.clientY + 14;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top  = y + 'px';
+    }
+
+    function hideTip() { tooltip.classList.remove('show'); }
+
+    // Build map
+    const wrap = document.getElementById('map-wrap');
+    const W = 960, H = 500;
+
+    const svg = d3.select('#map-wrap').insert('svg', '.map-hint')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    // SVG glow filter
+    const defs = svg.append('defs');
+    const filter = defs.append('filter').attr('id', 'glow').attr('x', '-40%').attr('y', '-40%').attr('width', '180%').attr('height', '180%');
+    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'blur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    const projection = d3.geoNaturalEarth1()
+      .scale(153)
+      .translate([W / 2, H / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // Ocean sphere
+    svg.append('path')
+      .datum({ type: 'Sphere' })
+      .attr('class', 'sphere')
+      .attr('d', path);
+
+    // Graticule
+    svg.append('path')
+      .datum(d3.geoGraticule()())
+      .attr('class', 'graticule')
+      .attr('d', path);
+
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(world => {
+        const countries = topojson.feature(world, world.objects.countries);
+
+        // Extra glow layer for live countries (behind the main path)
+        svg.selectAll('.country-glow-layer')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'country-glow-layer')
+          .attr('d', path)
+          .attr('filter', 'url(#glow)');
+
+        // Country paths
+        svg.selectAll('.country')
+          .data(countries.features)
+          .enter().append('path')
+          .attr('class', d => 'country' + (LIVE[+d.id] ? ' live' : ''))
+          .attr('d', path)
+          .on('mousemove', (e, d) => { showTip(e, +d.id); moveTip(e); })
+          .on('mouseleave', hideTip)
+          .on('click', (e, d) => {
+            const c = LIVE[+d.id];
+            if (c) window.location.href = c.url;
+          });
+
+        // Ping animation + LIVE label at Malaysia's centroid
+        const MY = countries.features.find(f => +f.id === 458);
+        if (MY) {
+          const [cx, cy] = path.centroid(MY);
+
+          // Offset label slightly right of centroid (Malaysia is on the east side)
+          const lx = cx + 5;
+          const ly = cy - 12;
+
+          const g = svg.append('g').attr('class', 'live-marker').attr('pointer-events', 'none');
+
+          // Three staggered ping rings
+          [0, 0.8, 1.6].forEach(delay => {
+            g.append('circle')
+              .attr('class', 'ping-ring')
+              .attr('cx', cx).attr('cy', cy).attr('r', 2)
+              .style('animation-delay', `${delay}s`);
+          });
+
+          // Center dot
+          g.append('circle')
+            .attr('class', 'ping-dot')
+            .attr('cx', cx).attr('cy', cy).attr('r', 2.5);
+
+          // "LIVE" text label
+          g.append('text')
+            .attr('class', 'live-tag')
+            .attr('x', lx).attr('y', ly)
+            .text('LIVE');
+        }
+      });
+  </script>
 </body>
 </html>
