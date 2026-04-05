@@ -491,127 +491,86 @@
       padding: 52px 28px 56px;
       border-top: 1px solid var(--border);
     }
-
-    .calc-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
+    .calc-header { text-align: center; margin-bottom: 32px; }
     .calc-badge {
       display: inline-block;
       font-size: 0.56rem; font-weight: 700; letter-spacing: 0.14em;
       text-transform: uppercase; padding: 3px 10px; border-radius: 5px;
       border: 1px solid rgba(0,212,255,0.25);
-      color: rgba(0,212,255,0.7);
-      background: rgba(0,212,255,0.06);
+      color: rgba(0,212,255,0.7); background: rgba(0,212,255,0.06);
       margin-bottom: 12px;
     }
-
-    .calc-title {
-      font-size: 1.3rem; font-weight: 700;
-      letter-spacing: 0.04em; color: var(--text);
-    }
-
-    .calc-sub {
-      font-size: 0.68rem; color: var(--text-muted);
-      margin-top: 6px; opacity: 0.7;
-    }
+    .calc-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+    .calc-sub   { font-size: 0.68rem; color: var(--text-muted); margin-top: 6px; opacity: 0.7; }
 
     .calc-card {
-      max-width: 680px;
-      margin: 0 auto;
+      max-width: 560px; margin: 0 auto;
       background: var(--bg-card, rgba(255,255,255,0.03));
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
+      border-radius: 16px; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
     }
 
-    .calc-fields {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+    .calc-country-tabs, .calc-fuel-tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
     }
-
-    .calc-field label {
-      display: block;
-      font-size: 0.58rem; font-weight: 600;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .calc-input-wrap {
-      display: flex;
-      align-items: center;
+    .calc-tab, .calc-fuel-btn {
+      padding: 6px 14px; border-radius: 8px;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
       border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
       background: rgba(255,255,255,0.03);
+      color: var(--text-muted); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .calc-tab.active, .calc-fuel-btn.active {
+      border-color: rgba(0,212,255,0.4);
+      background: rgba(0,212,255,0.08);
+      color: #00d4ff;
+    }
+
+    .calc-volume-row .calc-input-wrap {
+      display: flex; align-items: center;
+      border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; background: rgba(255,255,255,0.03);
       transition: border-color 0.15s;
     }
-
-    .calc-input-wrap:focus-within {
-      border-color: rgba(0,212,255,0.4);
+    .calc-volume-row .calc-input-wrap:focus-within { border-color: rgba(0,212,255,0.4); }
+    .calc-volume-row input {
+      flex: 1; background: none; border: none; outline: none;
+      padding: 12px 14px;
+      font-family: var(--font-mono); font-size: 1rem;
+      color: var(--text); min-width: 0;
     }
-
-    .calc-input-wrap input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      padding: 10px 12px;
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--text);
-      min-width: 0;
+    .calc-unit-toggle {
+      display: flex; border-left: 1px solid var(--border);
     }
-
-    .calc-unit {
-      padding: 0 10px;
-      font-size: 0.6rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--text-muted);
-      border-left: 1px solid var(--border);
-      white-space: nowrap;
+    .calc-unit-btn {
+      padding: 0 14px; height: 100%;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      transition: color 0.15s, background 0.15s;
     }
+    .calc-unit-btn + .calc-unit-btn { border-left: 1px solid var(--border); }
+    .calc-unit-btn.active { color: #00d4ff; background: rgba(0,212,255,0.08); }
 
     .calc-result {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      border-radius: 12px;
-      background: rgba(0,212,255,0.05);
-      border: 1px solid rgba(0,212,255,0.15);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-radius: 12px;
+      background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.15);
     }
-
     .calc-result-label {
-      font-size: 0.6rem; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: rgba(0,212,255,0.6);
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(0,212,255,0.6);
     }
-
+    .calc-result-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 4px; }
     .calc-result-value {
-      font-family: var(--font-mono);
-      font-size: 1.4rem; font-weight: 700;
-      color: #00d4ff;
-      letter-spacing: -0.02em;
+      font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700;
+      color: #00d4ff; letter-spacing: -0.02em;
     }
-
-    .calc-result-litres {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-      text-align: right;
-    }
-
-    .calc-result-right { text-align: right; }
 
     @media (max-width: 639px) {
       .calc-section { padding: 40px 16px 44px; }
-      .calc-fields  { grid-template-columns: 1fr 1fr; }
-      .calc-card    { padding: 20px 16px; }
+      .calc-card    { padding: 16px; }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -950,39 +909,31 @@
   <section class="calc-section" id="calculator">
     <div class="calc-header">
       <div class="calc-badge">⚡ Fuel Calculator</div>
-      <div class="calc-title">How much will your trip cost?</div>
-      <div class="calc-sub">Enter your distance, efficiency, and fuel price to estimate cost.</div>
+      <div class="calc-title">How much should your fuel cost?</div>
+      <div class="calc-sub">Pick a country, fuel type, and volume to see the price.</div>
     </div>
     <div class="calc-card">
-      <div class="calc-fields">
-        <div class="calc-field">
-          <label>Distance</label>
-          <div class="calc-input-wrap">
-            <input type="number" id="calc-distance" placeholder="100" min="0" step="1" oninput="calcUpdate()" />
-            <span class="calc-unit">km</span>
-          </div>
-        </div>
-        <div class="calc-field">
-          <label>Fuel use</label>
-          <div class="calc-input-wrap">
-            <input type="number" id="calc-efficiency" placeholder="10" min="0.1" step="0.1" oninput="calcUpdate()" />
-            <span class="calc-unit">L/100km</span>
-          </div>
-        </div>
-        <div class="calc-field">
-          <label>Price per litre</label>
-          <div class="calc-input-wrap">
-            <input type="number" id="calc-price" placeholder="2.05" min="0" step="0.01" oninput="calcUpdate()" />
-            <span class="calc-unit">RM</span>
+      <div class="calc-country-tabs" id="calc-country-tabs">
+        <button class="calc-tab active" data-country="my" onclick="calcSetCountry('my')">🇲🇾 Malaysia</button>
+        <button class="calc-tab" data-country="sg" onclick="calcSetCountry('sg')">🇸🇬 Singapore</button>
+        <button class="calc-tab" data-country="bn" onclick="calcSetCountry('bn')">🇧🇳 Brunei</button>
+      </div>
+      <div class="calc-fuel-tabs" id="calc-fuel-tabs"></div>
+      <div class="calc-volume-row">
+        <div class="calc-input-wrap">
+          <input type="number" id="calc-volume" placeholder="100" min="0" step="1" oninput="calcUpdate()" />
+          <div class="calc-unit-toggle">
+            <button class="calc-unit-btn active" data-unit="ml" onclick="calcSetUnit('ml')">mL</button>
+            <button class="calc-unit-btn" data-unit="l" onclick="calcSetUnit('l')">L</button>
           </div>
         </div>
       </div>
       <div class="calc-result">
-        <span class="calc-result-label">Estimated cost</span>
-        <div class="calc-result-right">
-          <div class="calc-result-value" id="calc-result-value">—</div>
-          <div class="calc-result-litres" id="calc-result-litres"></div>
+        <div>
+          <div class="calc-result-label">Estimated cost</div>
+          <div class="calc-result-sub" id="calc-result-sub"></div>
         </div>
+        <div class="calc-result-value" id="calc-result-value">—</div>
       </div>
     </div>
   </section>
@@ -1174,23 +1125,85 @@
     }
 
     /* ── Calculator ──────────────────────────────────────────── */
-    window.calcUpdate = function() {
-      const dist = parseFloat(document.getElementById('calc-distance').value);
-      const eff  = parseFloat(document.getElementById('calc-efficiency').value);
-      const price = parseFloat(document.getElementById('calc-price').value);
-      const resVal = document.getElementById('calc-result-value');
-      const resLit = document.getElementById('calc-result-litres');
+    const CALC_CONFIG = {
+      my: {
+        sym: 'RM',
+        fuels: [
+          { key: 'ron95',        label: 'RON95',   price: 2.05 },
+          { key: 'ron97',        label: 'RON97',   price: 3.88 },
+          { key: 'diesel',       label: 'Diesel',  price: 2.15 },
+          { key: 'ron95_budi95', label: 'BUDI95',  price: 1.99 },
+        ],
+      },
+      sg: {
+        sym: 'S$',
+        fuels: [
+          { key: 'ron95',   label: 'RON95',   price: 2.98 },
+          { key: 'ron98',   label: 'RON98',   price: 3.28 },
+          { key: 'diesel',  label: 'Diesel',  price: 2.48 },
+        ],
+      },
+      bn: {
+        sym: 'B$',
+        fuels: [
+          { key: 'gasoline', label: 'Gasoline',  price: 0.53 },
+          { key: 'diesel',   label: 'Diesel',    price: 0.53 },
+        ],
+      },
+    };
 
-      if (!isNaN(dist) && !isNaN(eff) && !isNaN(price) && dist > 0 && eff > 0 && price > 0) {
-        const litres = (dist / 100) * eff;
-        const cost   = litres * price;
-        resVal.textContent = `RM ${cost.toFixed(2)}`;
-        resLit.textContent = `${litres.toFixed(1)} L used`;
+    let calcCountry = 'my';
+    let calcFuel    = 'ron95';
+    let calcUnit    = 'ml';
+
+    function calcRenderFuels() {
+      const container = document.getElementById('calc-fuel-tabs');
+      const fuels = CALC_CONFIG[calcCountry].fuels;
+      container.innerHTML = fuels.map(f =>
+        `<button class="calc-fuel-btn${f.key === calcFuel ? ' active' : ''}" onclick="calcSetFuel('${f.key}')">${f.label}</button>`
+      ).join('');
+    }
+
+    window.calcSetCountry = function(c) {
+      calcCountry = c;
+      calcFuel = CALC_CONFIG[c].fuels[0].key;
+      document.querySelectorAll('.calc-tab').forEach(b => b.classList.toggle('active', b.dataset.country === c));
+      calcRenderFuels();
+      calcUpdate();
+    };
+
+    window.calcSetFuel = function(f) {
+      calcFuel = f;
+      document.querySelectorAll('.calc-fuel-btn').forEach(b => b.classList.toggle('active', b.textContent === CALC_CONFIG[calcCountry].fuels.find(x => x.key === f)?.label));
+      calcUpdate();
+    };
+
+    window.calcSetUnit = function(u) {
+      calcUnit = u;
+      document.querySelectorAll('.calc-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === u));
+      calcUpdate();
+    };
+
+    window.calcUpdate = function() {
+      const vol    = parseFloat(document.getElementById('calc-volume').value);
+      const cfg    = CALC_CONFIG[calcCountry];
+      const fuel   = cfg.fuels.find(f => f.key === calcFuel);
+      const resVal = document.getElementById('calc-result-value');
+      const resSub = document.getElementById('calc-result-sub');
+
+      if (!isNaN(vol) && vol > 0 && fuel) {
+        const litres = calcUnit === 'ml' ? vol / 1000 : vol;
+        const cost   = litres * fuel.price;
+        resVal.textContent = `${cfg.sym} ${cost.toFixed(cost < 0.10 ? 3 : 2)}`;
+        resSub.textContent = `${litres.toFixed(3)} L × ${cfg.sym}${fuel.price.toFixed(2)}/L`;
       } else {
         resVal.textContent = '—';
-        resLit.textContent = '';
+        resSub.textContent = '';
       }
     };
+
+    // Init
+    calcRenderFuels();
 
     /* ──────────────────────────���───────────────────���──────────
        MAP
