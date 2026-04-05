@@ -28,8 +28,8 @@ const I18N = {
     unchanged:   'Unchanged',
     loading:     'Fetching live data…',
     error:       'Failed to load data. Retrying…',
-    peninsular:  'SEMENANJUNG',
-    eastMY:      'SABAH/SARAWAK',
+    peninsular:  'PENINSULAR',
+    eastMY:      'SABAH / SARAWAK',
     fuelNames: {
       ron95:           'RON95 Petrol',
       ron97:           'RON97 Petrol',
@@ -57,47 +57,10 @@ const I18N = {
     intlRateNote:   'Live exchange rates via exchangerate-api.com',
     historyTitle:   '3-Month Price History',
   },
-  bm: {
-    subtitle:    'Harga Minyak Dunia Terkini',
-    lastUpdated: 'Kemaskini Terakhir',
-    nextUpdate:  'Kemaskini Seterusnya',
-    dataSource:  'Sumber data',
-    unchanged:   'Harga tidak berubah',
-    loading:     'Mendapatkan data terkini…',
-    error:       'Gagal memuatkan data. Cuba semula…',
-    peninsular:  'SEMENANJUNG',
-    eastMY:      'SABAH/SARAWAK',
-    fuelNames: {
-      ron95:           'Petrol RON95',
-      ron97:           'Petrol RON97',
-      diesel:          'Diesel',
-      diesel_eastmsia: 'Diesel (Malaysia Timur)',
-      ron95_budi95:    'BUDI95 Bersubsidi',
-    },
-    fuelSubs: {
-      ron95:           'Seluruh Malaysia',
-      ron95_skps:      'Malaysia Timur (SKPS)',
-      ron97:           'Seluruh Malaysia',
-      diesel:          'Semenanjung',
-      diesel_eastmsia: 'Sarawak, Sabah & Labuan',
-      ron95_budi95:    'Seluruh Malaysia',
-    },
-    myRegion:     'Kawasan Saya',
-    regionHint:   'Mempengaruhi RON95, RON97 & Diesel',
-    tagline:      'Harga minyak global, percuma & sumber terbuka selama-lamanya.',
-    viewOnGithub: 'Lihat di GitHub',
-    openSource:   'Sumber Terbuka',
-    mitLicense:   'Lesen MIT',
-    creditLine:     'Data bersumber dari portal data terbuka kerajaan seluruh dunia',
-    intlTitle:      'Perbandingan Harga Antarabangsa (RM/L)',
-    intlDisclaimer: 'Harga antarabangsa dikemaskini setiap minggu. Sumber: GlobalPetrolPrices.com',
-    intlRateNote:   'Kadar tukaran langsung melalui exchangerate-api.com',
-    historyTitle:   'Sejarah Harga 3 Bulan',
-  },
 };
 
 // ── State ────────────────────────────────────────────────────────
-let currentLang    = localStorage.getItem('lang')      || 'en';
+let currentLang    = 'en';
 let selectedRegion = localStorage.getItem('region')    || 'peninsular';
 let currentTheme    = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 let currentCurrency = localStorage.getItem('currency') || 'local';
@@ -164,33 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // refreshTimer = setInterval(() => loadData(true), REFRESH_MS);
 });
 
-// ── Language ─────────────────────────────────────────────────────
-window.setLang = function(lang) {
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  document.getElementById('lang-current').textContent = lang.toUpperCase();
-  closeLangDropdown();
-  applyLang(lang);
-  if (rawData.length) renderCards(rawData);
-};
-
-window.toggleLangDropdown = function() {
-  const menu = document.getElementById('lang-dropdown-menu');
-  const btn  = document.getElementById('lang-dropdown-btn');
-  const open = menu.classList.toggle('open');
-  btn.setAttribute('aria-expanded', open);
-};
-
-function closeLangDropdown() {
-  const menu = document.getElementById('lang-dropdown-menu');
-  const btn  = document.getElementById('lang-dropdown-btn');
-  if (menu) { menu.classList.remove('open'); btn?.setAttribute('aria-expanded', 'false'); }
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', e => {
-  if (!document.getElementById('lang-dropdown')?.contains(e.target)) closeLangDropdown();
-});
 
 function applyLang(lang) {
   const t = I18N[lang];
