@@ -186,6 +186,31 @@
     .cname.sea-name      { fill: rgba(255,255,255,0.45); }
     .cname.neighbor-name { fill: rgba(255,255,255,0.13); }
 
+    /* Zoom controls */
+    .zoom-controls {
+      position: absolute; bottom: 18px; right: 18px;
+      z-index: 3; display: flex; flex-direction: column; gap: 4px;
+    }
+    .zoom-btn {
+      width: 30px; height: 30px;
+      background: rgba(10,10,10,0.72);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 7px; color: var(--text-muted);
+      font-family: var(--font); font-size: 1.1rem; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .zoom-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.28); background: rgba(20,20,20,0.85); }
+    [data-theme="light"] .zoom-btn { background: rgba(245,244,240,0.82); border-color: rgba(0,0,0,0.14); }
+    [data-theme="light"] .zoom-btn:hover { background: rgba(230,229,225,0.9); border-color: rgba(0,0,0,0.25); }
+
+    @media (max-width: 639px) {
+      .zoom-controls { bottom: 14px; right: 12px; }
+      .zoom-btn { width: 26px; height: 26px; font-size: 1rem; }
+    }
+
     /* Edge vignette */
     .map-vignette {
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -662,6 +687,10 @@
     <div class="map-wrap" id="map-wrap">
       <div class="map-vignette"></div>
       <div class="map-hint">Tap the glowing country to view live prices</div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="mapZoomIn()"  aria-label="Zoom in">+</button>
+        <button class="zoom-btn" onclick="mapZoomOut()" aria-label="Zoom out">−</button>
+      </div>
     </div>
   </div>
 
@@ -872,8 +901,21 @@
 
     const path = d3.geoPath().projection(projection);
 
-    svg.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
-    svg.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
+    /* Single group — zoom transforms this entire layer */
+    const mapG = svg.append('g');
+
+    /* Zoom behaviour */
+    const zoom = d3.zoom()
+      .scaleExtent([1, 10])
+      .on('zoom', e => mapG.attr('transform', e.transform));
+
+    svg.call(zoom).on('dblclick.zoom', null); /* disable dbl-click zoom */
+
+    window.mapZoomIn  = () => svg.transition().duration(300).call(zoom.scaleBy, 1.6);
+    window.mapZoomOut = () => svg.transition().duration(300).call(zoom.scaleBy, 0.625);
+
+    mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
+    mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
 
     /* Tooltip */
     const tooltip   = document.getElementById('tooltip');
@@ -908,14 +950,14 @@
         const countries = topojson.feature(world, world.objects.countries);
 
         /* Glow halo (bottom-most) */
-        svg.selectAll('.glow-halo')
+        mapG.selectAll('.glow-halo')
           .data(countries.features.filter(d => LIVE[+d.id]))
           .enter().append('path')
           .attr('class', 'glow-halo').attr('d', path)
           .attr('filter', 'url(#blur-glow)');
 
         /* Rest of world */
-        svg.selectAll('.bg')
+        mapG.selectAll('.bg')
           .data(countries.features.filter(d => !SEA.has(+d.id)))
           .enter().append('path').attr('class', 'country').attr('d', path)
           .on('mousemove', (e, d) => showTip(e, +d.id))
@@ -927,7 +969,7 @@
           }, { passive: true });
 
         /* SEA (non-live) */
-        svg.selectAll('.sea-c')
+        mapG.selectAll('.sea-c')
           .data(countries.features.filter(d => SEA.has(+d.id) && !LIVE[+d.id]))
           .enter().append('path').attr('class', 'country sea').attr('d', path)
           .on('mousemove', (e, d) => showTip(e, +d.id))
@@ -938,8 +980,8 @@
             showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
           }, { passive: true });
 
-        /* Malaysia */
-        svg.selectAll('.live-c')
+        /* Live countries */
+        mapG.selectAll('.live-c')
           .data(countries.features.filter(d => LIVE[+d.id]))
           .enter().append('path').attr('class', 'country live').attr('d', path)
           .on('mousemove', (e, d) => showTip(e, +d.id))
@@ -957,7 +999,7 @@
           if (!name) return;
           const [lx, ly] = path.centroid(f);
           if (isNaN(lx) || isNaN(ly) || lx < 0 || lx > W || ly < 0 || ly > H) return;
-          svg.append('text')
+          mapG.append('text')
             .attr('class', SEA_LABEL_IDS.has(id) ? 'cname sea-name' : 'cname neighbor-name')
             .attr('x', lx).attr('y', ly).attr('font-size', labelSize)
             .text(name);
@@ -968,7 +1010,7 @@
         if (sgx > 0 && sgx < W && sgy > 0 && sgy < H) {
           const ox = mobile ? 18 : 22, oy = mobile ? 18 : 22;
           const lx = sgx - ox, ly = sgy - oy;
-          const sg = svg.append('g').attr('class', 'sg-pin');
+          const sg = mapG.append('g').attr('class', 'sg-pin');
 
           sg.append('line')
             .attr('x1', sgx).attr('y1', sgy)
@@ -1010,7 +1052,7 @@
           const ringMax = mobile ? 28 : 32;
           const dotR    = mobile ? 3.5 : 4;
           const tagSize = mobile ? 8 : 7;
-          const g = svg.append('g').attr('pointer-events', 'none');
+          const g = mapG.append('g').attr('pointer-events', 'none');
 
           [0, 0.87, 1.73].forEach(delay => {
             g.append('circle').attr('class', 'ping-ring')
