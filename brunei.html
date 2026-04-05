@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gasly — Brunei Fuel Prices</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .country-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 2px;
+    }
+    .country-flag { font-size: 1.25rem; line-height: 1; }
+    .country-name {
+      font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text, #f0f0f0);
+    }
+    .country-status-pill {
+      margin-left: auto;
+      font-size: 0.56rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.04);
+    }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.6rem; color: var(--text-muted, #888);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      text-decoration: none; margin-bottom: 14px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text, #f0f0f0); }
+
+    .coming-soon-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 18px; padding: 52px 24px 48px; text-align: center;
+    }
+    .cs-icon { font-size: 2.8rem; line-height: 1; }
+    .cs-heading {
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.08em; color: var(--text, #f0f0f0);
+    }
+    .cs-body {
+      font-size: 0.68rem; color: var(--text-muted, #888);
+      letter-spacing: 0.06em; line-height: 1.7; max-width: 340px;
+    }
+
+    .fuel-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; width: 100%; max-width: 560px;
+    }
+    .fuel-preview-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px 16px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      opacity: 0.65;
+    }
+    .fpc-icon  { font-size: 1.2rem; }
+    .fpc-name  { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; color: var(--text, #f0f0f0); }
+    .fpc-price {
+      font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em;
+      color: rgba(255,255,255,0.2);
+    }
+    .fpc-sub   { font-size: 0.58rem; color: var(--text-muted, #888); letter-spacing: 0.07em; }
+    .fpc-badge {
+      margin-top: 4px; display: inline-block; align-self: flex-start;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.3);
+    }
+
+    .notify-strip {
+      width: 100%; max-width: 400px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 0.62rem; color: var(--text-muted, #888);
+      letter-spacing: 0.07em; line-height: 1.6;
+      text-align: center;
+    }
+    .notify-strip a { color: #00d4ff; text-decoration: none; }
+    .notify-strip a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <div class="logo-block">
+          <img src="logo.svg" alt="Gasly logo" class="site-logo" />
+          <div>
+            <h1 class="site-title"><span class="title-regular">Gas</span><span class="title-bold">ly</span></h1>
+            <p class="site-subtitle">World Live Fuel Prices</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="theme-btn" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle light/dark mode"></button>
+      </div>
+    </header>
+
+    <a href="./index.html" class="back-link">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      All countries
+    </a>
+
+    <div class="country-bar">
+      <span class="country-flag">🇧🇳</span>
+      <span class="country-name">Brunei</span>
+      <span class="country-status-pill">○ Coming soon</span>
+    </div>
+
+    <div class="coming-soon-wrap">
+      <div class="cs-icon">🛢️</div>
+      <div class="cs-heading">Brunei data coming soon</div>
+      <div class="cs-body">
+        We're sourcing live pump price data for Brunei Darussalam.<br />
+        Brunei maintains some of the most subsidised fuel prices in the world — prices will appear here once the feed is connected.
+      </div>
+
+      <div class="fuel-preview-grid">
+        <div class="fuel-preview-card">
+          <span class="fpc-icon">🟢</span>
+          <span class="fpc-name">RON95</span>
+          <span class="fpc-price">B$ —</span>
+          <span class="fpc-sub">per litre</span>
+          <span class="fpc-badge">Pending data</span>
+        </div>
+        <div class="fuel-preview-card">
+          <span class="fpc-icon">🔵</span>
+          <span class="fpc-name">RON97</span>
+          <span class="fpc-price">B$ —</span>
+          <span class="fpc-sub">per litre</span>
+          <span class="fpc-badge">Pending data</span>
+        </div>
+        <div class="fuel-preview-card">
+          <span class="fpc-icon">🟠</span>
+          <span class="fpc-name">Diesel</span>
+          <span class="fpc-price">B$ —</span>
+          <span class="fpc-sub">per litre</span>
+          <span class="fpc-badge">Pending data</span>
+        </div>
+      </div>
+
+      <div class="notify-strip">
+        Know a reliable Brunei pump price source?<br />
+        <a href="https://github.com/aaronagai/Gasly/issues" target="_blank" rel="noopener">Open an issue on GitHub</a> to help us add it faster.
+      </div>
+    </div>
+
+    <footer>
+      <p class="footer-powered">Powered by Open Government Data</p>
+      <p class="footer-meta">
+        <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">Open Source</a> &nbsp;&bull;&nbsp;
+        <a href="https://github.com/aaronagai/Gasly/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        &nbsp;&bull;&nbsp;
+        Built by <a href="https://github.com/aaronagai" target="_blank" rel="noopener">@aaronagai</a>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const ICON_SUN  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Zm11.394-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75Zm-3.916 5.834a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.061 1.06l1.59 1.591ZM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18Zm-4.242-.697a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.591-1.59ZM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12Zm.697-4.243a.75.75 0 0 0 1.06-1.06L6.166 5.106a.75.75 0 0 0-1.06 1.06l1.59 1.591Z"/></svg>`;
+    const ICON_MOON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/></svg>`;
+
+    let currentTheme = localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+    function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); }
+    function updateThemeBtn() {
+      const btn = document.getElementById('theme-btn');
+      if (btn) btn.innerHTML = currentTheme === 'dark' ? ICON_SUN : ICON_MOON;
+    }
+    window.toggleTheme = function() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', currentTheme);
+      applyTheme(currentTheme);
+      updateThemeBtn();
+    };
+
+    applyTheme(currentTheme);
+    updateThemeBtn();
+
+    /*
+     * ── TODO: Brunei data feed ─────────────────────────────────────
+     *
+     * const BN_API_URL = '<url>';
+     *
+     * const BN_FUEL_KEYS = [
+     *   { key: 'ron95',  icon: '🟢', accent: '#00ff64', label: 'RON95'  },
+     *   { key: 'ron97',  icon: '🔵', accent: '#00d4ff', label: 'RON97'  },
+     *   { key: 'diesel', icon: '🟠', accent: '#ffaa00', label: 'Diesel' },
+     * ];
+     *
+     * async function fetchBNData() { ... }
+     * function renderBNCards(data) { ... }
+     *
+     * fetchBNData();
+     * setInterval(fetchBNData, 60_000);
+     * ──────────────────────────────────────────────────────────────
+     */
+  </script>
+</body>
+</html>
