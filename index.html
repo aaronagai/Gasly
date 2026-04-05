@@ -526,16 +526,34 @@
     ═══════════════════════════════════════════════════════════ */
     footer {
       position: relative; z-index: 2;
-      display: flex; align-items: center; justify-content: center;
-      padding: 12px 28px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 14px;
+      padding: 36px 28px 32px;
       border-top: 1px solid var(--border);
       background: var(--bg);
     }
-    .footer-text {
-      font-size: 0.6rem; color: var(--text-muted); opacity: 0.45; letter-spacing: 0.06em;
+    .footer-brand {
+      font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;
+      letter-spacing: 0.12em; color: var(--text);
     }
-    .footer-text a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
-    .footer-text a:hover { color: var(--text); opacity: 1; }
+    .footer-tagline {
+      font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.04em;
+      text-align: center; max-width: 320px; line-height: 1.5;
+    }
+    .footer-nav {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.65rem; letter-spacing: 0.04em;
+    }
+    .footer-nav a {
+      color: var(--text-muted); text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-nav a:hover { color: var(--text); }
+    .footer-sep { color: var(--border); user-select: none; }
+    .footer-copy {
+      font-size: 0.58rem; color: var(--text-muted); opacity: 0.4;
+      letter-spacing: 0.04em;
+    }
 
     /* ── Currency toggle ──────────────────────────────────────── */
     .currency-toggle {
@@ -741,9 +759,18 @@
 
   <!-- ── Footer ────────────────────────────────────────────────── -->
   <footer>
-    <span class="footer-text">
-      <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">github.com/aaronagai/Gasly</a>
-    </span>
+    <div class="footer-brand">Gas<span style="font-weight:400">ly</span></div>
+    <div class="footer-tagline">Real-time fuel prices across Southeast Asia and beyond.</div>
+    <nav class="footer-nav">
+      <a href="#">About</a>
+      <span class="footer-sep">·</span>
+      <a href="mailto:hello@gasly.app">Contact</a>
+      <span class="footer-sep">·</span>
+      <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">GitHub</a>
+      <span class="footer-sep">·</span>
+      <a href="#">Privacy</a>
+    </nav>
+    <div class="footer-copy">© 2025 Gasly. Open source under MIT License.</div>
   </footer>
 
   <!-- Tooltip -->
