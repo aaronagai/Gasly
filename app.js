@@ -233,20 +233,35 @@ function animateNumber(el, from, to, decimals, duration = 380) {
 }
 
 // ── Data Fetch ───────────────────────────────────────────────────
+const CACHE_KEY = 'gasly_my_data';
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (prices update weekly)
+
 async function loadData(isRefresh = false) {
   const statusDot  = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
 
-  statusText.textContent = I18N[currentLang].loading;
-  statusDot.classList.remove('error');
+  // ── Serve cache instantly ──────────────────────────────────────
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      rawData = cached.data;
+      renderCards(rawData);
+      setMeta(rawData);
+      statusText.textContent = 'Cached';
+    }
+  } catch (_) {}
 
+  // ── Fetch fresh data in background ────────────────────────────
+  statusDot.classList.remove('error');
   try {
     const res  = await fetch(API_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
 
-    // Keep only actual price rows, not weekly-change rows
     rawData = json.filter(row => row.series_type === 'level');
+
+    // Persist to cache
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: rawData }));
 
     renderCards(rawData);
     setMeta(rawData);
