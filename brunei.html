@@ -134,14 +134,7 @@
       <div class="fuel-preview-grid">
         <div class="fuel-preview-card">
           <span class="fpc-icon">🟢</span>
-          <span class="fpc-name">RON95</span>
-          <span class="fpc-price">B$ —</span>
-          <span class="fpc-sub">per litre</span>
-          <span class="fpc-badge">Pending data</span>
-        </div>
-        <div class="fuel-preview-card">
-          <span class="fpc-icon">🔵</span>
-          <span class="fpc-name">RON97</span>
+          <span class="fpc-name">Gasoline</span>
           <span class="fpc-price">B$ —</span>
           <span class="fpc-sub">per litre</span>
           <span class="fpc-badge">Pending data</span>
@@ -149,6 +142,20 @@
         <div class="fuel-preview-card">
           <span class="fpc-icon">🟠</span>
           <span class="fpc-name">Diesel</span>
+          <span class="fpc-price">B$ —</span>
+          <span class="fpc-sub">per litre</span>
+          <span class="fpc-badge">Pending data</span>
+        </div>
+        <div class="fuel-preview-card">
+          <span class="fpc-icon">⭐</span>
+          <span class="fpc-name">V-Power Gasoline</span>
+          <span class="fpc-price">B$ —</span>
+          <span class="fpc-sub">per litre</span>
+          <span class="fpc-badge">Pending data</span>
+        </div>
+        <div class="fuel-preview-card">
+          <span class="fpc-icon">🔵</span>
+          <span class="fpc-name">V-Power Diesel</span>
           <span class="fpc-price">B$ —</span>
           <span class="fpc-sub">per litre</span>
           <span class="fpc-badge">Pending data</span>
@@ -200,9 +207,10 @@
      * const BN_API_URL = '<url>';
      *
      * const BN_FUEL_KEYS = [
-     *   { key: 'ron95',  icon: '🟢', accent: '#00ff64', label: 'RON95'  },
-     *   { key: 'ron97',  icon: '🔵', accent: '#00d4ff', label: 'RON97'  },
-     *   { key: 'diesel', icon: '🟠', accent: '#ffaa00', label: 'Diesel' },
+     *   { key: 'gasoline',       icon: '🟢', accent: '#00ff64', label: 'Gasoline'         },
+     *   { key: 'diesel',         icon: '🟠', accent: '#ffaa00', label: 'Diesel'            },
+     *   { key: 'vpower_gasoline',icon: '⭐', accent: '#b478ff', label: 'V-Power Gasoline'  },
+     *   { key: 'vpower_diesel',  icon: '🔵', accent: '#00d4ff', label: 'V-Power Diesel'   },
      * ];
      *
      * async function fetchBNData() { ... }
