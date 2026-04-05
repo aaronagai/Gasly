@@ -119,10 +119,10 @@
 
     /* Rest of world */
     .country {
-      fill: transparent; stroke: rgba(255,255,255,0.07); stroke-width: 0.4;
+      fill: rgba(255,255,255,0.018); stroke: rgba(255,255,255,0.2); stroke-width: 0.5;
       cursor: default; transition: fill 0.12s, stroke 0.12s;
     }
-    .country:hover { fill: rgba(255,255,255,0.03); stroke: rgba(255,255,255,0.14); }
+    .country:hover { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.3); }
 
     /* Southeast Asia */
     .country.sea {
@@ -274,6 +274,7 @@
       gap: 14px;
       overflow-x: auto;
       padding: 6px 28px 10px;
+      scroll-padding-left: 28px;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
@@ -341,9 +342,23 @@
       letter-spacing: 0.06em; color: var(--text);
     }
 
-    .cc-fuels {
-      font-size: 0.62rem; color: var(--text-muted);
-      letter-spacing: 0.06em; line-height: 1.5;
+    .cc-fuel-list {
+      display: flex; flex-wrap: wrap; gap: 4px;
+    }
+
+    .cc-fuel-pill {
+      font-size: 0.52rem; letter-spacing: 0.04em;
+      padding: 2px 7px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted); white-space: nowrap;
+    }
+
+    .cc-see-more {
+      font-size: 0.52rem; letter-spacing: 0.06em;
+      color: var(--text-muted); opacity: 0.45;
+      cursor: pointer; text-decoration: underline;
+      text-underline-offset: 2px; white-space: nowrap;
+      align-self: center;
     }
 
     .cc-currency {
@@ -434,7 +449,7 @@
       .countries-section { padding: 28px 0 40px; }
       .cs-header { padding: 0 16px 18px; }
       .cs-arrows { display: none; } /* arrows not needed on mobile */
-      .cs-scroll { padding: 6px 16px 10px; gap: 12px; }
+      .cs-scroll { padding: 6px 16px 10px; scroll-padding-left: 16px; gap: 12px; }
 
       /* Cards: ~1.4 visible at once to signal swipe */
       .cc { width: min(72vw, 240px); }
@@ -510,16 +525,16 @@
        COUNTRY CARDS DATA
     ───────────────────────────────────────────────────────── */
     const COUNTRIES = [
-      { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: 'RON95 · RON97 · Diesel', currency: 'MYR / L', url: './malaysia.html', live: true  },
-      { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: 'RON95 · RON98 · Diesel', currency: 'SGD / L', url: null,              live: false },
-      { id: 96,  flag: '🇧🇳', name: 'Brunei',      fuels: 'RON95 · RON97 · Diesel', currency: 'BND / L', url: null,              live: false },
-      { id: 764, flag: '🇹🇭', name: 'Thailand',    fuels: 'RON91 · RON95 · Diesel', currency: 'THB / L', url: null,              live: false },
-      { id: 360, flag: '🇮🇩', name: 'Indonesia',   fuels: 'Pertalite · Pertamax',   currency: 'IDR / L', url: null,              live: false },
-      { id: 704, flag: '🇻🇳', name: 'Vietnam',     fuels: 'RON95 · E5 RON92',       currency: 'VND / L', url: null,              live: false },
-      { id: 608, flag: '🇵🇭', name: 'Philippines', fuels: 'RON91 · RON95 · Diesel', currency: 'PHP / L', url: null,              live: false },
-      { id: 116, flag: '🇰🇭', name: 'Cambodia',    fuels: 'RON92 · RON95 · Diesel', currency: 'KHR / L', url: null,              live: false },
-      { id: 418, flag: '🇱🇦', name: 'Laos',        fuels: 'RON95 · Diesel',         currency: 'LAK / L', url: null,              live: false },
-      { id: 104, flag: '🇲🇲', name: 'Myanmar',     fuels: 'RON92 · RON95 · Diesel', currency: 'MMK / L', url: null,              live: false },
+      { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: ['RON95','RON97','Diesel'],                              currency: 'MYR / L', url: './malaysia.html', live: true  },
+      { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: ['RON95','RON98','Diesel'],                              currency: 'SGD / L', url: null,              live: false },
+      { id: 96,  flag: '🇧🇳', name: 'Brunei',      fuels: ['RON95','RON97','Diesel'],                              currency: 'BND / L', url: null,              live: false },
+      { id: 764, flag: '🇹🇭', name: 'Thailand',    fuels: ['RON91','RON95','E20','E85','Diesel','Biodiesel B7'],   currency: 'THB / L', url: null,              live: false },
+      { id: 360, flag: '🇮🇩', name: 'Indonesia',   fuels: ['Pertalite','Pertamax','Pertamax Turbo','Dexlite','Biosolar B35'], currency: 'IDR / L', url: null, live: false },
+      { id: 704, flag: '🇻🇳', name: 'Vietnam',     fuels: ['RON95','E5 RON92','Diesel'],                           currency: 'VND / L', url: null,              live: false },
+      { id: 608, flag: '🇵🇭', name: 'Philippines', fuels: ['RON91','RON95','RON97','Diesel'],                      currency: 'PHP / L', url: null,              live: false },
+      { id: 116, flag: '🇰🇭', name: 'Cambodia',    fuels: ['RON92','RON95','Diesel'],                              currency: 'KHR / L', url: null,              live: false },
+      { id: 418, flag: '🇱🇦', name: 'Laos',        fuels: ['RON95','Diesel'],                                      currency: 'LAK / L', url: null,              live: false },
+      { id: 104, flag: '🇲🇲', name: 'Myanmar',     fuels: ['RON92','RON95','Diesel'],                              currency: 'MMK / L', url: null,              live: false },
     ];
 
     function renderCountryCards() {
@@ -540,13 +555,19 @@
           ? `<div class="cc-cta"><span class="cc-live-dot"></span>View prices →</div>`
           : `<div class="cc-cta" style="color:var(--text-muted);opacity:0.4">Coming soon</div>`;
 
+        const MAX_FUELS = 4;
+        const shown  = c.fuels.slice(0, MAX_FUELS);
+        const extra  = c.fuels.length - shown.length;
+        const pillsHtml = shown.map(f => `<span class="cc-fuel-pill">${f}</span>`).join('');
+        const moreHtml  = extra > 0 ? `<span class="cc-see-more">+${extra} more</span>` : '';
+
         card.innerHTML = `
           <div class="cc-top">
             <span class="cc-flag">${c.flag}</span>
             <span class="cc-badge ${badgeCls}">${badgeTxt}</span>
           </div>
           <div class="cc-name">${c.name}</div>
-          <div class="cc-fuels">${c.fuels}</div>
+          <div class="cc-fuel-list">${pillsHtml}${moreHtml}</div>
           <div class="cc-currency">${c.currency}</div>
           ${ctaHtml}
         `;
