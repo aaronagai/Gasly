@@ -376,6 +376,34 @@
     }
     .cc.clickable:hover .cc-cta { opacity: 0.75; }
 
+    /* See more card */
+    .cc-see-more-card {
+      opacity: 0.5;
+      border-style: dashed;
+      align-items: center; justify-content: center;
+      min-height: 160px;
+    }
+
+    .cc-more-inner {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px; text-align: center;
+    }
+
+    .cc-more-count {
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--text-muted); letter-spacing: 0.04em; line-height: 1;
+    }
+
+    .cc-more-label {
+      font-size: 0.65rem; font-weight: 600;
+      color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+
+    .cc-more-sub {
+      font-size: 0.55rem; color: var(--text-muted);
+      opacity: 0.55; letter-spacing: 0.08em; margin-top: 2px;
+    }
+
     /* Live pulsing dot in card */
     .cc-live-dot {
       display: inline-block;
@@ -539,7 +567,9 @@
 
     function renderCountryCards() {
       const scroll = document.getElementById('cs-scroll');
-      COUNTRIES.forEach(c => {
+      const visible = COUNTRIES.slice(0, 4);
+
+      visible.forEach(c => {
         const card = document.createElement('div');
         card.className = 'cc' + (c.live ? ' clickable' : '');
         if (c.url) {
@@ -573,6 +603,19 @@
         `;
         scroll.appendChild(card);
       });
+
+      /* See more card */
+      const remaining = COUNTRIES.length - visible.length;
+      const more = document.createElement('div');
+      more.className = 'cc cc-see-more-card';
+      more.innerHTML = `
+        <div class="cc-more-inner">
+          <div class="cc-more-count">+${remaining}</div>
+          <div class="cc-more-label">more countries</div>
+          <div class="cc-more-sub">coming soon</div>
+        </div>
+      `;
+      scroll.appendChild(more);
     }
 
     renderCountryCards();
