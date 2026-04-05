@@ -12,11 +12,10 @@
     :root {
       --bg:         #0a0a0a;
       --text:       #f0f0f0;
-      --text-muted: #888888;
+      --text-muted: #888;
       --blue:       #00d4ff;
-      --green:      #00ff64;
       --border:     rgba(255,255,255,0.08);
-      --font:       'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      --font:       'JetBrains Mono', 'Fira Code', monospace;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,260 +28,260 @@
       overflow: hidden;
     }
 
-    /* Ambient glow */
+    /* Ambient glow behind map */
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background: radial-gradient(ellipse at 55% 50%, rgba(0,212,255,0.05) 0%, transparent 65%);
-      pointer-events: none;
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 58% 55%, rgba(0,212,255,0.06) 0%, transparent 60%);
     }
 
-    /* Scanlines */
+    /* CRT scanlines */
     .scanlines {
       position: fixed; inset: 0; z-index: 1; pointer-events: none;
       background: repeating-linear-gradient(
         0deg, transparent, transparent 2px,
-        rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+        rgba(0,0,0,0.055) 2px, rgba(0,0,0,0.055) 4px
       );
     }
 
-    /* Page shell */
+    /* Shell */
     .page {
       position: relative; z-index: 2;
       width: 100vw; height: 100vh;
       display: flex; flex-direction: column;
     }
 
-    /* ── Header ──────────────────────────────────────────────────── */
+    /* ── Header ─────────────────────────────────────────────────── */
     header {
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 22px 32px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 28px 16px;
       border-bottom: 1px solid var(--border);
     }
 
-    .logo-block {
-      display: flex; align-items: center; gap: 12px;
-    }
-
-    .site-logo { height: 38px; width: auto; }
+    .logo-block { display: flex; align-items: center; gap: 10px; }
+    .site-logo  { height: 34px; width: auto; }
 
     .site-title {
-      font-size: 1rem; font-weight: 700;
+      font-size: 0.95rem; font-weight: 700;
       letter-spacing: 0.1em; line-height: 1;
     }
-    .title-regular { font-weight: 400; color: #ffffff; }
-    .title-bold    { font-weight: 700; color: #ffffff; }
+    .title-regular { font-weight: 400; color: #fff; }
+    .title-bold    { font-weight: 700; color: #fff; }
 
     .site-subtitle {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      margin-top: 4px;
+      font-size: 0.6rem; color: var(--text-muted);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-top: 4px;
     }
 
     .status-pill {
-      display: flex; align-items: center; gap: 8px;
-      padding: 5px 12px;
-      border: 1px solid rgba(0,212,255,0.2);
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 11px;
+      border: 1px solid rgba(0,212,255,0.22);
       border-radius: 20px;
-      background: rgba(0,212,255,0.06);
-      font-size: 0.65rem;
-      color: var(--blue);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 600;
+      background: rgba(0,212,255,0.07);
+      font-size: 0.6rem; font-weight: 600;
+      color: var(--blue); letter-spacing: 0.1em; text-transform: uppercase;
     }
 
     .status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--blue);
-      box-shadow: 0 0 6px var(--blue);
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--blue); box-shadow: 0 0 6px var(--blue);
       animation: blink 2s ease-in-out infinite;
+      flex-shrink: 0;
     }
 
     @keyframes blink {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+      50%       { opacity: 0.25; }
     }
 
-    /* ── Map ─────────────────────────────────────────────────────── */
+    /* ── Map container ──────────────────────────────────────────── */
     .map-wrap {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
+      flex: 1; position: relative; overflow: hidden;
     }
 
+    /* SVG fills the container */
     .map-wrap svg {
+      position: absolute; inset: 0;
       width: 100%; height: 100%;
       display: block;
     }
 
-    /* Ocean */
-    .sphere { fill: rgba(0,212,255,0.012); }
+    /* ── SVG country styles ─────────────────────────────────────── */
 
-    /* Graticule grid lines */
+    /* Rest of world — barely visible */
+    .country {
+      fill: transparent;
+      stroke: rgba(255,255,255,0.07);
+      stroke-width: 0.4;
+      cursor: default;
+      transition: fill 0.12s, stroke 0.12s;
+    }
+    .country:hover {
+      fill: rgba(255,255,255,0.03);
+      stroke: rgba(255,255,255,0.14);
+    }
+
+    /* Southeast Asia — visible, "coming soon" */
+    .country.sea {
+      fill: rgba(255,255,255,0.02);
+      stroke: rgba(255,255,255,0.28);
+      stroke-width: 0.55;
+      cursor: pointer;
+    }
+    .country.sea:hover {
+      fill: rgba(255,255,255,0.07);
+      stroke: rgba(255,255,255,0.5);
+    }
+
+    /* Malaysia — live, cyan glow */
+    .country.live {
+      fill: rgba(0,212,255,0.16);
+      stroke: rgba(0,212,255,0.88);
+      stroke-width: 0.9;
+      cursor: pointer;
+    }
+    .country.live:hover {
+      fill: rgba(0,212,255,0.26);
+      stroke: #00d4ff;
+    }
+
+    /* Animated glow halo behind Malaysia */
+    .glow-halo {
+      fill: rgba(0,212,255,0.06);
+      stroke: rgba(0,212,255,0.35);
+      stroke-width: 5;
+      pointer-events: none;
+      animation: haloPulse 2.8s ease-in-out infinite;
+    }
+    @keyframes haloPulse {
+      0%, 100% { opacity: 0.4; stroke-width: 5; }
+      50%       { opacity: 1;   stroke-width: 9; }
+    }
+
+    /* Ocean sphere */
+    .sphere { fill: rgba(0,212,255,0.015); }
+
+    /* Graticule grid */
     .graticule {
       fill: none;
-      stroke: rgba(255,255,255,0.035);
+      stroke: rgba(255,255,255,0.04);
       stroke-width: 0.3;
     }
 
-    /* Country paths */
-    .country {
-      fill: transparent;
-      stroke: rgba(255,255,255,0.13);
-      stroke-width: 0.35;
-      cursor: default;
-      transition: fill 0.12s ease, stroke 0.12s ease;
-    }
-
-    .country:hover {
-      fill: rgba(255,255,255,0.045);
-      stroke: rgba(255,255,255,0.28);
-    }
-
-    /* Live country — Malaysia */
-    .country.live {
-      fill: rgba(0,212,255,0.14);
-      stroke: rgba(0,212,255,0.9);
-      stroke-width: 0.7;
-      cursor: pointer;
-    }
-
-    .country.live:hover {
-      fill: rgba(0,212,255,0.24);
-      stroke: #00d4ff;
-      stroke-width: 1;
-    }
-
-    /* Glow filter applied via SVG <filter> */
-    .country-glow-layer {
-      fill: rgba(0,212,255,0.07);
-      stroke: rgba(0,212,255,0.5);
-      stroke-width: 2;
-      pointer-events: none;
-      animation: glowPulse 2.8s ease-in-out infinite;
-    }
-
-    @keyframes glowPulse {
-      0%, 100% { opacity: 0.5; stroke-width: 2; }
-      50%       { opacity: 1;   stroke-width: 4; }
-    }
-
-    /* Ping rings on Malaysia centroid */
+    /* Ping rings at Malaysia centroid */
     .ping-ring {
-      fill: none;
-      stroke: #00d4ff;
-      stroke-width: 1.2;
-      animation: pingOut 2.4s ease-out infinite;
+      fill: none; stroke: #00d4ff;
+      animation: pingOut 2.6s ease-out infinite;
     }
-    .ping-ring:nth-child(2) { animation-delay: 0.8s; }
-    .ping-ring:nth-child(3) { animation-delay: 1.6s; }
-
+    .ping-ring:nth-child(2) { animation-delay: 0.87s; }
+    .ping-ring:nth-child(3) { animation-delay: 1.73s; }
     @keyframes pingOut {
-      0%   { r: 2; opacity: 0.9; }
-      100% { r: 18; opacity: 0; }
+      0%   { stroke-width: 1.5; opacity: 0.9; }
+      100% { stroke-width: 0.3; opacity: 0;   }
     }
 
-    /* Center dot */
+    /* Centroid dot */
     .ping-dot {
       fill: #00d4ff;
-      filter: drop-shadow(0 0 3px #00d4ff) drop-shadow(0 0 6px #00d4ff80);
+      filter: drop-shadow(0 0 4px #00d4ff) drop-shadow(0 0 8px rgba(0,212,255,0.5));
     }
 
-    /* LIVE label */
+    /* "LIVE" label */
     .live-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 6.5px;
-      font-weight: 700;
-      letter-spacing: 0.16em;
-      fill: #00d4ff;
-      dominant-baseline: middle;
-      text-anchor: start;
-      filter: drop-shadow(0 0 4px rgba(0,212,255,0.8));
+      font-weight: 700; fill: #00d4ff;
+      dominant-baseline: middle; text-anchor: start;
+      filter: drop-shadow(0 0 5px rgba(0,212,255,0.9));
+      letter-spacing: 0.14em;
     }
 
-    /* ── Tooltip ─────────────────────────────────────────────────── */
-    #tooltip {
-      position: fixed;
-      z-index: 200;
+    /* Country name labels — SEA */
+    .cname {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500; letter-spacing: 0.1em;
+      text-anchor: middle; dominant-baseline: middle;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.12s ease;
-      background: rgba(8,8,8,0.92);
+      text-transform: uppercase;
+    }
+    .cname.sea-name      { fill: rgba(255,255,255,0.45); }
+    .cname.neighbor-name { fill: rgba(255,255,255,0.13); }
+
+    /* ── Edge vignette — creates "zoomed window" feel ───────────── */
+    .map-vignette {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(to right,  rgba(10,10,10,0.88) 0%, rgba(10,10,10,0) 13%, rgba(10,10,10,0) 87%, rgba(10,10,10,0.88) 100%),
+        linear-gradient(to bottom, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0) 16%, rgba(10,10,10,0) 80%, rgba(10,10,10,0.82) 100%);
+    }
+
+    /* ── Hint text ──────────────────────────────────────────────── */
+    .map-hint {
+      position: absolute; bottom: 18px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 2; pointer-events: none;
+      font-size: 0.58rem; color: var(--text-muted);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      opacity: 0.4; white-space: nowrap;
+    }
+
+    /* ── Tooltip ────────────────────────────────────────────────── */
+    #tooltip {
+      position: fixed; z-index: 300; pointer-events: none;
+      opacity: 0; transition: opacity 0.12s ease;
+      background: rgba(8,8,8,0.94);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 9px 14px 8px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      min-width: 140px;
+      border-radius: 8px; padding: 9px 14px 8px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      min-width: 148px;
     }
     #tooltip.show { opacity: 1; }
 
     .tt-country {
-      display: block;
-      font-size: 0.76rem;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: 0.04em;
-      margin-bottom: 3px;
+      display: block; font-size: 0.75rem; font-weight: 600;
+      color: var(--text); letter-spacing: 0.04em; margin-bottom: 3px;
     }
-
     .tt-status {
-      display: block;
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      display: block; font-size: 0.58rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
     }
     .tt-status.live { color: var(--blue); }
-    .tt-status.soon { color: var(--text-muted); opacity: 0.7; }
+    .tt-status.soon { color: var(--text-muted); opacity: 0.65; }
 
-    /* ── Hint ────────────────────────────────────────────────────── */
-    .map-hint {
-      position: absolute;
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      opacity: 0.45;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    /* ── Footer ──────────────────────────────────────────────────── */
+    /* ── Footer ─────────────────────────────────────────────────── */
     footer {
       flex-shrink: 0;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 32px;
+      padding: 10px 28px;
       border-top: 1px solid var(--border);
     }
-
     .footer-text {
-      font-size: 0.62rem;
-      color: var(--text-muted);
-      opacity: 0.5;
-      letter-spacing: 0.06em;
+      font-size: 0.6rem; color: var(--text-muted); opacity: 0.45; letter-spacing: 0.06em;
     }
+    .footer-text a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+    .footer-text a:hover { color: var(--text); opacity: 1; }
 
-    .footer-text a {
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-text a:hover { color: var(--text); }
+    /* ── Mobile ──────────────────────────────────────────────────── */
+    @media (max-width: 639px) {
+      header { padding: 14px 16px 12px; }
+      footer  { padding: 8px 16px; }
 
-    /* ── Responsive ──────────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      header { padding: 14px 16px 12px; gap: 8px; flex-wrap: wrap; }
-      footer { padding: 8px 16px; }
-      .status-pill { font-size: 0.58rem; padding: 4px 10px; }
-      .map-hint { font-size: 0.55rem; bottom: 12px; }
+      .site-logo    { height: 28px; }
+      .site-title   { font-size: 0.85rem; }
+      .site-subtitle { display: none; }
+
+      .status-pill { font-size: 0.56rem; padding: 4px 9px; gap: 6px; }
+      .status-dot  { width: 5px; height: 5px; }
+
+      .map-hint { font-size: 0.52rem; bottom: 12px; }
+
+      /* Stronger side vignette on mobile since map is narrower */
+      .map-vignette {
+        background:
+          linear-gradient(to right,  rgba(10,10,10,0.6) 0%, rgba(10,10,10,0) 8%,  rgba(10,10,10,0) 92%, rgba(10,10,10,0.6) 100%),
+          linear-gradient(to bottom, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0) 12%, rgba(10,10,10,0) 82%, rgba(10,10,10,0.8) 100%);
+      }
     }
   </style>
 </head>
@@ -290,7 +289,6 @@
   <div class="scanlines" aria-hidden="true"></div>
 
   <div class="page">
-    <!-- Header -->
     <header>
       <div class="logo-block">
         <img src="logo.svg" alt="Gasly logo" class="site-logo" />
@@ -307,20 +305,18 @@
       </div>
     </header>
 
-    <!-- Map -->
     <div class="map-wrap" id="map-wrap">
-      <div class="map-hint">Click the glowing country to view live prices</div>
+      <div class="map-vignette"></div>
+      <div class="map-hint">Tap the glowing country to view live prices</div>
     </div>
 
-    <!-- Tooltip -->
     <div id="tooltip">
       <span class="tt-country" id="tt-country"></span>
-      <span class="tt-status" id="tt-status"></span>
+      <span class="tt-status"  id="tt-status"></span>
     </div>
 
-    <!-- Footer -->
     <footer>
-      <span class="footer-text">Global fuel price tracker &mdash; open source</span>
+      <span class="footer-text">Southeast Asia · expanding globally</span>
       <span class="footer-text">
         <a href="https://github.com/aaronagai/Gasly" target="_blank" rel="noopener">github.com/aaronagai/Gasly</a>
       </span>
@@ -328,76 +324,72 @@
   </div>
 
   <script>
-    // Countries with live data
+    /* ── Country sets ─────────────────────────────────────────── */
+    // Southeast Asia (all countries rendered prominently)
+    const SEA = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
+    // 96=Brunei  104=Myanmar  116=Cambodia  360=Indonesia  418=Laos
+    // 458=Malaysia  608=Philippines  626=Timor-Leste  702=Singapore
+    // 704=Vietnam  764=Thailand
+
+    // Countries with live data → links to tracker page
     const LIVE = {
       458: { name: 'Malaysia', url: './malaysia.html' },
     };
 
-    // ISO 3166-1 numeric → name lookup
+    // ISO 3166-1 numeric → display name
     const NAMES = {
-      4:'Afghanistan',8:'Albania',12:'Algeria',24:'Angola',32:'Argentina',
-      36:'Australia',40:'Austria',50:'Bangladesh',56:'Belgium',68:'Bolivia',
-      76:'Brazil',100:'Bulgaria',116:'Cambodia',120:'Cameroon',124:'Canada',
-      144:'Sri Lanka',152:'Chile',156:'China',170:'Colombia',188:'Costa Rica',
-      191:'Croatia',203:'Czech Republic',208:'Denmark',218:'Ecuador',818:'Egypt',
-      231:'Ethiopia',246:'Finland',250:'France',276:'Germany',288:'Ghana',
-      300:'Greece',348:'Hungary',356:'India',360:'Indonesia',364:'Iran',
-      368:'Iraq',372:'Ireland',376:'Israel',380:'Italy',392:'Japan',
-      400:'Jordan',398:'Kazakhstan',404:'Kenya',410:'South Korea',414:'Kuwait',
-      418:'Laos',458:'Malaysia',484:'Mexico',504:'Morocco',524:'Nepal',
-      528:'Netherlands',554:'New Zealand',566:'Nigeria',578:'Norway',
-      586:'Pakistan',604:'Peru',608:'Philippines',616:'Poland',620:'Portugal',
-      634:'Qatar',643:'Russia',682:'Saudi Arabia',702:'Singapore',703:'Slovakia',
-      710:'South Africa',724:'Spain',752:'Sweden',756:'Switzerland',764:'Thailand',
-      792:'Turkey',804:'Ukraine',784:'United Arab Emirates',826:'United Kingdom',
-      840:'United States',858:'Uruguay',704:'Vietnam',887:'Yemen',716:'Zimbabwe',
+      36:'Australia', 50:'Bangladesh', 96:'Brunei', 104:'Myanmar',
+      116:'Cambodia', 144:'Sri Lanka', 156:'China', 158:'Taiwan',
+      356:'India', 360:'Indonesia', 392:'Japan', 410:'South Korea',
+      418:'Laos', 458:'Malaysia', 598:'Papua New Guinea', 608:'Philippines',
+      626:'Timor-Leste', 702:'Singapore', 704:'Vietnam', 764:'Thailand',
     };
 
-    const tooltip    = document.getElementById('tooltip');
-    const ttCountry  = document.getElementById('tt-country');
-    const ttStatus   = document.getElementById('tt-status');
+    // Labels rendered on the map itself (SEA core + key neighbours)
+    const MAP_LABELS = {
+      // SEA countries
+      104: 'Myanmar',   116: 'Cambodia',    360: 'Indonesia',
+      418: 'Laos',      608: 'Philippines',  764: 'Thailand',
+      704: 'Vietnam',
+      // Neighbours (dimmer)
+      156: 'China',     356: 'India',        36:  'Australia',
+      392: 'Japan',
+    };
+    const SEA_LABEL_IDS = new Set([104, 116, 360, 418, 608, 764, 704]);
 
-    function showTip(e, id) {
-      const name = NAMES[id];
-      if (!name) return;
-      const live = !!LIVE[id];
-      ttCountry.textContent = name;
-      ttStatus.textContent  = live ? '● Live data' : '○ Coming soon';
-      ttStatus.className    = 'tt-status ' + (live ? 'live' : 'soon');
-      tooltip.classList.add('show');
-      moveTip(e);
-    }
+    /* ── Responsive map dimensions ────────────────────────────── */
+    const mobile = window.innerWidth < 640;
 
-    function moveTip(e) {
-      const pad = 16;
-      let x = e.clientX + 14;
-      let y = e.clientY - 44;
-      if (x + 160 > window.innerWidth)  x = e.clientX - 160;
-      if (y < pad) y = e.clientY + 14;
-      tooltip.style.left = x + 'px';
-      tooltip.style.top  = y + 'px';
-    }
+    // ViewBox dimensions — portrait for mobile, landscape for desktop
+    const W = mobile ? 480  : 960;
+    const H = mobile ? 820  : 500;
 
-    function hideTip() { tooltip.classList.remove('show'); }
+    // Projection: Mercator centered on Southeast Asia
+    // Center lon=115 (Borneo), lat=3 (near equator)
+    // Scale tuned so SEA fills most of the frame with neighbours as glimpses
+    const SCALE  = mobile ? 680 : 820;
+    const CENTER = [115, mobile ? 2 : 3];
 
-    // Build map
-    const wrap = document.getElementById('map-wrap');
-    const W = 960, H = 500;
-
-    const svg = d3.select('#map-wrap').insert('svg', '.map-hint')
+    /* ── SVG setup ─────────────────────────────────────────────── */
+    const svg = d3.select('#map-wrap')
+      .insert('svg', ':first-child')
       .attr('viewBox', `0 0 ${W} ${H}`)
       .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    // SVG glow filter
-    const defs = svg.append('defs');
-    const filter = defs.append('filter').attr('id', 'glow').attr('x', '-40%').attr('y', '-40%').attr('width', '180%').attr('height', '180%');
-    filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
-    const feMerge = filter.append('feMerge');
-    feMerge.append('feMergeNode').attr('in', 'blur');
-    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // Glow filter for Malaysia halo
+    const defs   = svg.append('defs');
+    const filter = defs.append('filter')
+      .attr('id', 'blur-glow')
+      .attr('x', '-60%').attr('y', '-60%')
+      .attr('width', '220%').attr('height', '220%');
+    filter.append('feGaussianBlur').attr('stdDeviation', mobile ? 5 : 7).attr('result', 'blur');
+    const merge = filter.append('feMerge');
+    merge.append('feMergeNode').attr('in', 'blur');
+    merge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    const projection = d3.geoNaturalEarth1()
-      .scale(153)
+    const projection = d3.geoMercator()
+      .center(CENTER)
+      .scale(SCALE)
       .translate([W / 2, H / 2]);
 
     const path = d3.geoPath().projection(projection);
@@ -408,68 +400,176 @@
       .attr('class', 'sphere')
       .attr('d', path);
 
-    // Graticule
+    // Lat/lon grid
     svg.append('path')
-      .datum(d3.geoGraticule()())
+      .datum(d3.geoGraticule().step([10, 10])())
       .attr('class', 'graticule')
       .attr('d', path);
 
+    /* ── Tooltip helpers ───────────────────────────────────────── */
+    const tooltip   = document.getElementById('tooltip');
+    const ttCountry = document.getElementById('tt-country');
+    const ttStatus  = document.getElementById('tt-status');
+
+    function showTip(e, id) {
+      const name = NAMES[id];
+      if (!name) return;
+      const live = !!LIVE[id];
+      ttCountry.textContent = name;
+      ttStatus.textContent  = live ? '● Live data' : '○ Coming soon';
+      ttStatus.className    = 'tt-status ' + (live ? 'live' : 'soon');
+      tooltip.classList.add('show');
+      moveTip(e.clientX, e.clientY);
+    }
+
+    function moveTip(cx, cy) {
+      let x = cx + 14, y = cy - 46;
+      if (x + 170 > window.innerWidth)  x = cx - 170;
+      if (y < 8)                         y = cy + 14;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top  = y + 'px';
+    }
+
+    function hideTip() { tooltip.classList.remove('show'); }
+
+    // Close tooltip on outside tap (mobile)
+    document.addEventListener('touchstart', hideTip, { passive: true });
+
+    /* ── Load and render map ───────────────────────────────────── */
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
       .then(world => {
         const countries = topojson.feature(world, world.objects.countries);
 
-        // Extra glow layer for live countries (behind the main path)
-        svg.selectAll('.country-glow-layer')
+        // ── Glow halo behind Malaysia (rendered first so it's under everything) ──
+        svg.selectAll('.glow-halo')
           .data(countries.features.filter(d => LIVE[+d.id]))
           .enter().append('path')
-          .attr('class', 'country-glow-layer')
+          .attr('class', 'glow-halo')
           .attr('d', path)
-          .attr('filter', 'url(#glow)');
+          .attr('filter', 'url(#blur-glow)');
 
-        // Country paths
-        svg.selectAll('.country')
-          .data(countries.features)
+        // ── Country fills — rest of world, then SEA on top ──────────────
+        // Draw rest-of-world first (dimmer, z-order behind SEA)
+        svg.selectAll('.country-bg')
+          .data(countries.features.filter(d => !SEA.has(+d.id)))
           .enter().append('path')
-          .attr('class', d => 'country' + (LIVE[+d.id] ? ' live' : ''))
+          .attr('class', 'country')
           .attr('d', path)
-          .on('mousemove', (e, d) => { showTip(e, +d.id); moveTip(e); })
+          .on('mousemove', (e, d) => showTip(e, +d.id))
+          .on('mouseleave', hideTip)
+          .on('touchstart', (e, d) => {
+            e.stopPropagation();
+            const t = e.touches[0];
+            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
+          }, { passive: true });
+
+        // Draw SEA countries on top (brighter)
+        svg.selectAll('.country-sea')
+          .data(countries.features.filter(d => SEA.has(+d.id) && !LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'country sea')
+          .attr('d', path)
+          .on('mousemove', (e, d) => showTip(e, +d.id))
+          .on('mouseleave', hideTip)
+          .on('touchstart', (e, d) => {
+            e.stopPropagation();
+            const t = e.touches[0];
+            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
+          }, { passive: true });
+
+        // Malaysia — topmost, clickable, live
+        svg.selectAll('.country-live')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'country live')
+          .attr('d', path)
+          .on('mousemove', (e, d) => showTip(e, +d.id))
           .on('mouseleave', hideTip)
           .on('click', (e, d) => {
             const c = LIVE[+d.id];
             if (c) window.location.href = c.url;
+          })
+          .on('touchend', (e, d) => {
+            e.preventDefault();
+            const c = LIVE[+d.id];
+            if (c) window.location.href = c.url;
           });
 
-        // Ping animation + LIVE label at Malaysia's centroid
+        /* ── Country name labels ──────────────────────────────── */
+        const labelFontSize = mobile ? 9 : 8;
+
+        countries.features.forEach(f => {
+          const id   = +f.id;
+          const name = MAP_LABELS[id];
+          if (!name) return;
+
+          const [lx, ly] = path.centroid(f);
+          if (isNaN(lx) || isNaN(ly)) return;
+          // Only render labels whose centroid falls inside the viewBox
+          if (lx < 0 || lx > W || ly < 0 || ly > H) return;
+
+          const isSEA      = SEA_LABEL_IDS.has(id);
+          const cls        = isSEA ? 'cname sea-name' : 'cname neighbor-name';
+
+          svg.append('text')
+            .attr('class', cls)
+            .attr('x', lx).attr('y', ly)
+            .attr('font-size', labelFontSize)
+            .text(name);
+        });
+
+        /* ── Ping rings + LIVE badge at Malaysia centroid ─────── */
         const MY = countries.features.find(f => +f.id === 458);
         if (MY) {
           const [cx, cy] = path.centroid(MY);
+          const ringMax   = mobile ? 32 : 38;
+          const dotR      = mobile ? 3.5 : 4;
+          const tagSize   = mobile ? 8 : 7;
 
-          // Offset label slightly right of centroid (Malaysia is on the east side)
-          const lx = cx + 5;
-          const ly = cy - 12;
+          const g = svg.append('g').attr('pointer-events', 'none');
 
-          const g = svg.append('g').attr('class', 'live-marker').attr('pointer-events', 'none');
-
-          // Three staggered ping rings
-          [0, 0.8, 1.6].forEach(delay => {
-            g.append('circle')
+          // Three staggered ping rings (CSS animation changes r via CSS keyframes,
+          // but we set the max r here via data-driven approach)
+          [0, 0.87, 1.73].forEach((delay, i) => {
+            const ring = g.append('circle')
               .attr('class', 'ping-ring')
-              .attr('cx', cx).attr('cy', cy).attr('r', 2)
+              .attr('cx', cx).attr('cy', cy)
+              .attr('r', dotR)
               .style('animation-delay', `${delay}s`);
+
+            // Dynamically update r via a custom @keyframes-friendly approach:
+            // We set the target r with a CSS animation that grows it
+            ring.style('--ring-max', ringMax);
           });
 
           // Center dot
           g.append('circle')
             .attr('class', 'ping-dot')
-            .attr('cx', cx).attr('cy', cy).attr('r', 2.5);
+            .attr('cx', cx).attr('cy', cy)
+            .attr('r', dotR);
 
-          // "LIVE" text label
+          // "LIVE" text — offset above and to the right of centroid
           g.append('text')
             .attr('class', 'live-tag')
-            .attr('x', lx).attr('y', ly)
+            .attr('x', cx + dotR + 5)
+            .attr('y', cy - 10)
+            .attr('font-size', tagSize)
             .text('LIVE');
         }
       });
+
+    /* ── Inject ping keyframes with correct max radius ──────────
+       CSS @keyframes can't read CSS custom properties for SVG attr,
+       so we inject the animation directly.                         */
+    const pingMax = mobile ? 32 : 38;
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pingOut {
+        0%   { r: ${mobile ? 3.5 : 4}; stroke-width: 1.5; opacity: 0.9; }
+        100% { r: ${pingMax};           stroke-width: 0.3; opacity: 0;   }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
