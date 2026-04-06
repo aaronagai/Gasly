@@ -227,11 +227,12 @@
         const diff        = dispP !== undefined ? +(disp - dispP).toFixed(isUSD ? 4 : 0) : 0;
         const changeClass = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
         const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
+        const fmtIDR = v => Math.round(v).toLocaleString('en-US');
         const changeLabel = diff === 0
           ? 'Unchanged'
-          : `${diff > 0 ? '+' : ''}${sym} ${isUSD ? Math.abs(diff).toFixed(4) : Math.abs(diff).toFixed(0)}`;
+          : `${diff > 0 ? '+' : ''}${sym} ${isUSD ? Math.abs(diff).toFixed(4) : fmtIDR(Math.abs(diff))}`;
 
-        const priceDisplay = isUSD ? disp.toFixed(4) : disp.toFixed(0);
+        const priceDisplay = isUSD ? disp.toFixed(4) : fmtIDR(disp);
 
         const card = document.createElement('div');
         card.className = 'fuel-card';

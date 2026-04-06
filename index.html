@@ -1349,10 +1349,13 @@
       const resSub = document.getElementById('calc-result-sub');
 
       if (!isNaN(vol) && vol > 0 && price) {
-        const litres = calcUnit === 'ml' ? vol / 1000 : vol;
-        const cost   = litres * price;
-        resVal.textContent = `${schema.sym} ${cost.toFixed(2)}`;
-        resSub.textContent = `${litres % 1 === 0 ? litres : litres.toFixed(3)} L × ${schema.sym} ${price.toFixed(3)}/L`;
+        const litres  = calcUnit === 'ml' ? vol / 1000 : vol;
+        const cost    = litres * price;
+        const isIDR   = schema.sym === 'IDR';
+        const fmtCost = isIDR ? Math.round(cost).toLocaleString('en-US') : cost.toFixed(2);
+        const fmtPric = isIDR ? Math.round(price).toLocaleString('en-US') : price.toFixed(3);
+        resVal.textContent = `${schema.sym} ${fmtCost}`;
+        resSub.textContent = `${litres % 1 === 0 ? litres : litres.toFixed(3)} L × ${schema.sym} ${fmtPric}/L`;
       } else {
         resVal.textContent = '—';
         resSub.textContent = '';
