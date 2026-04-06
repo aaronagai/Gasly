@@ -155,25 +155,22 @@
   </div>
 
   <script>
-    /* ── Theme (site is dark-only) ── */
     const currentTheme = 'dark';
 
-    /* ── Currency ── */
     const IDR_TO_USD = 0.000061;
     let currentCurrency = localStorage.getItem('currency') || 'local';
     function updateCurrencyBtns() {
       document.querySelectorAll('.curr-opt').forEach(b => b.classList.toggle('active', b.dataset.curr === currentCurrency));
     }
-    window.setCurrency = function(c) {
+    function setCurrency(c) {
       currentCurrency = c;
       localStorage.setItem('currency', c);
       updateCurrencyBtns();
       const city = document.getElementById('city-select')?.value || 'Jakarta Pusat';
       if (window._idData) renderCards(window._idData, city);
-    };
+    }
     updateCurrencyBtns();
 
-    /* ── Fuel config ── */
     const FUEL_KEYS = [
       { key: 'pertalite',      label: 'Pertalite',      accent: '#ff6b35', lightAccent: '#ea4400' },
       { key: 'pertamax',       label: 'Pertamax',        accent: '#00ff64', lightAccent: '#16a34a' },
@@ -182,7 +179,6 @@
       { key: 'pertamina_dex',  label: 'Pertamina Dex',   accent: '#00d4ff', lightAccent: '#0ea5e9' },
     ];
 
-    /* ── CSV parser ── */
     function parseCSV(text) {
       const rows = text.trim().split('\n').map(r =>
         r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
@@ -195,12 +191,10 @@
       });
     }
 
-    /* ── City setter ── */
-    window.setCity = function(city) {
+    function setCity(city) {
       if (window._idData) renderCards(window._idData, city);
-    };
+    }
 
-    /* ── Render ── */
     function renderCards(data, city) {
       const grid = document.getElementById('cards-grid');
       grid.innerHTML = '';
@@ -263,7 +257,6 @@
       }
     }
 
-    /* ── Fetch ── */
     const SHEET_ID   = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
     const SHEET_NAME = 'Indonesia';
     const SHEET_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;

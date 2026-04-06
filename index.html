@@ -1026,7 +1026,6 @@
 
   <script>
 
-    /* ── Country cards data ───────────────────────────────────── */
     const COUNTRIES = [
       { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: ['RON95','RON97','Diesel'],                              currency: 'MYR / L', url: './malaysia.html', live: true  },
       { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: ['RON92','RON95','RON98','Premium','Diesel'],           currency: 'SGD / L', url: './singapore.html', live: true  },
@@ -1096,7 +1095,6 @@
 
     renderCountryCards();
 
-    /* ── Sparklines ───────────────────────────────────────────── */
     function drawSparkline(id, values, color) {
       const el = document.getElementById(`spark-${id}`);
       if (!el) return;
@@ -1126,7 +1124,7 @@
       </svg>`;
     }
 
-    function parseCSVSimple(text) {
+    function parseCSV(text) {
       const rows = text.trim().split('\n').map(r =>
         r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
       );
@@ -1154,7 +1152,7 @@
     fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`)
       .then(r => r.text())
       .then(text => {
-        const vals = parseCSVSimple(text).map(r => parseFloat(r.ron95)).filter(v => !isNaN(v));
+        const vals = parseCSV(text).map(r => parseFloat(r.ron95)).filter(v => !isNaN(v));
         drawSparkline(702, vals, '#00d4ff');
       }).catch(() => drawSparkline(702, null, '#00d4ff'));
 
@@ -1162,7 +1160,7 @@
     fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`)
       .then(r => r.text())
       .then(text => {
-        const vals = parseCSVSimple(text).map(r => parseFloat(r.gasoline)).filter(v => !isNaN(v));
+        const vals = parseCSV(text).map(r => parseFloat(r.gasoline)).filter(v => !isNaN(v));
         drawSparkline(96, vals, '#b478ff');
       }).catch(() => drawSparkline(96, null, '#b478ff'));
 
@@ -1170,7 +1168,7 @@
     fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`)
       .then(r => r.text())
       .then(text => {
-        const rows = parseCSVSimple(text).filter(r => r.city === 'Jakarta Pusat');
+        const rows = parseCSV(text).filter(r => r.city === 'Jakarta Pusat');
         const vals = rows.map(r => parseFloat(r.pertalite)).filter(v => !isNaN(v));
         drawSparkline(360, vals, '#ff6b35');
       }).catch(() => drawSparkline(360, null, '#ff6b35'));
@@ -1181,7 +1179,6 @@
       el.scrollBy({ left: dir * 230, behavior: 'smooth' });
     }
 
-    /* ── Calculator ──────────────────────────────────────────── */
     const CALC_SCHEMA = {
       my_peninsular: {
         sym: 'MYR', dataKey: 'my',
@@ -1245,6 +1242,7 @@
 
     async function calcFetchPrices() {
       const statusEl = document.getElementById('calc-data-status');
+      const sourceCount = Object.keys(LIVE_PRICES).length;
       let ok = 0;
 
       // Malaysia
@@ -1259,7 +1257,7 @@
       try {
         const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`);
         const text = await res.text();
-        const rows = parseCSVSimple(text);
+        const rows = parseCSV(text);
         if (rows.length) { LIVE_PRICES.sg = rows[rows.length - 1]; ok++; }
       } catch (_) {}
 
@@ -1267,7 +1265,7 @@
       try {
         const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`);
         const text = await res.text();
-        const rows = parseCSVSimple(text);
+        const rows = parseCSV(text);
         if (rows.length) { LIVE_PRICES.bn = rows[rows.length - 1]; ok++; }
       } catch (_) {}
 
@@ -1275,11 +1273,11 @@
       try {
         const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`);
         const text = await res.text();
-        const rows = parseCSVSimple(text);
+        const rows = parseCSV(text);
         if (rows.length) { LIVE_PRICES.id = rows; ok++; }
       } catch (_) {}
 
-      if (ok === 4) {
+      if (ok === sourceCount) {
         statusEl.textContent = 'Live prices loaded';
         statusEl.className = 'calc-data-status live';
       } else if (ok > 0) {
@@ -1317,31 +1315,31 @@
       ).join('');
     }
 
-    window.calcSetCountry = function(c) {
+    function calcSetCountry(c) {
       calcCountry = c;
       calcFuel    = CALC_SCHEMA[c].fuels[0].key;
       const cityField = document.getElementById('calc-city-field');
       if (cityField) cityField.style.display = CALC_SCHEMA[c].hasCity ? '' : 'none';
       calcRenderFuels();
       calcUpdate();
-    };
+    }
 
-    window.calcSetCity = function(city) {
+    function calcSetCity() {
       calcUpdate();
-    };
+    }
 
-    window.calcSetFuel = function(f) {
+    function calcSetFuel(f) {
       calcFuel = f;
       calcUpdate();
-    };
+    }
 
-    window.calcSetUnit = function(u) {
+    function calcSetUnit(u) {
       calcUnit = u;
       document.querySelectorAll('.calc-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === u));
       calcUpdate();
-    };
+    }
 
-    window.calcUpdate = function() {
+    function calcUpdate() {
       const vol    = parseFloat(document.getElementById('calc-volume').value);
       const schema = CALC_SCHEMA[calcCountry];
       const price  = calcGetPrice(calcCountry, calcFuel);
@@ -1360,15 +1358,13 @@
         resVal.textContent = '—';
         resSub.textContent = '';
       }
-    };
+    }
 
     // Init
     calcRenderFuels();
     calcFetchPrices();
 
-    /* ──────────────────────────���───────────────────���──────────
-       MAP
-    ─────────────────────────────────────────────────────��─── */
+    // Map
     const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = {
       458: { name: 'Malaysia',  url: './malaysia.html'   },
@@ -1392,7 +1388,7 @@
     };
     const SEA_LABEL_IDS = new Set([104, 116, 360, 418, 608, 764, 704]);
 
-    const mobile = window.innerWidth < 640;
+    const mobile = window.matchMedia('(max-width: 640px)').matches;
     const W = mobile ? 480 : 960;
     const H = mobile ? 820 : 500;
     const SCALE  = mobile ? 640 : 730;
@@ -1577,26 +1573,24 @@
     `;
     document.head.appendChild(st);
 
-    /* ── Scroll-aware navbar ─────────────────────────────────── */
-    (function() {
-      const hdr = document.querySelector('header');
-      window.addEventListener('scroll', function() {
-        hdr.classList.toggle('scrolled', window.scrollY > 50);
-      }, { passive: true });
-    })();
+    const hdr = document.querySelector('header');
+    window.addEventListener('scroll', () => {
+      hdr.classList.toggle('scrolled', window.scrollY > 50);
+    }, { passive: true });
 
-    /* ── Mobile nav ──────────────────────────────────────────── */
-    window.toggleMobileNav = function() {
+    function toggleMobileNav() {
       const nav = document.getElementById('mobile-nav');
       const btn = document.querySelector('.nav-hamburger');
       const open = nav.classList.toggle('open');
       btn.setAttribute('aria-expanded', open);
-    };
-    window.closeMobileNav = function() {
+    }
+
+    function closeMobileNav() {
       document.getElementById('mobile-nav').classList.remove('open');
       document.querySelector('.nav-hamburger').setAttribute('aria-expanded', 'false');
-    };
-    document.addEventListener('click', function(e) {
+    }
+
+    document.addEventListener('click', e => {
       if (!e.target.closest('header')) closeMobileNav();
     });
   </script>

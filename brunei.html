@@ -96,24 +96,22 @@
   </div>
 
   <script>
-    /* ── Theme (site is dark-only) ── */
     const currentTheme = 'dark';
 
-    /* ── Currency ── */
+
     const BND_TO_USD = 0.74;
     let currentCurrency = localStorage.getItem('currency') || 'local';
     function updateCurrencyBtns() {
       document.querySelectorAll('.curr-opt').forEach(b => b.classList.toggle('active', b.dataset.curr === currentCurrency));
     }
-    window.setCurrency = function(c) {
+    function setCurrency(c) {
       currentCurrency = c;
       localStorage.setItem('currency', c);
       updateCurrencyBtns();
       if (window._bnData) renderCards(window._bnData);
-    };
+    }
     updateCurrencyBtns();
 
-    /* ── Fuel config ── */
     const FUEL_KEYS = [
       { key: 'gasoline',        label: 'Gasoline',        accent: '#00ff64', lightAccent: '#16a34a' },
       { key: 'diesel',          label: 'Diesel',          accent: '#ffaa00', lightAccent: '#ea580c' },
@@ -121,7 +119,6 @@
       { key: 'vpower_diesel',   label: 'V-Power Diesel',  accent: '#00d4ff', lightAccent: '#0ea5e9' },
     ];
 
-    /* ── CSV parser ── */
     function parseCSV(text) {
       const rows = text.trim().split('\n').map(r =>
         r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
@@ -134,7 +131,6 @@
       });
     }
 
-    /* ── Render ── */
     function renderCards(data) {
       const grid = document.getElementById('cards-grid');
       grid.innerHTML = '';
@@ -152,7 +148,7 @@
 
         const isUSD = currentCurrency === 'usd';
         const rate  = isUSD ? BND_TO_USD : 1;
-        const sym   = isUSD ? 'USD' : 'B$';
+        const sym   = isUSD ? 'USD' : 'BND';
         const disp  = current * rate;
         const dispP = prev !== undefined ? prev * rate : undefined;
 
@@ -188,7 +184,6 @@
       });
     }
 
-    /* ── Fetch ── */
     const SHEET_ID   = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
     const SHEET_NAME = 'Brunei';
     const SHEET_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
