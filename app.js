@@ -52,7 +52,7 @@ const I18N = {
     openSource:   'Open Source',
     mitLicense:   'MIT License',
     creditLine:     'Data sourced from open government data portals worldwide',
-    intlTitle:      'Global Price Comparison (RM/L)',
+    intlTitle:      'Global Price Comparison (MYR/L)',
     intlDisclaimer: 'International prices updated weekly. Source: GlobalPetrolPrices.com',
     intlRateNote:   'Live exchange rates via exchangerate-api.com',
     historyTitle:   '3-Month Price History',
@@ -271,7 +271,7 @@ function renderFuelCards(data, skipAnimation = false) {
 
     const isUSD = currentCurrency === 'usd';
     const rate  = isUSD ? MYR_TO_USD : 1;
-    const sym   = isUSD ? 'USD' : 'RM';
+    const sym   = isUSD ? 'USD' : 'MYR';
     const disp  = current * rate;
     const dispP = prev !== undefined ? prev * rate : undefined;
 
@@ -376,7 +376,7 @@ function renderSparkline(key, series, accent) {
           bodyColor: currentTheme === 'light' ? '#1a1a1a' : '#f0f0f0',
           titleFont: { family: 'DM Mono' },
           bodyFont:  { family: 'DM Mono' },
-          callbacks: { label: ctx => ` RM ${ctx.parsed.y.toFixed(2)}/L` },
+          callbacks: { label: ctx => ` MYR ${ctx.parsed.y.toFixed(2)}/L` },
         },
       },
       scales: {
@@ -464,7 +464,7 @@ function renderHistoryChart() {
           titleFont: { family: 'DM Mono', size: 11 },
           bodyFont:  { family: 'DM Mono', size: 11 },
           callbacks: {
-            label: c => ` ${c.dataset.label}: RM ${c.parsed.y.toFixed(2)}/L`,
+            label: c => ` ${c.dataset.label}: MYR ${c.parsed.y.toFixed(2)}/L`,
           },
         },
       },
@@ -482,7 +482,7 @@ function renderHistoryChart() {
           ticks: {
             color: tickColor,
             font: { family: 'DM Mono', size: 10 },
-            callback: v => `RM ${v.toFixed(2)}`,
+            callback: v => `MYR ${v.toFixed(2)}`,
           },
           grace: '5%',
         },
@@ -642,7 +642,7 @@ function generateStoryCanvas(key, activeKey) {
   ctx.font = '400 70px "DM Mono", monospace';
   ctx.fillStyle = '#4a4a4a';
   ctx.textAlign = 'right';
-  ctx.fillText('RM', priceX - priceW / 2 - 14, priceY);
+  ctx.fillText('MYR', priceX - priceW / 2 - 14, priceY);
   ctx.textAlign = 'left';
   ctx.fillText('/L', priceX + priceW / 2 + 14, priceY);
 
@@ -651,7 +651,7 @@ function generateStoryCanvas(key, activeKey) {
   const arrow       = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
   const changeLabel = diff === 0
     ? `─  ${t.unchanged}`
-    : `${arrow}  ${diff > 0 ? '+' : '−'}RM${Math.abs(diff).toFixed(2)}`;
+    : `${arrow}  ${diff > 0 ? '+' : '−'}MYR ${Math.abs(diff).toFixed(2)}`;
 
   ctx.font = '600 40px "DM Mono", monospace';
   ctx.textAlign = 'center';
@@ -814,7 +814,7 @@ function drawStoryMultilineChart(ctx, x, y, w, h) {
     ctx.fillStyle    = '#383838';
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`RM ${val.toFixed(2)}`, x, gy);
+    ctx.fillText(`MYR ${val.toFixed(2)}`, x, gy);
   }
 
   // Draw each line

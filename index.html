@@ -921,6 +921,44 @@
           <option value="my_east">Malaysia — Sabah / Sarawak</option>
           <option value="sg">Singapore</option>
           <option value="bn">Brunei</option>
+          <option value="id">Indonesia</option>
+        </select>
+      </div>
+      <div class="calc-field" id="calc-city-field" style="display:none">
+        <label class="calc-label" for="calc-city">City</label>
+        <select id="calc-city" class="calc-select" onchange="calcSetCity(this.value)">
+          <optgroup label="Jakarta">
+            <option value="Jakarta Pusat">Jakarta Pusat</option>
+            <option value="Jakarta Selatan">Jakarta Selatan</option>
+            <option value="Jakarta Barat">Jakarta Barat</option>
+            <option value="Jakarta Timur">Jakarta Timur</option>
+            <option value="Jakarta Utara">Jakarta Utara</option>
+          </optgroup>
+          <optgroup label="Greater Jakarta">
+            <option value="Bekasi">Bekasi</option>
+            <option value="Bogor">Bogor</option>
+            <option value="Depok">Depok</option>
+            <option value="Tangerang">Tangerang</option>
+            <option value="Tangerang Selatan">Tangerang Selatan</option>
+          </optgroup>
+          <optgroup label="Java">
+            <option value="Bandung">Bandung</option>
+            <option value="Semarang">Semarang</option>
+            <option value="Surabaya">Surabaya</option>
+            <option value="Surakarta">Surakarta</option>
+            <option value="Yogyakarta">Yogyakarta</option>
+          </optgroup>
+          <optgroup label="Sumatra">
+            <option value="Medan">Medan</option>
+            <option value="Palembang">Palembang</option>
+            <option value="Pekanbaru">Pekanbaru</option>
+          </optgroup>
+          <optgroup label="Bali">
+            <option value="Denpasar">Denpasar</option>
+          </optgroup>
+          <optgroup label="Sulawesi">
+            <option value="Makassar">Makassar</option>
+          </optgroup>
         </select>
       </div>
       <div class="calc-field">
@@ -993,7 +1031,7 @@
       { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: ['RON95','RON97','Diesel'],                              currency: 'MYR / L', url: './malaysia.html', live: true  },
       { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: ['RON92','RON95','RON98','Premium','Diesel'],           currency: 'SGD / L', url: './singapore.html', live: true  },
       { id: 96,  flag: '🇧🇳', name: 'Brunei',      fuels: ['Gasoline','Diesel','V-Power Gasoline','V-Power Diesel'], currency: 'BND / L', url: './brunei.html',   live: true  },
-      { id: 360, flag: '🇮🇩', name: 'Indonesia',   fuels: ['Pertalite','Pertamax','Pertamax Turbo','Dexlite','Biosolar B35'], currency: 'IDR / L', url: null, live: false },
+      { id: 360, flag: '🇮🇩', name: 'Indonesia',   fuels: ['Pertalite','Pertamax','Pertamax Turbo','Dexlite','Pertamina Dex'], currency: 'IDR / L', url: './indonesia.html', live: true },
       { id: 704, flag: '🇻🇳', name: 'Vietnam',     fuels: ['RON95','E5 RON92','Diesel'],                           currency: 'VND / L', url: null,              live: false },
       { id: 608, flag: '🇵🇭', name: 'Philippines', fuels: ['RON91','RON95','RON97','Diesel'],                      currency: 'PHP / L', url: null,              live: false },
       { id: 116, flag: '🇰🇭', name: 'Cambodia',    fuels: ['RON92','RON95','Diesel'],                              currency: 'KHR / L', url: null,              live: false },
@@ -1128,6 +1166,15 @@
         drawSparkline(96, vals, '#b478ff');
       }).catch(() => drawSparkline(96, null, '#b478ff'));
 
+    /* Indonesia — Pertalite for Jakarta Pusat */
+    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`)
+      .then(r => r.text())
+      .then(text => {
+        const rows = parseCSVSimple(text).filter(r => r.city === 'Jakarta Pusat');
+        const vals = rows.map(r => parseFloat(r.pertalite)).filter(v => !isNaN(v));
+        drawSparkline(360, vals, '#ff6b35');
+      }).catch(() => drawSparkline(360, null, '#ff6b35'));
+
     /* Arrow scroll (desktop) */
     function scrollCards(dir) {
       const el = document.getElementById('cs-scroll');
@@ -1137,7 +1184,7 @@
     /* ── Calculator ──────────────────────────────────────────── */
     const CALC_SCHEMA = {
       my_peninsular: {
-        sym: 'RM', dataKey: 'my',
+        sym: 'MYR', dataKey: 'my',
         fuels: [
           { key: 'ron95',        label: 'RON 95'  },
           { key: 'ron97',        label: 'RON 97'  },
@@ -1146,7 +1193,7 @@
         ],
       },
       my_east: {
-        sym: 'RM', dataKey: 'my',
+        sym: 'MYR', dataKey: 'my',
         fuels: [
           { key: 'ron95',          label: 'RON 95'     },
           { key: 'ron97',          label: 'RON 97'     },
@@ -1173,16 +1220,27 @@
           { key: 'vpower_diesel',   label: 'V-Power Diesel'  },
         ],
       },
+      id: {
+        sym: 'IDR', dataKey: 'id', hasCity: true,
+        fuels: [
+          { key: 'pertalite',      label: 'Pertalite'      },
+          { key: 'pertamax',       label: 'Pertamax'       },
+          { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
+          { key: 'dexlite',        label: 'Dexlite'        },
+          { key: 'pertamina_dex',  label: 'Pertamina Dex'  },
+        ],
+      },
     };
 
-    // Live prices cache: { my: {ron95:2.05,...}, sg: {...}, bn: {...} }
-    const LIVE_PRICES = { my: null, sg: null, bn: null };
+    // Live prices cache: { my: {ron95:2.05,...}, sg: {...}, bn: {...}, id: [...] }
+    const LIVE_PRICES = { my: null, sg: null, bn: null, id: null };
 
     // Fallback prices (used if fetch fails)
     const FALLBACK = {
       my: { ron95: 2.05, ron97: 3.88, diesel: 2.15, diesel_eastmsia: 2.15, ron95_budi95: 1.99 },
       sg: { ron92: 2.82, ron95: 2.88, ron98: 3.17, premium: 3.28, diesel: 2.26 },
       bn: { gasoline: 0.53, diesel: 0.53, vpower_gasoline: 0.53, vpower_diesel: 0.53 },
+      id: { pertalite: 10000, pertamax: 12400, pertamax_turbo: 13300, dexlite: 14500, pertamina_dex: 15000 },
     };
 
     async function calcFetchPrices() {
@@ -1213,7 +1271,15 @@
         if (rows.length) { LIVE_PRICES.bn = rows[rows.length - 1]; ok++; }
       } catch (_) {}
 
-      if (ok === 3) {
+      // Indonesia
+      try {
+        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`);
+        const text = await res.text();
+        const rows = parseCSVSimple(text);
+        if (rows.length) { LIVE_PRICES.id = rows; ok++; }
+      } catch (_) {}
+
+      if (ok === 4) {
         statusEl.textContent = 'Live prices loaded';
         statusEl.className = 'calc-data-status live';
       } else if (ok > 0) {
@@ -1229,7 +1295,13 @@
     function calcGetPrice(countryKey, fuelKey) {
       const schema  = CALC_SCHEMA[countryKey];
       const dataKey = schema.dataKey;
-      const source  = LIVE_PRICES[dataKey] || FALLBACK[dataKey];
+      if (schema.hasCity && LIVE_PRICES[dataKey]) {
+        const city = document.getElementById('calc-city')?.value;
+        const rows = LIVE_PRICES[dataKey].filter(r => r.city === city);
+        const row  = rows[rows.length - 1]; // latest
+        return parseFloat(row?.[fuelKey]) || parseFloat(FALLBACK[dataKey]?.[fuelKey]) || null;
+      }
+      const source = LIVE_PRICES[dataKey] || FALLBACK[dataKey];
       return parseFloat(source?.[fuelKey]) || null;
     }
 
@@ -1248,7 +1320,13 @@
     window.calcSetCountry = function(c) {
       calcCountry = c;
       calcFuel    = CALC_SCHEMA[c].fuels[0].key;
+      const cityField = document.getElementById('calc-city-field');
+      if (cityField) cityField.style.display = CALC_SCHEMA[c].hasCity ? '' : 'none';
       calcRenderFuels();
+      calcUpdate();
+    };
+
+    window.calcSetCity = function(city) {
       calcUpdate();
     };
 
@@ -1290,9 +1368,10 @@
     ─────────────────────────────────────────────────────��─── */
     const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = {
-      458: { name: 'Malaysia',  url: './malaysia.html'  },
-      702: { name: 'Singapore', url: './singapore.html' },
-      96:  { name: 'Brunei',    url: './brunei.html'    },
+      458: { name: 'Malaysia',  url: './malaysia.html'   },
+      702: { name: 'Singapore', url: './singapore.html'  },
+      96:  { name: 'Brunei',    url: './brunei.html'     },
+      360: { name: 'Indonesia', url: './indonesia.html'  },
     };
 
     const NAMES = {
