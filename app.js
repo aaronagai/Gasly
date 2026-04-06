@@ -374,8 +374,8 @@ function renderSparkline(key, series, accent) {
           borderWidth: 1,
           titleColor: accent,
           bodyColor: currentTheme === 'light' ? '#1a1a1a' : '#f0f0f0',
-          titleFont: { family: 'JetBrains Mono' },
-          bodyFont:  { family: 'JetBrains Mono' },
+          titleFont: { family: 'DM Mono' },
+          bodyFont:  { family: 'DM Mono' },
           callbacks: { label: ctx => ` RM ${ctx.parsed.y.toFixed(2)}/L` },
         },
       },
@@ -448,7 +448,7 @@ function renderHistoryChart() {
           align: 'end',
           labels: {
             color: tickColor,
-            font: { family: 'JetBrains Mono', size: 11 },
+            font: { family: 'DM Mono', size: 11 },
             boxWidth: 24,
             padding: 16,
             usePointStyle: true,
@@ -461,8 +461,8 @@ function renderHistoryChart() {
           borderWidth: 1,
           titleColor: isLight ? '#1a1a1a' : '#f0f0f0',
           bodyColor:  isLight ? '#555555' : '#aaaaaa',
-          titleFont: { family: 'JetBrains Mono', size: 11 },
-          bodyFont:  { family: 'JetBrains Mono', size: 11 },
+          titleFont: { family: 'DM Mono', size: 11 },
+          bodyFont:  { family: 'DM Mono', size: 11 },
           callbacks: {
             label: c => ` ${c.dataset.label}: RM ${c.parsed.y.toFixed(2)}/L`,
           },
@@ -473,7 +473,7 @@ function renderHistoryChart() {
           grid: { color: gridColor },
           ticks: {
             color: tickColor,
-            font: { family: 'JetBrains Mono', size: 10 },
+            font: { family: 'DM Mono', size: 10 },
             maxRotation: 0,
           },
         },
@@ -481,7 +481,7 @@ function renderHistoryChart() {
           grid: { color: gridColor },
           ticks: {
             color: tickColor,
-            font: { family: 'JetBrains Mono', size: 10 },
+            font: { family: 'DM Mono', size: 10 },
             callback: v => `RM ${v.toFixed(2)}`,
           },
           grace: '5%',

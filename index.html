@@ -492,85 +492,86 @@
       border-top: 1px solid var(--border);
     }
     .calc-header { text-align: center; margin-bottom: 32px; }
-    .calc-badge {
-      display: inline-block;
-      font-size: 0.56rem; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; padding: 3px 10px; border-radius: 5px;
-      border: 1px solid rgba(0,212,255,0.25);
-      color: rgba(0,212,255,0.7); background: rgba(0,212,255,0.06);
-      margin-bottom: 12px;
-    }
-    .calc-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
-    .calc-sub   { font-size: 0.68rem; color: var(--text-muted); margin-top: 6px; opacity: 0.7; }
+    .calc-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); margin-bottom: 6px; }
+    .calc-sub   { font-size: 0.72rem; color: var(--text-muted); }
 
     .calc-card {
-      max-width: 560px; margin: 0 auto;
-      background: var(--bg-card, rgba(255,255,255,0.03));
+      max-width: 480px; margin: 0 auto;
+      background: rgba(255,255,255,0.025);
       border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px;
-      display: flex; flex-direction: column; gap: 16px;
+      border-radius: 12px; padding: 24px 28px;
+      display: flex; flex-direction: column; gap: 18px;
     }
 
-    .calc-country-tabs, .calc-fuel-tabs {
-      display: flex; gap: 8px; flex-wrap: wrap;
+    .calc-field { display: flex; flex-direction: column; gap: 6px; }
+    .calc-label {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
     }
-    .calc-tab, .calc-fuel-btn {
-      padding: 6px 14px; border-radius: 8px;
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      color: var(--text-muted); cursor: pointer;
-      transition: all 0.15s;
-    }
-    .calc-tab.active, .calc-fuel-btn.active {
-      border-color: rgba(0,212,255,0.4);
-      background: rgba(0,212,255,0.08);
-      color: #00d4ff;
-    }
-
-    .calc-volume-row .calc-input-wrap {
-      display: flex; align-items: center;
-      border: 1px solid var(--border); border-radius: 10px;
-      overflow: hidden; background: rgba(255,255,255,0.03);
+    .calc-select {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font); font-size: 0.85rem;
+      cursor: pointer; outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
       transition: border-color 0.15s;
     }
-    .calc-volume-row .calc-input-wrap:focus-within { border-color: rgba(0,212,255,0.4); }
-    .calc-volume-row input {
+    .calc-select:focus { border-color: rgba(0,212,255,0.35); }
+    .calc-select option { background: #121212; color: var(--text); }
+
+    .calc-volume-wrap {
+      display: flex; align-items: stretch;
+      border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; background: rgba(255,255,255,0.04);
+      transition: border-color 0.15s;
+    }
+    .calc-volume-wrap:focus-within { border-color: rgba(0,212,255,0.35); }
+    .calc-volume-wrap input {
       flex: 1; background: none; border: none; outline: none;
-      padding: 12px 14px;
-      font-family: var(--font-mono); font-size: 1rem;
+      padding: 10px 12px;
+      font-family: var(--font-mono); font-size: 0.95rem;
       color: var(--text); min-width: 0;
     }
-    .calc-unit-toggle {
-      display: flex; border-left: 1px solid var(--border);
-    }
+    .calc-unit-toggle { display: flex; border-left: 1px solid var(--border); }
     .calc-unit-btn {
-      padding: 0 14px; height: 100%;
-      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+      padding: 0 13px;
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em;
       background: none; border: none; color: var(--text-muted); cursor: pointer;
       transition: color 0.15s, background 0.15s;
     }
     .calc-unit-btn + .calc-unit-btn { border-left: 1px solid var(--border); }
-    .calc-unit-btn.active { color: #00d4ff; background: rgba(0,212,255,0.08); }
+    .calc-unit-btn.active { color: var(--text); background: rgba(255,255,255,0.06); }
 
     .calc-result {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px; border-radius: 12px;
-      background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.15);
+      padding: 14px 18px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
     }
+    .calc-result-left { display: flex; flex-direction: column; gap: 3px; }
     .calc-result-label {
-      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em;
-      text-transform: uppercase; color: rgba(0,212,255,0.6);
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
     }
-    .calc-result-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 4px; }
+    .calc-result-sub { font-size: 0.65rem; color: var(--text-muted); }
     .calc-result-value {
-      font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700;
-      color: #00d4ff; letter-spacing: -0.02em;
+      font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500;
+      color: var(--text); letter-spacing: -0.01em;
     }
+    .calc-data-status {
+      font-size: 0.6rem; color: var(--text-muted); text-align: right;
+    }
+    .calc-data-status.live { color: #00d4ff; }
+    .calc-data-status.error { color: #ff4444; }
 
     @media (max-width: 639px) {
       .calc-section { padding: 40px 16px 44px; }
-      .calc-card    { padding: 16px; }
+      .calc-card    { padding: 18px; }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -909,33 +910,41 @@
   <!-- ── Calculator section ───────────────────────────────────── -->
   <section class="calc-section" id="calculator">
     <div class="calc-header">
-      <div class="calc-badge">⚡ Fuel Calculator</div>
-      <div class="calc-title">How much should your fuel cost?</div>
-      <div class="calc-sub">Pick a country, fuel type, and volume to see the price.</div>
+      <div class="calc-title">Fuel Cost Calculator</div>
+      <div class="calc-sub">Enter a volume to see what you should pay at the pump.</div>
     </div>
     <div class="calc-card">
-      <div class="calc-country-tabs" id="calc-country-tabs">
-        <button class="calc-tab active" data-country="my" onclick="calcSetCountry('my')">🇲🇾 Malaysia</button>
-        <button class="calc-tab" data-country="sg" onclick="calcSetCountry('sg')">🇸🇬 Singapore</button>
-        <button class="calc-tab" data-country="bn" onclick="calcSetCountry('bn')">🇧🇳 Brunei</button>
+      <div class="calc-field">
+        <label class="calc-label" for="calc-country">Country</label>
+        <select id="calc-country" class="calc-select" onchange="calcSetCountry(this.value)">
+          <option value="my_peninsular">Malaysia — Peninsular</option>
+          <option value="my_east">Malaysia — Sabah / Sarawak</option>
+          <option value="sg">Singapore</option>
+          <option value="bn">Brunei</option>
+        </select>
       </div>
-      <div class="calc-fuel-tabs" id="calc-fuel-tabs"></div>
-      <div class="calc-volume-row">
-        <div class="calc-input-wrap">
-          <input type="number" id="calc-volume" placeholder="100" min="0" step="1" oninput="calcUpdate()" />
+      <div class="calc-field">
+        <label class="calc-label" for="calc-fuel">Fuel Type</label>
+        <select id="calc-fuel" class="calc-select" onchange="calcSetFuel(this.value)"></select>
+      </div>
+      <div class="calc-field">
+        <label class="calc-label" for="calc-volume">Volume</label>
+        <div class="calc-volume-wrap">
+          <input type="number" id="calc-volume" placeholder="50" min="0" step="any" oninput="calcUpdate()" />
           <div class="calc-unit-toggle">
-            <button class="calc-unit-btn active" data-unit="ml" onclick="calcSetUnit('ml')">mL</button>
-            <button class="calc-unit-btn" data-unit="l" onclick="calcSetUnit('l')">L</button>
+            <button class="calc-unit-btn active" data-unit="l" onclick="calcSetUnit('l')">L</button>
+            <button class="calc-unit-btn" data-unit="ml" onclick="calcSetUnit('ml')">mL</button>
           </div>
         </div>
       </div>
       <div class="calc-result">
-        <div>
-          <div class="calc-result-label">Estimated cost</div>
+        <div class="calc-result-left">
+          <div class="calc-result-label">Estimated Cost</div>
           <div class="calc-result-sub" id="calc-result-sub"></div>
         </div>
         <div class="calc-result-value" id="calc-result-value">—</div>
       </div>
+      <div class="calc-data-status" id="calc-data-status">Fetching live prices…</div>
     </div>
   </section>
 
@@ -1126,56 +1135,125 @@
     }
 
     /* ── Calculator ──────────────────────────────────────────── */
-    const CALC_CONFIG = {
-      my: {
-        sym: 'RM',
+    const CALC_SCHEMA = {
+      my_peninsular: {
+        sym: 'RM', dataKey: 'my',
         fuels: [
-          { key: 'ron95',        label: 'RON95',   price: 2.05 },
-          { key: 'ron97',        label: 'RON97',   price: 3.88 },
-          { key: 'diesel',       label: 'Diesel',  price: 2.15 },
-          { key: 'ron95_budi95', label: 'BUDI95',  price: 1.99 },
+          { key: 'ron95',        label: 'RON 95'  },
+          { key: 'ron97',        label: 'RON 97'  },
+          { key: 'diesel',       label: 'Diesel'  },
+          { key: 'ron95_budi95', label: 'BUDI 95' },
+        ],
+      },
+      my_east: {
+        sym: 'RM', dataKey: 'my',
+        fuels: [
+          { key: 'ron95',          label: 'RON 95'     },
+          { key: 'ron97',          label: 'RON 97'     },
+          { key: 'diesel_eastmsia',label: 'Diesel'     },
+          { key: 'ron95_budi95',   label: 'BUDI 95'   },
         ],
       },
       sg: {
-        sym: 'S$',
+        sym: 'SGD', dataKey: 'sg',
         fuels: [
-          { key: 'ron95',   label: 'RON95',   price: 2.98 },
-          { key: 'ron98',   label: 'RON98',   price: 3.28 },
-          { key: 'diesel',  label: 'Diesel',  price: 2.48 },
+          { key: 'ron92',   label: 'RON 92'  },
+          { key: 'ron95',   label: 'RON 95'  },
+          { key: 'ron98',   label: 'RON 98'  },
+          { key: 'premium', label: 'Premium' },
+          { key: 'diesel',  label: 'Diesel'  },
         ],
       },
       bn: {
-        sym: 'B$',
+        sym: 'BND', dataKey: 'bn',
         fuels: [
-          { key: 'gasoline', label: 'Gasoline',  price: 0.53 },
-          { key: 'diesel',   label: 'Diesel',    price: 0.53 },
+          { key: 'gasoline',        label: 'Gasoline'        },
+          { key: 'diesel',          label: 'Diesel'          },
+          { key: 'vpower_gasoline', label: 'V-Power Gasoline'},
+          { key: 'vpower_diesel',   label: 'V-Power Diesel'  },
         ],
       },
     };
 
-    let calcCountry = 'my';
+    // Live prices cache: { my: {ron95:2.05,...}, sg: {...}, bn: {...} }
+    const LIVE_PRICES = { my: null, sg: null, bn: null };
+
+    // Fallback prices (used if fetch fails)
+    const FALLBACK = {
+      my: { ron95: 2.05, ron97: 3.88, diesel: 2.15, diesel_eastmsia: 2.15, ron95_budi95: 1.99 },
+      sg: { ron92: 2.82, ron95: 2.88, ron98: 3.17, premium: 3.28, diesel: 2.26 },
+      bn: { gasoline: 0.53, diesel: 0.53, vpower_gasoline: 0.53, vpower_diesel: 0.53 },
+    };
+
+    async function calcFetchPrices() {
+      const statusEl = document.getElementById('calc-data-status');
+      let ok = 0;
+
+      // Malaysia
+      try {
+        const res  = await fetch('https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=2');
+        const json = await res.json();
+        const row  = json.find(r => r.series_type === 'level');
+        if (row) { LIVE_PRICES.my = row; ok++; }
+      } catch (_) {}
+
+      // Singapore
+      try {
+        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`);
+        const text = await res.text();
+        const rows = parseCSVSimple(text);
+        if (rows.length) { LIVE_PRICES.sg = rows[rows.length - 1]; ok++; }
+      } catch (_) {}
+
+      // Brunei
+      try {
+        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`);
+        const text = await res.text();
+        const rows = parseCSVSimple(text);
+        if (rows.length) { LIVE_PRICES.bn = rows[rows.length - 1]; ok++; }
+      } catch (_) {}
+
+      if (ok === 3) {
+        statusEl.textContent = 'Live prices loaded';
+        statusEl.className = 'calc-data-status live';
+      } else if (ok > 0) {
+        statusEl.textContent = 'Partial live data — some prices are estimates';
+        statusEl.className = 'calc-data-status';
+      } else {
+        statusEl.textContent = 'Using estimated prices';
+        statusEl.className = 'calc-data-status error';
+      }
+      calcUpdate();
+    }
+
+    function calcGetPrice(countryKey, fuelKey) {
+      const schema  = CALC_SCHEMA[countryKey];
+      const dataKey = schema.dataKey;
+      const source  = LIVE_PRICES[dataKey] || FALLBACK[dataKey];
+      return parseFloat(source?.[fuelKey]) || null;
+    }
+
+    let calcCountry = 'my_peninsular';
     let calcFuel    = 'ron95';
-    let calcUnit    = 'ml';
+    let calcUnit    = 'l';
 
     function calcRenderFuels() {
-      const container = document.getElementById('calc-fuel-tabs');
-      const fuels = CALC_CONFIG[calcCountry].fuels;
-      container.innerHTML = fuels.map(f =>
-        `<button class="calc-fuel-btn${f.key === calcFuel ? ' active' : ''}" onclick="calcSetFuel('${f.key}')">${f.label}</button>`
+      const sel   = document.getElementById('calc-fuel');
+      const fuels = CALC_SCHEMA[calcCountry].fuels;
+      sel.innerHTML = fuels.map(f =>
+        `<option value="${f.key}"${f.key === calcFuel ? ' selected' : ''}>${f.label}</option>`
       ).join('');
     }
 
     window.calcSetCountry = function(c) {
       calcCountry = c;
-      calcFuel = CALC_CONFIG[c].fuels[0].key;
-      document.querySelectorAll('.calc-tab').forEach(b => b.classList.toggle('active', b.dataset.country === c));
+      calcFuel    = CALC_SCHEMA[c].fuels[0].key;
       calcRenderFuels();
       calcUpdate();
     };
 
     window.calcSetFuel = function(f) {
       calcFuel = f;
-      document.querySelectorAll('.calc-fuel-btn').forEach(b => b.classList.toggle('active', b.textContent === CALC_CONFIG[calcCountry].fuels.find(x => x.key === f)?.label));
       calcUpdate();
     };
 
@@ -1187,16 +1265,16 @@
 
     window.calcUpdate = function() {
       const vol    = parseFloat(document.getElementById('calc-volume').value);
-      const cfg    = CALC_CONFIG[calcCountry];
-      const fuel   = cfg.fuels.find(f => f.key === calcFuel);
+      const schema = CALC_SCHEMA[calcCountry];
+      const price  = calcGetPrice(calcCountry, calcFuel);
       const resVal = document.getElementById('calc-result-value');
       const resSub = document.getElementById('calc-result-sub');
 
-      if (!isNaN(vol) && vol > 0 && fuel) {
+      if (!isNaN(vol) && vol > 0 && price) {
         const litres = calcUnit === 'ml' ? vol / 1000 : vol;
-        const cost   = litres * fuel.price;
-        resVal.textContent = `${cfg.sym} ${cost.toFixed(cost < 0.10 ? 3 : 2)}`;
-        resSub.textContent = `${litres.toFixed(3)} L × ${cfg.sym}${fuel.price.toFixed(2)}/L`;
+        const cost   = litres * price;
+        resVal.textContent = `${schema.sym} ${cost.toFixed(2)}`;
+        resSub.textContent = `${litres % 1 === 0 ? litres : litres.toFixed(3)} L × ${schema.sym} ${price.toFixed(3)}/L`;
       } else {
         resVal.textContent = '—';
         resSub.textContent = '';
@@ -1205,6 +1283,7 @@
 
     // Init
     calcRenderFuels();
+    calcFetchPrices();
 
     /* ──────────────────────────���───────────────────���──────────
        MAP
