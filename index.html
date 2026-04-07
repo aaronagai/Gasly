@@ -99,6 +99,40 @@
       animation: blink 2s ease-in-out infinite; flex-shrink: 0;
     }
 
+    .try-terminal-btn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      box-shadow: 0 10px 24px rgba(254,94,14,0.22);
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+      white-space: nowrap;
+    }
+    .try-terminal-btn:hover{
+      filter: brightness(0.98);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(254,94,14,0.26);
+    }
+    .try-terminal-btn:active{
+      transform: translateY(0px);
+      box-shadow: 0 10px 22px rgba(254,94,14,0.22);
+    }
+
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.25; }
@@ -224,365 +258,6 @@
     @keyframes nudgeBounce {
       0%, 100% { transform: translateX(-50%) translateY(0); }
       50%       { transform: translateX(-50%) translateY(4px); }
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       COUNTRIES SECTION
-    ═══════════════════════════════════════════════════════════ */
-    .countries-section {
-      position: relative; z-index: 2;
-      background: var(--bg);
-      padding: 36px 0 52px;
-      border-top: 1px solid var(--border);
-    }
-
-    /* Section header */
-    .cs-header {
-      display: flex; align-items: baseline; justify-content: space-between;
-      padding: 0 28px 22px;
-      flex-wrap: wrap; gap: 8px;
-    }
-
-    .cs-title {
-      font-size: 0.72rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.18em;
-      color: var(--text-muted);
-    }
-
-    .cs-sub {
-      font-size: 0.6rem; color: var(--text-muted);
-      opacity: 0.5; letter-spacing: 0.08em;
-    }
-
-    /* Desktop arrow nav */
-    .cs-arrows {
-      display: flex; gap: 6px; align-items: center;
-    }
-
-    .cs-arrow {
-      background: rgba(0,0,0,0.03);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-family: var(--font);
-      font-size: 0.8rem;
-      width: 30px; height: 30px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      line-height: 1;
-    }
-    .cs-arrow:hover {
-      background: rgba(255,255,255,0.1);
-      color: var(--text);
-      border-color: rgba(255,255,255,0.2);
-    }
-
-    /* Scroll track */
-    .cs-scroll {
-      display: flex;
-      gap: 14px;
-      overflow-x: auto;
-      padding: 6px 28px 10px;
-      scroll-padding-left: 28px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .cs-scroll::-webkit-scrollbar { display: none; }
-
-    /* ── Country card ───────────────���───────────────────────── */
-    .cc {
-      flex: 0 0 auto;
-      width: 210px;
-      scroll-snap-align: start;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 18px 16px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: flex; flex-direction: column; gap: 8px;
-      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-      cursor: default;
-    }
-
-    .cc.clickable {
-      cursor: pointer;
-    }
-
-    .cc.clickable:hover {
-      transform: translateY(-3px);
-      border-color: rgba(254,94,14,0.4);
-      box-shadow: 0 8px 32px rgba(254,94,14,0.1);
-    }
-
-    .cc:not(.clickable) {
-      opacity: 0.6;
-    }
-
-    /* Card top row: flag + status badge */
-    .cc-top {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px;
-    }
-
-    .cc-flag { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
-
-    .cc-badge {
-      font-size: 0.7rem; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      padding: 3px 8px; border-radius: 5px; border: 1px solid;
-      white-space: nowrap;
-    }
-    .cc-badge.live {
-      color: var(--accent);
-      background: rgba(254,94,14,0.08);
-      border-color: rgba(254,94,14,0.3);
-    }
-    .cc-badge.soon {
-      color: var(--text-muted);
-      background: rgba(0,0,0,0.03);
-      border-color: var(--border);
-    }
-
-    /* Card body */
-    .cc-name {
-      font-size: 0.92rem; font-weight: 700;
-      letter-spacing: 0.06em; color: var(--text);
-    }
-
-    .cc-fuel-list {
-      display: flex; flex-wrap: wrap; gap: 4px;
-    }
-
-    .cc-fuel-pill {
-      font-size: 0.7rem; letter-spacing: 0.04em;
-      padding: 2px 7px; border-radius: 4px;
-      border: 1px solid var(--border);
-      color: var(--text-muted); white-space: nowrap;
-      font-family: var(--font-mono);
-    }
-
-    .cc-see-more {
-      font-size: 0.7rem; letter-spacing: 0.06em;
-      color: var(--text-muted); opacity: 0.45;
-      cursor: pointer; text-decoration: underline;
-      text-underline-offset: 2px; white-space: nowrap;
-      align-self: center;
-    }
-
-    .cc-currency {
-      font-size: 0.7rem; color: var(--text-muted);
-      opacity: 0.55; letter-spacing: 0.08em;
-    }
-
-    /* Card CTA */
-    .cc-cta {
-      margin-top: 4px;
-      font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      transition: opacity 0.15s;
-    }
-    .cc.clickable:hover .cc-cta { opacity: 0.75; }
-
-    /* See more card */
-    .cc-see-more-card {
-      opacity: 0.5;
-      border-style: dashed;
-      align-items: center; justify-content: center;
-      min-height: 160px;
-    }
-
-    .cc-more-inner {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 4px; text-align: center;
-    }
-
-    .cc-more-count {
-      font-size: 1.6rem; font-weight: 700;
-      color: var(--text-muted); letter-spacing: 0.04em; line-height: 1;
-      font-family: var(--font-mono);
-    }
-
-    .cc-more-label {
-      font-size: 0.65rem; font-weight: 600;
-      color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
-    }
-
-    .cc-more-sub {
-      font-size: 0.7rem; color: var(--text-muted);
-      opacity: 0.55; letter-spacing: 0.08em; margin-top: 2px;
-    }
-
-    /* Sparkline */
-    .cc-spark {
-      margin-top: 4px;
-      height: 36px; width: 100%;
-      overflow: hidden;
-    }
-    .cc-spark svg { display: block; }
-
-    /* Live pulsing dot in card */
-    .cc-live-dot {
-      display: inline-block;
-      width: 5px; height: 5px; border-radius: 50%;
-      background: var(--accent); box-shadow: 0 0 5px rgba(254,94,14,0.5);
-      margin-right: 5px; vertical-align: middle;
-      animation: blink 2s ease-in-out infinite;
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       CALCULATOR SECTION
-    ═══════════════════════════════════════════════════════════ */
-    .calc-section {
-      position: relative; z-index: 2;
-      background: var(--bg);
-      padding: 52px 28px 56px;
-      border-top: 1px solid var(--border);
-    }
-    .calc-header { text-align: center; margin-bottom: 32px; }
-    .calc-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); margin-bottom: 6px; }
-    .calc-sub   { font-size: 0.72rem; color: var(--text-muted); }
-
-    .calc-card {
-      max-width: 480px; margin: 0 auto;
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 12px; padding: 24px 28px;
-      display: flex; flex-direction: column; gap: 18px;
-    }
-
-    .calc-field { display: flex; flex-direction: column; gap: 6px; }
-    .calc-label {
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-muted);
-    }
-    .calc-select {
-      width: 100%; padding: 10px 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--font); font-size: 0.85rem;
-      cursor: pointer; outline: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 32px;
-      transition: border-color 0.15s;
-    }
-    .calc-select:focus { border-color: rgba(254,94,14,0.4); }
-    .calc-select option { background: #ffffff; color: var(--text); }
-
-    .calc-volume-wrap {
-      display: flex; align-items: stretch;
-      border: 1px solid var(--border); border-radius: 8px;
-      overflow: hidden; background: var(--bg-card);
-      transition: border-color 0.15s;
-    }
-    .calc-volume-wrap:focus-within { border-color: rgba(254,94,14,0.4); }
-    .calc-volume-wrap input {
-      flex: 1; background: none; border: none; outline: none;
-      padding: 10px 12px;
-      font-family: var(--font-mono); font-size: 0.95rem;
-      color: var(--text); min-width: 0;
-    }
-    .calc-unit-toggle { display: flex; border-left: 1px solid var(--border); }
-    .calc-unit-btn {
-      padding: 0 13px;
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
-      background: none; border: none; color: var(--text-muted); cursor: pointer;
-      transition: color 0.15s, background 0.15s;
-    }
-    .calc-unit-btn + .calc-unit-btn { border-left: 1px solid var(--border); }
-    .calc-unit-btn.active { color: var(--text); background: rgba(0,0,0,0.06); }
-
-    .calc-result {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    .calc-result-left { display: flex; flex-direction: column; gap: 3px; }
-    .calc-result-label {
-      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--text-muted);
-    }
-    .calc-result-sub { font-size: 0.65rem; color: var(--text-muted); }
-    .calc-result-value {
-      font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500;
-      color: var(--text); letter-spacing: -0.01em;
-    }
-    .calc-data-status {
-      font-size: 0.6rem; color: var(--text-muted); text-align: right;
-    }
-    .calc-data-status.live { color: var(--accent); }
-    .calc-data-status.error { color: #dc2626; }
-
-    @media (max-width: 639px) {
-      .calc-section { padding: 40px 16px 44px; }
-      .calc-card    { padding: 18px; }
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       EXPORT SECTION
-    ═══════════════════════════════════════════════════════════ */
-    .export-section {
-      position: relative; z-index: 2;
-      background: var(--bg);
-      padding: 52px 28px 56px;
-      border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; align-items: center;
-      gap: 20px; text-align: center;
-    }
-
-    .export-section-badge {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; padding: 3px 10px; border-radius: 5px;
-      border: 1px solid rgba(0,0,0,0.1);
-      color: rgba(0,0,0,0.35);
-      background: rgba(0,0,0,0.03);
-    }
-
-    .export-section-title {
-      font-size: 1.3rem; font-weight: 700;
-      letter-spacing: 0.04em; color: var(--text);
-      line-height: 1.2;
-    }
-
-    .export-section-sub {
-      font-size: 0.8rem; color: var(--text-muted);
-      letter-spacing: 0.06em; line-height: 1.7;
-      max-width: 400px;
-    }
-
-    .export-format-list {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-    }
-
-    .export-fmt {
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
-      text-transform: uppercase; padding: 6px 14px; border-radius: 8px;
-      border: 1px dashed rgba(0,0,0,0.12);
-      color: rgba(0,0,0,0.3);
-      background: rgba(0,0,0,0.02);
-    }
-
-    .export-cta-btn {
-      margin-top: 4px;
-      padding: 10px 24px; border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(0,0,0,0.03);
-      color: rgba(0,0,0,0.3);
-      font-family: var(--font); font-size: 0.7rem;
-      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      cursor: not-allowed;
-    }
-
-    @media (max-width: 639px) {
-      .export-section { padding: 40px 16px 44px; }
-      .export-section-title { font-size: 1.1rem; }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -725,6 +400,7 @@
       .site-subtitle { display: none; }
       .status-pill  { font-size: 0.7rem; padding: 4px 9px; gap: 5px; }
       .status-dot   { width: 5px; height: 5px; }
+      .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
       .map-vignette {
         background:
@@ -734,15 +410,6 @@
 
       .map-hint    { font-size: 0.7rem; bottom: 38px; }
       .scroll-nudge { bottom: 10px; }
-
-      /* Countries section */
-      .countries-section { padding: 28px 0 40px; }
-      .cs-header { padding: 0 16px 18px; }
-      .cs-arrows { display: none; } /* arrows not needed on mobile */
-      .cs-scroll { padding: 6px 16px 10px; scroll-padding-left: 16px; gap: 12px; }
-
-      /* Cards: ~1.4 visible at once to signal swipe */
-      .cc { width: min(72vw, 240px); }
 
       footer { padding: 10px 16px; }
     }
@@ -760,17 +427,10 @@
       </div>
     </div>
 
-    <nav class="nav-links" aria-label="Main navigation">
-      <a href="#countries">Countries</a>
-      <a href="#trends">Trends</a>
-      <a href="#terminal">Terminal</a>
-      <a href="#calculator">Calculator</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#about">About</a>
-    </nav>
-
-    <div style="display:flex;align-items:center;gap:10px;">
-<button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu" aria-expanded="false">
+    <div class="header-actions">
+      <a class="try-terminal-btn" href="./terminal.html">Try Terminal</a>
+      <a class="try-terminal-btn" href="./app.html">App</a>
+      <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu" aria-expanded="false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <line x1="3" y1="6"  x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
@@ -780,12 +440,8 @@
     </div>
 
     <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
-      <a href="#countries"  onclick="closeMobileNav()">Countries</a>
-      <a href="#trends"     onclick="closeMobileNav()">Trends</a>
-      <a href="#terminal"   onclick="closeMobileNav()">Terminal</a>
-      <a href="#calculator" onclick="closeMobileNav()">Calculator</a>
-      <a href="#pricing"    onclick="closeMobileNav()">Pricing</a>
-      <a href="#about"      onclick="closeMobileNav()">About</a>
+      <a href="./terminal.html">Try Terminal</a>
+      <a href="./app.html">App</a>
     </nav>
   </header>
 
@@ -801,128 +457,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ── Countries section ──────────────────────────────���────── -->
-  <section class="countries-section" id="countries">
-    <div class="cs-header">
-      <div>
-        <div class="cs-title">Fuel Prices by Country</div>
-        <div class="cs-sub">Southeast Asia · more regions coming</div>
-      </div>
-      <div class="cs-arrows">
-        <button class="cs-arrow" onclick="scrollCards(-1)" aria-label="Previous">&#8592;</button>
-        <button class="cs-arrow" onclick="scrollCards(1)"  aria-label="Next">&#8594;</button>
-      </div>
-    </div>
-    <div class="cs-scroll" id="cs-scroll">
-      <!-- Injected by JS -->
-    </div>
-  </section>
-
-  <!-- ── Calculator section ───────────────────────────────────── -->
-  <section class="calc-section" id="calculator">
-    <div class="calc-header">
-      <div class="calc-title">Fuel Cost Calculator</div>
-      <div class="calc-sub">Enter a volume to see what you should pay at the pump.</div>
-    </div>
-    <div class="calc-card">
-      <div class="calc-field">
-        <label class="calc-label" for="calc-country">Country</label>
-        <select id="calc-country" class="calc-select" onchange="calcSetCountry(this.value)">
-          <option value="my_peninsular">Malaysia — Peninsular</option>
-          <option value="my_east">Malaysia — Sabah / Sarawak</option>
-          <option value="sg">Singapore</option>
-          <option value="bn">Brunei</option>
-          <option value="id">Indonesia</option>
-        </select>
-      </div>
-      <div class="calc-field" id="calc-city-field" style="display:none">
-        <label class="calc-label" for="calc-city">City</label>
-        <select id="calc-city" class="calc-select" onchange="calcSetCity(this.value)">
-          <optgroup label="Jakarta">
-            <option value="Jakarta Pusat">Jakarta Pusat</option>
-            <option value="Jakarta Selatan">Jakarta Selatan</option>
-            <option value="Jakarta Barat">Jakarta Barat</option>
-            <option value="Jakarta Timur">Jakarta Timur</option>
-            <option value="Jakarta Utara">Jakarta Utara</option>
-          </optgroup>
-          <optgroup label="Greater Jakarta">
-            <option value="Bekasi">Bekasi</option>
-            <option value="Bogor">Bogor</option>
-            <option value="Depok">Depok</option>
-            <option value="Tangerang">Tangerang</option>
-            <option value="Tangerang Selatan">Tangerang Selatan</option>
-          </optgroup>
-          <optgroup label="Java">
-            <option value="Bandung">Bandung</option>
-            <option value="Semarang">Semarang</option>
-            <option value="Surabaya">Surabaya</option>
-            <option value="Surakarta">Surakarta</option>
-            <option value="Yogyakarta">Yogyakarta</option>
-          </optgroup>
-          <optgroup label="Sumatra">
-            <option value="Medan">Medan</option>
-            <option value="Palembang">Palembang</option>
-            <option value="Pekanbaru">Pekanbaru</option>
-          </optgroup>
-          <optgroup label="Bali">
-            <option value="Denpasar">Denpasar</option>
-          </optgroup>
-          <optgroup label="Sulawesi">
-            <option value="Makassar">Makassar</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="calc-field">
-        <label class="calc-label" for="calc-fuel">Fuel Type</label>
-        <select id="calc-fuel" class="calc-select" onchange="calcSetFuel(this.value)"></select>
-      </div>
-      <div class="calc-field">
-        <label class="calc-label" for="calc-volume">Volume</label>
-        <div class="calc-volume-wrap">
-          <input type="number" id="calc-volume" placeholder="50" min="0" step="any" oninput="calcUpdate()" />
-          <div class="calc-unit-toggle">
-            <button class="calc-unit-btn active" data-unit="l" onclick="calcSetUnit('l')">L</button>
-            <button class="calc-unit-btn" data-unit="ml" onclick="calcSetUnit('ml')">mL</button>
-          </div>
-        </div>
-      </div>
-      <div class="calc-result">
-        <div class="calc-result-left">
-          <div class="calc-result-label">Estimated Cost</div>
-          <div class="calc-result-sub" id="calc-result-sub"></div>
-        </div>
-        <div class="calc-result-value" id="calc-result-value">—</div>
-      </div>
-      <div class="calc-data-status" id="calc-data-status">Fetching live prices…</div>
-    </div>
-  </section>
-
-  <!-- ── Terminal section ────────────────────────────────────────── -->
-  <section class="export-section" id="terminal">
-    <span class="export-section-badge">○ Coming soon</span>
-    <div class="export-section-title">Terminal</div>
-    <div class="export-section-sub">
-      A CLI-style view for power users—quickly check prices, deltas, and history from your command line.
-    </div>
-    <button class="export-cta-btn" disabled>Launch Terminal — Coming Soon</button>
-  </section>
-
-  <!-- ── Export section ────────────────────────────────────────── -->
-  <section class="export-section">
-    <span class="export-section-badge">○ Coming soon</span>
-    <div class="export-section-title">Export All Data</div>
-    <div class="export-section-sub">
-      Download the full historical price dataset across all countries in your preferred format. Great for research, analysis, or building your own tools on top.
-    </div>
-    <div class="export-format-list">
-      <span class="export-fmt">CSV</span>
-      <span class="export-fmt">JSON</span>
-      <span class="export-fmt">Excel</span>
-      <span class="export-fmt">API</span>
-    </div>
-    <button class="export-cta-btn" disabled>Download — Coming Soon</button>
-  </section>
 
   <!-- ── Footer ────────────────────────────────────────────────── -->
   <footer>
@@ -947,105 +481,6 @@
   </div>
 
   <script>
-
-    const COUNTRIES = [
-      { id: 458, flag: '🇲🇾', name: 'Malaysia',    fuels: ['RON95','RON97','Diesel'],                              currency: 'MYR / L', url: './malaysia.html', live: true  },
-      { id: 702, flag: '🇸🇬', name: 'Singapore',   fuels: ['RON92','RON95','RON98','Premium','Diesel'],           currency: 'SGD / L', url: './singapore.html', live: true  },
-      { id: 96,  flag: '🇧🇳', name: 'Brunei',      fuels: ['Gasoline','Diesel','V-Power Gasoline','V-Power Diesel'], currency: 'BND / L', url: './brunei.html',   live: true  },
-      { id: 360, flag: '🇮🇩', name: 'Indonesia',   fuels: ['Pertalite','Pertamax','Pertamax Turbo','Dexlite','Pertamina Dex'], currency: 'IDR / L', url: './indonesia.html', live: true },
-      { id: 704, flag: '🇻🇳', name: 'Vietnam',     fuels: ['RON95','E5 RON92','Diesel'],                           currency: 'VND / L', url: null,              live: false },
-      { id: 608, flag: '🇵🇭', name: 'Philippines', fuels: ['RON91','RON95','RON97','Diesel'],                      currency: 'PHP / L', url: null,              live: false },
-      { id: 116, flag: '🇰🇭', name: 'Cambodia',    fuels: ['RON92','RON95','Diesel'],                              currency: 'KHR / L', url: null,              live: false },
-      { id: 418, flag: '🇱🇦', name: 'Laos',        fuels: ['RON95','Diesel'],                                      currency: 'LAK / L', url: null,              live: false },
-      { id: 104, flag: '🇲🇲', name: 'Myanmar',     fuels: ['RON92','RON95','Diesel'],                              currency: 'MMK / L', url: null,              live: false },
-    ];
-
-    function renderCountryCards() {
-      const scroll = document.getElementById('cs-scroll');
-      const visible = COUNTRIES.slice(0, 4);
-
-      visible.forEach(c => {
-        const card = document.createElement('div');
-        card.className = 'cc' + (c.live ? ' clickable' : '');
-        if (c.url) {
-          card.setAttribute('role', 'button');
-          card.setAttribute('tabindex', '0');
-          card.addEventListener('click', () => { window.location.href = c.url; });
-          card.addEventListener('keydown', e => { if (e.key === 'Enter') window.location.href = c.url; });
-        }
-
-        const badgeTxt = c.live ? '● Live' : '○ Soon';
-        const badgeCls = c.live ? 'live' : 'soon';
-        const ctaHtml  = c.live
-          ? `<div class="cc-cta"><span class="cc-live-dot"></span>View prices →</div>`
-          : `<div class="cc-cta" style="color:var(--text-muted);opacity:0.4">Coming soon</div>`;
-
-        const MAX_FUELS = 4;
-        const shown  = c.fuels.slice(0, MAX_FUELS);
-        const extra  = c.fuels.length - shown.length;
-        const pillsHtml = shown.map(f => `<span class="cc-fuel-pill">${f}</span>`).join('');
-        const moreHtml  = extra > 0 ? `<span class="cc-see-more">+${extra} more</span>` : '';
-
-        card.dataset.countryId = c.id;
-        card.innerHTML = `
-          <div class="cc-top">
-            <span class="cc-flag">${c.flag}</span>
-            <span class="cc-badge ${badgeCls}">${badgeTxt}</span>
-          </div>
-          <div class="cc-name">${c.name}</div>
-          <div class="cc-fuel-list">${pillsHtml}${moreHtml}</div>
-          <div class="cc-currency">${c.currency}</div>
-          <div class="cc-spark" id="spark-${c.id}"></div>
-          ${ctaHtml}
-        `;
-        scroll.appendChild(card);
-      });
-
-      /* See more card */
-      const remaining = COUNTRIES.length - visible.length;
-      const more = document.createElement('div');
-      more.className = 'cc cc-see-more-card';
-      more.innerHTML = `
-        <div class="cc-more-inner">
-          <div class="cc-more-count">+${remaining}</div>
-          <div class="cc-more-label">more countries</div>
-          <div class="cc-more-sub">coming soon</div>
-        </div>
-      `;
-      scroll.appendChild(more);
-    }
-
-    renderCountryCards();
-
-    function drawSparkline(id, values, color) {
-      const el = document.getElementById(`spark-${id}`);
-      if (!el) return;
-      if (!values || values.length < 2) {
-        el.innerHTML = `<svg width="100%" height="36" preserveAspectRatio="none">
-          <line x1="0" y1="18" x2="100%" y2="18" stroke="${color}44" stroke-width="1" stroke-dasharray="4,3"/>
-        </svg>`;
-        return;
-      }
-      const min = Math.min(...values), max = Math.max(...values);
-      const range = max - min || 1;
-      const W = 200, H = 32;
-      const pts = values.map((v, i) => {
-        const x = (i / (values.length - 1)) * W;
-        const y = H - ((v - min) / range) * (H - 6) - 3;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(' ');
-      el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="36" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="sg-${id}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${color}" stop-opacity="0.18"/>
-            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-      </svg>`;
-    }
-
     function parseCSV(text) {
       const rows = text.trim().split('\n').map(r =>
         r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
@@ -1060,240 +495,13 @@
 
     const SHEET_ID = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
 
-    /* Malaysia — RON95 from gov API */
-    fetch('https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=52')
-      .then(r => r.json())
-      .then(json => {
-        const vals = json
-          .filter(r => r.series_type === 'level')
-          .map(r => r.ron95).filter(v => v > 0).reverse().slice(-12);
-        drawSparkline(458, vals, '#00ff64');
-      }).catch(() => drawSparkline(458, null, '#00ff64'));
-
-    /* Singapore — RON95 from Sheets */
-    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`)
-      .then(r => r.text())
-      .then(text => {
-        const vals = parseCSV(text).map(r => parseFloat(r.ron95)).filter(v => !isNaN(v));
-        drawSparkline(702, vals, '#00d4ff');
-      }).catch(() => drawSparkline(702, null, '#00d4ff'));
-
-    /* Brunei — Gasoline from Sheets */
-    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`)
-      .then(r => r.text())
-      .then(text => {
-        const vals = parseCSV(text).map(r => parseFloat(r.gasoline)).filter(v => !isNaN(v));
-        drawSparkline(96, vals, '#b478ff');
-      }).catch(() => drawSparkline(96, null, '#b478ff'));
-
-    /* Indonesia — Pertalite for Jakarta Pusat */
-    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`)
-      .then(r => r.text())
-      .then(text => {
-        const rows = parseCSV(text).filter(r => r.city === 'Jakarta Pusat');
-        const vals = rows.map(r => parseFloat(r.pertalite)).filter(v => !isNaN(v));
-        drawSparkline(360, vals, '#ff6b35');
-      }).catch(() => drawSparkline(360, null, '#ff6b35'));
-
-    /* Arrow scroll (desktop) */
-    function scrollCards(dir) {
-      const el = document.getElementById('cs-scroll');
-      el.scrollBy({ left: dir * 230, behavior: 'smooth' });
-    }
-
-    const CALC_SCHEMA = {
-      my_peninsular: {
-        sym: 'MYR', dataKey: 'my',
-        fuels: [
-          { key: 'ron95',        label: 'RON 95'  },
-          { key: 'ron97',        label: 'RON 97'  },
-          { key: 'diesel',       label: 'Diesel'  },
-          { key: 'ron95_budi95', label: 'BUDI 95' },
-        ],
-      },
-      my_east: {
-        sym: 'MYR', dataKey: 'my',
-        fuels: [
-          { key: 'ron95',          label: 'RON 95'     },
-          { key: 'ron97',          label: 'RON 97'     },
-          { key: 'diesel_eastmsia',label: 'Diesel'     },
-          { key: 'ron95_budi95',   label: 'BUDI 95'   },
-        ],
-      },
-      sg: {
-        sym: 'SGD', dataKey: 'sg',
-        fuels: [
-          { key: 'ron92',   label: 'RON 92'  },
-          { key: 'ron95',   label: 'RON 95'  },
-          { key: 'ron98',   label: 'RON 98'  },
-          { key: 'premium', label: 'Premium' },
-          { key: 'diesel',  label: 'Diesel'  },
-        ],
-      },
-      bn: {
-        sym: 'BND', dataKey: 'bn',
-        fuels: [
-          { key: 'gasoline',        label: 'Gasoline'        },
-          { key: 'diesel',          label: 'Diesel'          },
-          { key: 'vpower_gasoline', label: 'V-Power Gasoline'},
-          { key: 'vpower_diesel',    label: 'V-Power Diesel'   },
-          { key: 'gasoline_premium', label: 'Premium Gasoline' },
-        ],
-      },
-      id: {
-        sym: 'IDR', dataKey: 'id', hasCity: true,
-        fuels: [
-          { key: 'pertalite',      label: 'Pertalite'      },
-          { key: 'pertamax',       label: 'Pertamax'       },
-          { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
-          { key: 'dexlite',        label: 'Dexlite'        },
-          { key: 'pertamina_dex',  label: 'Pertamina Dex'  },
-        ],
-      },
-    };
-
-    // Live prices cache: { my: {ron95:2.05,...}, sg: {...}, bn: {...}, id: [...] }
-    const LIVE_PRICES = { my: null, sg: null, bn: null, id: null };
-
-    // Fallback prices (used if fetch fails)
-    const FALLBACK = {
-      my: { ron95: 2.05, ron97: 3.88, diesel: 2.15, diesel_eastmsia: 2.15, ron95_budi95: 1.99 },
-      sg: { ron92: 2.82, ron95: 2.88, ron98: 3.17, premium: 3.28, diesel: 2.26 },
-      bn: { gasoline: 0.53, diesel: 0.53, vpower_gasoline: 0.53, vpower_diesel: 0.53, gasoline_premium: 0.53 },
-      id: { pertalite: 10000, pertamax: 12400, pertamax_turbo: 13300, dexlite: 14500, pertamina_dex: 15000 },
-    };
-
-    async function calcFetchPrices() {
-      const statusEl = document.getElementById('calc-data-status');
-      const sourceCount = Object.keys(LIVE_PRICES).length;
-      let ok = 0;
-
-      // Malaysia
-      try {
-        const res  = await fetch('https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=2');
-        const json = await res.json();
-        const row  = json.find(r => r.series_type === 'level');
-        if (row) { LIVE_PRICES.my = row; ok++; }
-      } catch (_) {}
-
-      // Singapore
-      try {
-        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`);
-        const text = await res.text();
-        const rows = parseCSV(text);
-        if (rows.length) { LIVE_PRICES.sg = rows[rows.length - 1]; ok++; }
-      } catch (_) {}
-
-      // Brunei
-      try {
-        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`);
-        const text = await res.text();
-        const rows = parseCSV(text);
-        if (rows.length) { LIVE_PRICES.bn = rows[rows.length - 1]; ok++; }
-      } catch (_) {}
-
-      // Indonesia
-      try {
-        const res  = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`);
-        const text = await res.text();
-        const rows = parseCSV(text);
-        if (rows.length) { LIVE_PRICES.id = rows; ok++; }
-      } catch (_) {}
-
-      if (ok === sourceCount) {
-        statusEl.textContent = 'Live prices loaded';
-        statusEl.className = 'calc-data-status live';
-      } else if (ok > 0) {
-        statusEl.textContent = 'Partial live data — some prices are estimates';
-        statusEl.className = 'calc-data-status';
-      } else {
-        statusEl.textContent = 'Using estimated prices';
-        statusEl.className = 'calc-data-status error';
-      }
-      calcUpdate();
-    }
-
-    function calcGetPrice(countryKey, fuelKey) {
-      const schema  = CALC_SCHEMA[countryKey];
-      const dataKey = schema.dataKey;
-      if (schema.hasCity && LIVE_PRICES[dataKey]) {
-        const city = document.getElementById('calc-city')?.value;
-        const rows = LIVE_PRICES[dataKey].filter(r => r.city === city);
-        const row  = rows[rows.length - 1]; // latest
-        return parseFloat(row?.[fuelKey]) || parseFloat(FALLBACK[dataKey]?.[fuelKey]) || null;
-      }
-      const source = LIVE_PRICES[dataKey] || FALLBACK[dataKey];
-      return parseFloat(source?.[fuelKey]) || null;
-    }
-
-    let calcCountry = 'my_peninsular';
-    let calcFuel    = 'ron95';
-    let calcUnit    = 'l';
-
-    function calcRenderFuels() {
-      const sel   = document.getElementById('calc-fuel');
-      const fuels = CALC_SCHEMA[calcCountry].fuels;
-      sel.innerHTML = fuels.map(f =>
-        `<option value="${f.key}"${f.key === calcFuel ? ' selected' : ''}>${f.label}</option>`
-      ).join('');
-    }
-
-    function calcSetCountry(c) {
-      calcCountry = c;
-      calcFuel    = CALC_SCHEMA[c].fuels[0].key;
-      const cityField = document.getElementById('calc-city-field');
-      if (cityField) cityField.style.display = CALC_SCHEMA[c].hasCity ? '' : 'none';
-      calcRenderFuels();
-      calcUpdate();
-    }
-
-    function calcSetCity() {
-      calcUpdate();
-    }
-
-    function calcSetFuel(f) {
-      calcFuel = f;
-      calcUpdate();
-    }
-
-    function calcSetUnit(u) {
-      calcUnit = u;
-      document.querySelectorAll('.calc-unit-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === u));
-      calcUpdate();
-    }
-
-    function calcUpdate() {
-      const vol    = parseFloat(document.getElementById('calc-volume').value);
-      const schema = CALC_SCHEMA[calcCountry];
-      const price  = calcGetPrice(calcCountry, calcFuel);
-      const resVal = document.getElementById('calc-result-value');
-      const resSub = document.getElementById('calc-result-sub');
-
-      if (!isNaN(vol) && vol > 0 && price) {
-        const litres  = calcUnit === 'ml' ? vol / 1000 : vol;
-        const cost    = litres * price;
-        const isIDR   = schema.sym === 'IDR';
-        const fmtCost = isIDR ? Math.round(cost).toLocaleString('en-US') : cost.toFixed(2);
-        const fmtPric = isIDR ? Math.round(price).toLocaleString('en-US') : price.toFixed(3);
-        resVal.textContent = `${schema.sym} ${fmtCost}`;
-        resSub.textContent = `${litres % 1 === 0 ? litres : litres.toFixed(3)} L × ${schema.sym} ${fmtPric}/L`;
-      } else {
-        resVal.textContent = '—';
-        resSub.textContent = '';
-      }
-    }
-
-    // Init
-    calcRenderFuels();
-    calcFetchPrices();
-
     // Map
     const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = {
-      458: { name: 'Malaysia',  url: './malaysia.html'   },
-      702: { name: 'Singapore', url: './singapore.html'  },
-      96:  { name: 'Brunei',    url: './brunei.html'     },
-      360: { name: 'Indonesia', url: './indonesia.html'  },
+      458: { name: 'Malaysia',  url: './terminal.html?country=458&my_region=peninsular' },
+      702: { name: 'Singapore', url: './terminal.html?country=702' },
+      96:  { name: 'Brunei',    url: './terminal.html?country=96' },
+      360: { name: 'Indonesia', url: './terminal.html?country=360' },
     };
 
     const NAMES = {
@@ -1361,7 +569,7 @@
 
     document.addEventListener('touchstart', hideTip, { passive: true });
 
-    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    d3.json('./assets/countries-110m.json')
       .then(world => {
         const countries = topojson.feature(world, world.objects.countries);
 
@@ -1426,8 +634,8 @@
             .attr('cx', sgx).attr('cy', sgy).attr('r', mobile ? 18 : 14)
             .attr('fill', 'transparent').attr('cursor', 'pointer')
             .on('mousemove', e => showTip(e, 702)).on('mouseleave', hideTip)
-            .on('click', () => { window.location.href = './singapore.html'; })
-            .on('touchend', e => { e.preventDefault(); window.location.href = './singapore.html'; })
+            .on('click', () => { window.location.href = './terminal.html?country=702'; })
+            .on('touchend', e => { e.preventDefault(); window.location.href = './terminal.html?country=702'; })
             .on('touchstart', e => {
               e.stopPropagation();
               const t = e.touches[0];
