@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetrolPrice — App</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <style>
+    :root{
+      --bg: #f1f1f0;
+      --panel: rgba(247,247,246,0.92);
+      --text: #0f0f0f;
+      --muted: rgba(0,0,0,0.55);
+      --line: rgba(0,0,0,0.10);
+      --shadow: 0 18px 54px rgba(0,0,0,0.12);
+      --orange: #ff6a00;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    .app{
+      position: relative;
+      height: 100dvh;
+      width: 100%;
+    }
+
+    /* Map layer */
+    .map{
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
+        radial-gradient(1200px 680px at 44% 56%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.00) 62%),
+        linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
+        #d7d7d7;
+      overflow: hidden;
+    }
+    .map::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px);
+      opacity: 0.26;
+      pointer-events:none;
+    }
+    .map svg{ width: 100%; height: 100%; display:block; }
+    .sphere { fill: #e7eef7; }
+    .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
+    .country { fill: #d9d6d2; stroke:none; }
+    .country.live { fill: rgba(17, 24, 39, 0.28); }
+    .country.live.selected { fill: rgba(255,106,0,0.26); }
+    .border-mesh { fill:none; stroke: rgba(48,48,48,0.14); stroke-width: 0.5; pointer-events:none; }
+    .border-live { fill:none; stroke: rgba(17, 24, 39, 0.45); stroke-width: 1; pointer-events:none; }
+    .border-live.selected { stroke: rgba(255,106,0,0.78); }
+
+    /* Top search */
+    .topbar{
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+    .search{
+      flex: 1;
+      height: 40px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      padding: 0 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+    }
+    .search svg{ width: 16px; height: 16px; opacity: 0.7; }
+    .search input{
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font: inherit;
+      font-weight: 650;
+      color: rgba(0,0,0,0.78);
+    }
+    .search-menu{
+      position: absolute;
+      top: calc(12px + 40px + 8px);
+      left: 12px;
+      right: 12px;
+      z-index: 11;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.96);
+      border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+      padding: 6px;
+      display:none;
+      max-height: min(320px, calc(100dvh - 180px));
+      overflow:auto;
+    }
+    .search-menu.open{ display:block; }
+    .search-item{
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 750;
+    }
+    .search-item:hover{ background: rgba(0,0,0,0.04); }
+
+    /* Bottom sheet */
+    .sheet{
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      z-index: 20;
+      height: var(--sheetH, 40vh);
+      display:flex;
+      flex-direction: column;
+      border-radius: 22px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* Make sure the map is visible behind the sheet */
+    .map{ padding-bottom: calc(var(--sheetH, 40vh) + 18px); }
+    .grab{
+      padding: 10px 0 6px;
+      background: transparent;
+      touch-action: none;
+    }
+    .grab::before{
+      content:'';
+      display:block;
+      width: 46px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.20);
+      margin: 0 auto;
+    }
+    .sheet-scroll{
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 10px 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .card{
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,0.10);
+      overflow:hidden;
+      background: rgba(255,255,255,0.70);
+    }
+    .card .pad{ padding: 14px; }
+    .kicker{
+      font-family: var(--font);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .title{
+      margin: 8px 0 0;
+      font-size: 1.9rem;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .sub{
+      margin-top: 6px;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    .lines{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      font-family: var(--font);
+      font-size: 0.78rem;
+    }
+    .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
+    .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
+    .chart-wrap{ height: 210px; padding: 12px; }
+    .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
+    .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: rgba(0,0,0,0.78); }
+
+    @media (min-width: 900px){
+      /* "App" can still run on desktop, but keep it phone-ish */
+      .sheet{ left: 16px; right: 16px; max-width: 520px; margin: 0 auto; }
+      .topbar{ left: 16px; right: 16px; max-width: 520px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="map" id="map"></div>
+
+    <div class="topbar">
+      <div class="search" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7.5"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input id="country-search" type="search" placeholder="Search (Cmd+F)" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+    <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
+
+    <div class="sheet" id="sheet" aria-label="Details sheet">
+      <div class="grab" id="grab" aria-hidden="true"></div>
+      <div class="sheet-scroll" id="sheet-scroll">
+        <div class="card" id="card-highlights">
+          <div class="pad">
+            <div class="kicker">Highlights</div>
+            <div class="title" id="hi-title">Semenanjung</div>
+            <div class="sub" id="hi-sub">—</div>
+            <div class="lines" id="hi-lines"></div>
+          </div>
+        </div>
+
+        <div class="card" id="card-history">
+          <div class="pad">
+            <div class="kicker" id="chart-kicker">Malaysia petrol prices history</div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" id="card-overview">
+          <div class="pad">
+            <div class="kicker" id="ov-kicker">Malaysia overview</div>
+            <div class="oil" id="overview-text">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const COUNTRIES = {
+      458: { name: 'Malaysia' },
+      702: { name: 'Singapore' },
+      96:  { name: 'Brunei' },
+      360: { name: 'Indonesia' },
+    };
+    const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
+    const LIVE = { 458: true, 702: true, 96: true, 360: true };
+    const OIL_CONTEXT = {
+      458: 'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
+      702: 'No meaningful upstream production; a major refining and trading hub that imports crude/feedstocks and exports refined products and petrochemicals across the region.',
+      96:  'Small but highly oil & gas–dependent exporter; government revenue and external balances are closely tied to energy prices and production levels.',
+      360: 'Large energy consumer and major producer, but generally a net importer of crude and fuels; prices are often managed via subsidies/controls, with refining capacity expansion a recurring policy focus.',
+    };
+
+    let selected = 458;
+    let RIGHT_CHART = null;
+    let APP_ZOOM_TO = null;
+
+    function setSelected(cid){
+      selected = cid;
+      document.getElementById('overview-text').textContent = OIL_CONTEXT[cid] || '—';
+      document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
+      // Placeholder highlights; we'll wire real data next.
+      document.getElementById('hi-title').textContent = COUNTRIES[cid]?.name || '—';
+      document.getElementById('hi-sub').textContent = 'Tap a country to view';
+      document.getElementById('hi-lines').innerHTML = `
+        <div class="kv"><div class="k">Status</div><div class="v">Live</div></div>
+        <div class="kv"><div class="k">Country ID</div><div class="v">${cid}</div></div>
+      `;
+      if (RIGHT_CHART) RIGHT_CHART.update();
+      if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(cid, true);
+    }
+
+    function initSheet(){
+      const sheet = document.getElementById('sheet');
+      const grab = document.getElementById('grab');
+      const scroller = document.getElementById('sheet-scroll');
+      const cardHighlights = document.getElementById('card-highlights');
+      const cardHistory = document.getElementById('card-history');
+      const cardOverview = document.getElementById('card-overview');
+      let snap = 0;
+      let dragging = false, startY = 0, startH = 0;
+      const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+      const snaps = () => {
+        const vh = window.innerHeight;
+        // Snap 0: highlights. Snap 1: history. Snap 2: overview.
+        // Keep the default state feeling "normal" (not compact) while
+        // still leaving map visible.
+        return [Math.round(vh * 0.52), Math.round(vh * 0.74), Math.round(vh * 0.90)];
+      };
+      const apply = (h) => document.documentElement.style.setProperty('--sheetH', `${h}px`);
+      const nearest = (h) => {
+        const s = snaps();
+        let best = 0, d = Infinity;
+        s.forEach((x,i)=>{ const dd=Math.abs(x-h); if(dd<d){d=dd;best=i;}});
+        return best;
+      };
+      function setSnap(i){
+        snap = clamp(i,0,2);
+        apply(snaps()[snap]);
+        // Keep the default view "normal": don't auto-scroll away from highlights.
+        if (!scroller) return;
+        if (snap === 0) {
+          scroller.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        // For deeper snaps, align the requested section to the top.
+        const target = snap === 1 ? cardHistory : cardOverview;
+        if (target) requestAnimationFrame(() => scroller.scrollTo({ top: target.offsetTop, behavior: 'smooth' }));
+      }
+      function onDown(e){
+        dragging = true;
+        startY = (e.touches?e.touches[0].clientY:e.clientY);
+        startH = sheet.getBoundingClientRect().height;
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        window.addEventListener('touchmove', onMove, { passive:false });
+        window.addEventListener('touchend', onUp);
+      }
+      function onMove(e){
+        if(!dragging) return;
+        if(e.cancelable) e.preventDefault();
+        const y = (e.touches?e.touches[0].clientY:e.clientY);
+        const dy = startY - y;
+        const s = snaps();
+        apply(clamp(startH + dy, s[0], s[2]));
+      }
+      function onUp(){
+        if(!dragging) return;
+        dragging = false;
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('touchend', onUp);
+        setSnap(nearest(sheet.getBoundingClientRect().height));
+        if (RIGHT_CHART) setTimeout(() => RIGHT_CHART.resize(), 60);
+      }
+      grab.addEventListener('mousedown', onDown);
+      grab.addEventListener('touchstart', onDown, { passive:true });
+      setSnap(0);
+      window.addEventListener('resize', () => setSnap(snap));
+    }
+
+    function initSearch(){
+      const input = document.getElementById('country-search');
+      const menu = document.getElementById('country-search-menu');
+      const list = Object.keys(COUNTRIES).map(k => ({ id:+k, name: COUNTRIES[k].name }));
+      let open = false;
+      const openMenu = () => { open=true; menu.classList.add('open'); };
+      const closeMenu = () => { open=false; menu.classList.remove('open'); };
+      const render = (items) => {
+        menu.innerHTML = items.map(c => `<div class="search-item" role="option" data-id="${c.id}">${c.name}</div>`).join('');
+      };
+      const filter = () => {
+        const q = (input.value||'').trim().toLowerCase();
+        const items = !q ? list : list.filter(x => x.name.toLowerCase().includes(q));
+        render(items);
+      };
+      input.addEventListener('focus', () => { openMenu(); filter(); });
+      input.addEventListener('input', () => { openMenu(); filter(); });
+      document.addEventListener('pointerdown', (e) => {
+        if (!open) return;
+        if (menu.contains(e.target) || input.contains(e.target)) return;
+        closeMenu();
+      }, true);
+      menu.addEventListener('mousedown', (e) => {
+        const it = e.target.closest('.search-item');
+        if (!it) return;
+        const id = +it.getAttribute('data-id');
+        setSelected(id);
+        input.value = COUNTRIES[id].name;
+        closeMenu();
+        e.preventDefault();
+      });
+      document.addEventListener('keydown', (e) => {
+        const isMacFind = (e.metaKey && !e.ctrlKey && (e.key === 'f' || e.key === 'F'));
+        const isWinFind = (e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F'));
+        if (!isMacFind && !isWinFind) return;
+        e.preventDefault();
+        openMenu();
+        filter();
+        input.focus();
+        try { input.select(); } catch (_) {}
+      }, true);
+    }
+
+    function initChart(){
+      const cv = document.getElementById('chart');
+      const ctx = cv.getContext('2d');
+      RIGHT_CHART = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+          datasets: [{
+            label: 'RON95',
+            data: [2.05, 2.05, 2.10, 2.15],
+            borderColor: '#111827',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.35,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 600, easing: 'easeOutCubic' },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: 'rgba(0,0,0,0.45)' } },
+            y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: 'rgba(0,0,0,0.45)' } }
+          }
+        }
+      });
+    }
+
+    function initMap(){
+      const root = document.getElementById('map');
+      const rect = root.getBoundingClientRect();
+      const W = Math.max(320, Math.floor(rect.width));
+      // Keep map content a bit higher so it's visible above the bottom sheet.
+      const sheetH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheetH')) || (window.innerHeight * 0.52);
+      const H = Math.max(320, Math.floor(rect.height));
+      const svg = d3.select(root).append('svg')
+        .attr('viewBox', `0 0 ${W} ${H}`)
+        .attr('preserveAspectRatio', 'xMidYMid meet');
+
+      const baseScale = (Math.min(W, H) * 1.55) / 2;
+      const projection = d3.geoOrthographic()
+        .translate([W/2, Math.max(0, (H - sheetH) / 2)])
+        .scale(baseScale)
+        .clipAngle(90)
+        .precision(0.3);
+      const path = d3.geoPath(projection);
+      const mapG = svg.append('g');
+
+      d3.json('./assets/countries-110m.json').then(world => {
+        const countries = topojson.feature(world, world.objects.countries);
+        const DEFAULT_CENTER = [115, 6];
+        projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
+
+        mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
+        mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
+
+        mapG.selectAll('.bg')
+          .data(countries.features.filter(d => !SEA.has(+d.id)))
+          .enter().append('path').attr('class', 'country').attr('d', path);
+
+        mapG.selectAll('.live-c')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path').attr('class', 'country live').attr('d', path)
+          .on('click', (e, d) => {
+            setSelected(+d.id);
+            applySel();
+          });
+
+        const mesh = mapG.append('path')
+          .datum(topojson.mesh(world, world.objects.countries))
+          .attr('class', 'border-mesh')
+          .attr('d', path);
+
+        const liveBorders = mapG.selectAll('.border-live-p')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'border-live')
+          .attr('d', path);
+
+        function applySel(){
+          mapG.selectAll('.country.live').classed('selected', d => +d.id === +selected);
+          liveBorders.classed('selected', d => +d.id === +selected);
+        }
+        applySel();
+
+        function updateAll(){
+          mapG.selectAll('path').attr('d', path);
+        }
+
+        function computeFitScale(feature, rotateArr, padPx) {
+          const s0 = projection.scale();
+          const r0 = projection.rotate();
+          try {
+            projection.scale(1).rotate(rotateArr);
+            const b = path.bounds(feature);
+            const dx = b[1][0] - b[0][0];
+            const dy = b[1][1] - b[0][1];
+            if (!(dx > 0) || !(dy > 0)) return null;
+            const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
+            if (!isFinite(s) || s <= 0) return null;
+            return s;
+          } finally {
+            projection.scale(s0).rotate(r0);
+          }
+        }
+
+        // Expose: zoom/rotate to a selected country
+        APP_ZOOM_TO = function zoomToCountry(countryId, animate = true) {
+          const f = countries.features.find(x => +x.id === +countryId);
+          if (!f) return;
+          const [lon, lat] = d3.geoCentroid(f);
+          const target = [-lon, -lat, 0];
+          const padZ = 58;
+          const fitS = computeFitScale(f, target, padZ);
+          const nextScale = fitS ? Math.max(baseScale * 0.90, Math.min(baseScale * 4.8, fitS)) : projection.scale();
+
+          if (!animate) {
+            projection.rotate(target);
+            if (fitS) projection.scale(nextScale);
+            updateAll();
+            return;
+          }
+
+          const r0 = projection.rotate();
+          const s0 = projection.scale();
+          const interpR = d3.interpolate(r0, target);
+          const interpS = d3.interpolateNumber(s0, nextScale);
+          svg.interrupt();
+          svg.transition().duration(420).tween('appFocus', () => (t) => {
+            projection.rotate(interpR(t)).scale(interpS(t));
+            updateAll();
+          });
+        };
+
+        // Initial focus: selected country
+        APP_ZOOM_TO(selected, false);
+
+        // Drag rotate (lower sensitivity)
+        function rotateBy(dx, dy){
+          const r = projection.rotate();
+          const sens = 0.06;
+          const ddx = Math.abs(dx) < 1.5 ? 0 : dx;
+          const ddy = Math.abs(dy) < 1.5 ? 0 : dy;
+          projection.rotate([ r[0] + ddx * sens, Math.max(-85, Math.min(85, r[1] - ddy * sens)), 0 ]);
+          updateAll();
+        }
+        svg.style('cursor','grab');
+        svg.call(d3.drag()
+          .on('start', () => svg.style('cursor','grabbing'))
+          .on('drag', (ev) => rotateBy(ev.dx, ev.dy))
+          .on('end', () => svg.style('cursor','grab'))
+        );
+      });
+    }
+
+    // Init
+    initSheet();
+    initSearch();
+    window.addEventListener('load', () => {
+      initChart();
+      initMap();
+      setSelected(458);
+    });
+  </script>
+</body>
+</html>
+
