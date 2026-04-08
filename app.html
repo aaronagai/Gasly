@@ -1763,15 +1763,30 @@
             ? sgFeature
             : countries.features.find(x => +x.id === +countryId);
           if (!f) return;
-          const [lon, lat] = d3.geoCentroid(f);
+
+          let lon, lat, subFocus = false;
+          if (+countryId === 360) {
+            const city = appIndonesiaCity();
+            const ll = APP_ID_CITY_LONLAT[city];
+            if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
+              [lon, lat] = ll;
+              subFocus = true;
+            } else {
+              [lon, lat] = d3.geoCentroid(f);
+            }
+          } else {
+            [lon, lat] = d3.geoCentroid(f);
+          }
+
           const target = [-lon, -lat, 0];
           const padZ = 58;
-          const fitS = computeFitScale(f, target, padZ);
-          const nextScale = fitS ? Math.max(baseScale * 0.90, Math.min(baseScale * 4.8, fitS)) : projection.scale();
+          const fitS = subFocus ? null : computeFitScale(f, target, padZ);
+          let nextScale = fitS ? Math.max(baseScale * 0.90, Math.min(baseScale * 4.8, fitS)) : projection.scale();
+          if (subFocus) nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, baseScale * 2.15));
 
           if (!animate) {
             projection.rotate(target);
-            if (fitS) projection.scale(nextScale);
+            projection.scale(nextScale);
             updateAll();
             syncZoomFromProjection();
             return;
