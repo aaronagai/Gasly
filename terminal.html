@@ -746,7 +746,7 @@
       fill: rgba(254,94,14,0.26); /* orange for selected */
     }
     .country.live.selected:hover { fill: rgba(254,94,14,0.34); }
-    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
+    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: contrast(1.2); pointer-events: none; }
     .border-mesh {
       fill: none;
       stroke: rgba(48,48,48,0.14);
@@ -2184,6 +2184,9 @@
     function hideTip() { tooltip.classList.remove('show'); }
     document.addEventListener('touchstart', hideTip, { passive: true });
 
+    /* Terrain source pixels — loaded once, reused across renderTerminalMap() calls */
+    let _terrSrcPx = null, _terrSrcW = 0, _terrSrcH = 0;
+
     function renderTerminalMap() {
       const root = document.getElementById('terminal-map');
       if (!root) return;
@@ -2295,19 +2298,54 @@
               if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(id, true);
             });
 
-          /* Terrain texture — Natural Earth Gray Earth, clipped to sphere */
-          svg.append('defs').append('clipPath')
-            .attr('id', 'sphere-clip')
-            .append('path')
-            .datum({ type: 'Sphere' })
-            .attr('d', path);
-          mapG.append('image')
+          /* Terrain texture — canvas-sampled, reprojects on every rotation */
+          const _tW = Math.ceil(W / 3), _tH = Math.ceil(H / 3);
+          const _tCanvas = document.createElement('canvas');
+          _tCanvas.width = _tW; _tCanvas.height = _tH;
+          const _tCtx = _tCanvas.getContext('2d');
+          const _tImgEl = mapG.append('image')
             .attr('class', 'terrain-img')
-            .attr('href', 'assets/terrain.jpg')
-            .attr('x', W / 2 - baseScale).attr('y', H / 2 - baseScale)
-            .attr('width', baseScale * 2).attr('height', baseScale * 2)
-            .attr('preserveAspectRatio', 'xMidYMid slice')
-            .attr('clip-path', 'url(#sphere-clip)');
+            .attr('x', 0).attr('y', 0).attr('width', W).attr('height', H)
+            .attr('preserveAspectRatio', 'none');
+
+          function _drawTerrain() {
+            if (!_terrSrcPx) return;
+            const out = _tCtx.createImageData(_tW, _tH);
+            const d = out.data;
+            for (let oy = 0; oy < _tH; oy++) {
+              for (let ox = 0; ox < _tW; ox++) {
+                const coords = projection.invert([ox * 3 + 1.5, oy * 3 + 1.5]);
+                const di = (oy * _tW + ox) << 2;
+                if (!coords) { d[di + 3] = 0; continue; }
+                const [lon, lat] = coords;
+                if (lon < -180 || lon > 180 || lat < -90 || lat > 90) { d[di + 3] = 0; continue; }
+                let ix = ((lon + 180) / 360 * _terrSrcW) | 0;
+                ix = ((ix % _terrSrcW) + _terrSrcW) % _terrSrcW;
+                const iy = ((90 - lat) / 180 * _terrSrcH) | 0;
+                if (iy < 0 || iy >= _terrSrcH) { d[di + 3] = 0; continue; }
+                const si = (iy * _terrSrcW + ix) << 2;
+                const gray = (0.299 * _terrSrcPx[si] + 0.587 * _terrSrcPx[si + 1] + 0.114 * _terrSrcPx[si + 2]) | 0;
+                d[di] = d[di + 1] = d[di + 2] = gray; d[di + 3] = 255;
+              }
+            }
+            _tCtx.putImageData(out, 0, 0);
+            _tImgEl.attr('href', _tCanvas.toDataURL('image/jpeg', 0.8));
+          }
+
+          if (_terrSrcPx) {
+            _drawTerrain();
+          } else {
+            const _img = new Image();
+            _img.onload = () => {
+              const c = document.createElement('canvas');
+              c.width = _img.width; c.height = _img.height;
+              c.getContext('2d').drawImage(_img, 0, 0);
+              const id = c.getContext('2d').getImageData(0, 0, _img.width, _img.height);
+              _terrSrcPx = id.data; _terrSrcW = _img.width; _terrSrcH = _img.height;
+              _drawTerrain();
+            };
+            _img.src = 'assets/terrain.jpg';
+          }
 
           const borderMesh = mapG.append('path')
             .datum(topojson.mesh(world, world.objects.countries))
@@ -2358,6 +2396,7 @@
             bgPaths.attr('d', path);
             seaPaths.attr('d', path);
             livePaths.attr('d', path);
+            _drawTerrain();
             borderMesh.attr('d', path);
             liveBorders.attr('d', path);
 

@@ -185,7 +185,7 @@
       stroke: var(--sg-stroke-selected);
       stroke-width: 1.85px;
     }
-    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
+    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: contrast(1.2); pointer-events: none; }
     .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
     .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
     .border-live.selected { stroke: var(--border-live-selected); }
@@ -1633,19 +1633,51 @@
             applySel();
           });
 
-        /* Terrain texture — Natural Earth Gray Earth, clipped to sphere */
-        svg.append('defs').append('clipPath')
-          .attr('id', 'sphere-clip')
-          .append('path')
-          .datum({ type: 'Sphere' })
-          .attr('d', path);
-        mapG.append('image')
+        /* Terrain texture — canvas-sampled, reprojects on every rotation */
+        let _terrSrcPx = null, _terrSrcW = 0, _terrSrcH = 0;
+        const _tW = Math.ceil(W / 3), _tH = Math.ceil(H / 3);
+        const _tCanvas = document.createElement('canvas');
+        _tCanvas.width = _tW; _tCanvas.height = _tH;
+        const _tCtx = _tCanvas.getContext('2d');
+        const _tImgEl = mapG.append('image')
           .attr('class', 'terrain-img')
-          .attr('href', 'assets/terrain.jpg')
-          .attr('x', W / 2 - baseScale).attr('y', mapCenterY - baseScale)
-          .attr('width', baseScale * 2).attr('height', baseScale * 2)
-          .attr('preserveAspectRatio', 'xMidYMid slice')
-          .attr('clip-path', 'url(#sphere-clip)');
+          .attr('x', 0).attr('y', 0).attr('width', W).attr('height', H)
+          .attr('preserveAspectRatio', 'none');
+
+        function _drawTerrain() {
+          if (!_terrSrcPx) return;
+          const out = _tCtx.createImageData(_tW, _tH);
+          const d = out.data;
+          for (let oy = 0; oy < _tH; oy++) {
+            for (let ox = 0; ox < _tW; ox++) {
+              const coords = projection.invert([ox * 3 + 1.5, oy * 3 + 1.5]);
+              const di = (oy * _tW + ox) << 2;
+              if (!coords) { d[di + 3] = 0; continue; }
+              const [lon, lat] = coords;
+              if (lon < -180 || lon > 180 || lat < -90 || lat > 90) { d[di + 3] = 0; continue; }
+              let ix = ((lon + 180) / 360 * _terrSrcW) | 0;
+              ix = ((ix % _terrSrcW) + _terrSrcW) % _terrSrcW;
+              const iy = ((90 - lat) / 180 * _terrSrcH) | 0;
+              if (iy < 0 || iy >= _terrSrcH) { d[di + 3] = 0; continue; }
+              const si = (iy * _terrSrcW + ix) << 2;
+              const gray = (0.299 * _terrSrcPx[si] + 0.587 * _terrSrcPx[si + 1] + 0.114 * _terrSrcPx[si + 2]) | 0;
+              d[di] = d[di + 1] = d[di + 2] = gray; d[di + 3] = 255;
+            }
+          }
+          _tCtx.putImageData(out, 0, 0);
+          _tImgEl.attr('href', _tCanvas.toDataURL('image/jpeg', 0.8));
+        }
+
+        const _img = new Image();
+        _img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = _img.width; c.height = _img.height;
+          c.getContext('2d').drawImage(_img, 0, 0);
+          const id = c.getContext('2d').getImageData(0, 0, _img.width, _img.height);
+          _terrSrcPx = id.data; _terrSrcW = _img.width; _terrSrcH = _img.height;
+          _drawTerrain();
+        };
+        _img.src = 'assets/terrain.jpg';
 
         const mesh = mapG.append('path')
           .datum(topojson.mesh(world, world.objects.countries))
@@ -1683,6 +1715,7 @@
 
         function updateAll(){
           mapG.selectAll('path').attr('d', path);
+          _drawTerrain();
         }
 
         const minZoomK = 0.90;
