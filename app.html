@@ -171,6 +171,10 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
+    /* Collapsed: vertical drags resize sheet (not browser scroll) */
+    .sheet:not(.sheet-expanded){
+      touch-action: none;
+    }
     .grab{
       flex-shrink: 0;
       /* ≥44px touch target for phones */
@@ -951,6 +955,17 @@
         apply(h);
         if (RIGHT_CHART) setTimeout(() => RIGHT_CHART.resize(), 60);
       }
+      function shouldStartSheetResize(e) {
+        if (sheet.classList.contains('sheet-expanded')) {
+          return grab.contains(e.target);
+        }
+        return true;
+      }
+      function onSheetPointerDown(e) {
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        if (!shouldStartSheetResize(e)) return;
+        onDown(e);
+      }
       function onDown(e){
         if (e.cancelable && e.type === 'touchstart') e.preventDefault();
         dragging = true;
@@ -981,8 +996,8 @@
         const h = sheet.getBoundingClientRect().height;
         setSnap(nearestSnapIndex(h));
       }
-      grab.addEventListener('mousedown', onDown);
-      grab.addEventListener('touchstart', onDown, { passive: false });
+      sheet.addEventListener('mousedown', onSheetPointerDown);
+      sheet.addEventListener('touchstart', onSheetPointerDown, { passive: false });
       grab.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
