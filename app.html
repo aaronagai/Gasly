@@ -843,6 +843,37 @@
       });
     }
 
+    /** Milliseconds for sorting; ISO YYYY-MM-DD, then D/M/Y (Singapore sheet CSV), else Date.parse. */
+    function appRowDateMs(v) {
+      if (v == null || v === '') return NaN;
+      const s = String(v).trim();
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return Date.UTC(+iso[1], +iso[2] - 1, +iso[3]);
+      const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:\s|$)/);
+      if (dmy) {
+        const d = +dmy[1];
+        const m = +dmy[2];
+        const y = +dmy[3];
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return Date.UTC(y, m - 1, d);
+      }
+      const t = new Date(s).getTime();
+      return Number.isFinite(t) ? t : NaN;
+    }
+
+    function appSortRowsByDate(rows) {
+      return (rows || [])
+        .slice()
+        .filter((r) => r?.date)
+        .sort((a, b) => {
+          const ta = appRowDateMs(a.date);
+          const tb = appRowDateMs(b.date);
+          if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
+          if (Number.isFinite(ta)) return -1;
+          if (Number.isFinite(tb)) return 1;
+          return String(a.date).localeCompare(String(b.date));
+        });
+    }
+
     function fmtAppDate(d) {
       if (!d) return '—';
       const dt = new Date(d);
@@ -945,7 +976,7 @@
 
     async function ensureAppSheetRows(url, cacheRef) {
       if (cacheRef.val) return cacheRef.val;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error('sheet');
       const text = await res.text();
       cacheRef.val = parseAppCSV(text);
@@ -1135,10 +1166,7 @@
       try {
         if (cid === 458) {
           const rows = await ensureAppMalaysiaRows();
-          const seriesAsc = rows
-            .slice()
-            .filter(r => r?.date)
-            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const seriesAsc = appSortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           const regionKey = appMalaysiaRegionKey();
           const isEast = regionKey === 'SabahSarawak';
@@ -1174,10 +1202,7 @@
 
         if (cid === 702) {
           const rows = await ensureAppSheetRows(APP_SG_URL, _sgCache);
-          const seriesAsc = rows
-            .slice()
-            .filter(r => r?.date)
-            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const seriesAsc = appSortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Singapore';
           subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
@@ -1211,10 +1236,7 @@
 
         if (cid === 96) {
           const rows = await ensureAppSheetRows(APP_BN_URL, _bnCache);
-          const seriesAsc = rows
-            .slice()
-            .filter(r => r?.date)
-            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const seriesAsc = appSortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Brunei';
           subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
@@ -1247,10 +1269,7 @@
         if (cid === 360) {
           const rows = await ensureAppSheetRows(APP_ID_URL, _idCache);
           const city = appIndonesiaCity();
-          const cityRows = rows
-            .filter(r => r.city === city)
-            .filter(r => r?.date)
-            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const cityRows = appSortRowsByDate(rows.filter((r) => r.city === city));
           const rSel = cityRows[cityRows.length - 1] || {};
           titleEl.textContent = city;
           subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;

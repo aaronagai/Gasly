@@ -189,6 +189,36 @@
       });
     }
 
+    function sheetRowDateMs(v) {
+      if (v == null || v === '') return NaN;
+      const s = String(v).trim();
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return Date.UTC(+iso[1], +iso[2] - 1, +iso[3]);
+      const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:\s|$)/);
+      if (dmy) {
+        const d = +dmy[1];
+        const m = +dmy[2];
+        const y = +dmy[3];
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return Date.UTC(y, m - 1, d);
+      }
+      const t = new Date(s).getTime();
+      return Number.isFinite(t) ? t : NaN;
+    }
+
+    function sortSheetRowsByDate(rows) {
+      return (rows || [])
+        .slice()
+        .filter((r) => r?.date)
+        .sort((a, b) => {
+          const ta = sheetRowDateMs(a.date);
+          const tb = sheetRowDateMs(b.date);
+          if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
+          if (Number.isFinite(ta)) return -1;
+          if (Number.isFinite(tb)) return 1;
+          return String(a.date).localeCompare(String(b.date));
+        });
+    }
+
     function setCity(city) {
       if (window._idData) renderCards(window._idData, city);
     }
@@ -197,7 +227,7 @@
       const grid = document.getElementById('cards-grid');
       grid.innerHTML = '';
 
-      const cityRows = data.filter(r => r.city === city);
+      const cityRows = sortSheetRowsByDate(data.filter((r) => r.city === city));
 
       FUEL_KEYS.forEach(({ key, label, accent, lightAccent }) => {
         const activeAccent = (currentTheme === 'light' && lightAccent) ? lightAccent : accent;
@@ -265,18 +295,16 @@
       const countryPill = document.getElementById('country-status');
 
       try {
-        const res  = await fetch(SHEET_URL);
+        const res  = await fetch(SHEET_URL, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
-        const data = parseCSV(text);
+        const data = sortSheetRowsByDate(parseCSV(text));
         window._idData = data;
 
         const city = document.getElementById('city-select')?.value || 'Jakarta Pusat';
         renderCards(data, city);
 
-        // Find the latest date across all rows
-        const dates = data.map(r => r.date).filter(Boolean).sort();
-        const lastDate = dates[dates.length - 1];
+        const lastDate = data[data.length - 1]?.date;
         if (lastDate) {
           document.getElementById('last-updated').textContent =
             new Date(lastDate).toLocaleDateString('en-ID', { year: 'numeric', month: 'short', day: 'numeric' });
