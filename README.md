@@ -1,6 +1,6 @@
 # PetrolPrice.xyz
 
-A sleek, terminal-themed web app that displays **live fuel prices from around the world** using open government data.
+A live fuel price tracker for Southeast Asia — real-time data sourced from official open government portals.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-00d4ff?style=flat-square&labelColor=0a0a0a)](LICENSE)
 [![Open Source](https://img.shields.io/badge/open%20source-%E2%9D%A4-00ff64?style=flat-square&labelColor=0a0a0a)](https://github.com/aaronagai/PetrolPrice.xyz)
@@ -11,13 +11,22 @@ A sleek, terminal-themed web app that displays **live fuel prices from around th
 
 ## Features
 
-- **Multi-country fuel prices** — live data from open government sources worldwide
+- **Multi-country fuel prices** — live data from open government sources (Malaysia, Singapore, Brunei, Indonesia)
 - **Week-on-week price change** — colour-coded ▲/▼ indicator with diff
 - **3-month price history chart** per fuel type (Chart.js)
+- **Interactive SEA map** — click countries to view live prices (D3 + TopoJSON)
+- **PWA-ready** — installable on mobile (manifest + icons)
+- **Auto dark/light mode** — follows system preference
 - **Auto-refresh** with animated live indicator
-- **Dark terminal aesthetic** — glassmorphism cards, neon accents, DM Mono
-- **Mobile-first responsive** layout
 - **Zero frameworks** — plain HTML, CSS, JavaScript
+
+## Views
+
+| Page | Description |
+|------|-------------|
+| `index.html` | Landing page with interactive Southeast Asia map |
+| `app.html` | Full PWA app — global price comparison, charts, dark/light mode |
+| `terminal.html` | Terminal-themed viewer — per-country prices via `?country=<id>` |
 
 ## Running Locally
 
@@ -47,15 +56,30 @@ To deploy your own fork:
 
 ```
 PetrolPrice.xyz/
-├── index.html      # Landing page with interactive SEA map
-├── malaysia.html   # Malaysia fuel prices
-├── singapore.html  # Singapore fuel prices
-├── brunei.html     # Brunei fuel prices
-├── style.css       # Dark terminal theme styles
-├── app.js          # Data fetching, rendering, charts
-├── LICENSE         # MIT License
-└── README.md       # This file
+├── index.html              # Landing page with interactive SEA map
+├── app.html                # PWA app — global comparison, dark/light mode
+├── terminal.html           # Terminal-themed country viewer (?country= param)
+├── style.css               # Shared dark terminal theme
+├── app.js                  # Data fetching & rendering (Malaysia)
+├── logo.svg                # Site logo
+├── manifest.webmanifest    # PWA manifest
+├── assets/
+│   ├── countries-110m.json # World map TopoJSON (D3)
+│   ├── singapore-geo.json  # Singapore district boundaries
+│   └── icons/
+│       └── applogo.png     # App icon (PWA + touch icon)
+├── LICENSE
+└── README.md
 ```
+
+## Data Sources
+
+| Country | Source |
+|---------|--------|
+| Malaysia | [data.gov.my](https://data.gov.my) — Official Government Open Data |
+| Singapore | Google Sheets (weekly pump prices) |
+| Brunei | Google Sheets |
+| Indonesia | Google Sheets |
 
 ## License
 
