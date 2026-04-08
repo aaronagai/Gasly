@@ -423,6 +423,15 @@
       box-shadow: none;
       transition: box-shadow 0.2s ease;
     }
+    .sheet-region-sticky .hi-kicker{
+      margin: 0 0 4px;
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
     .sheet-region-sticky .title{
       margin: 0;
     }
@@ -743,6 +752,7 @@
       <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
       <div class="sheet-scroll" id="sheet-scroll">
         <div class="sheet-region-sticky" id="sheet-region-sticky">
+          <div class="hi-kicker">HIGHLIGHTS</div>
           <div class="title" id="hi-title">Semenanjung</div>
         </div>
         <div class="sheet-cards-stack">
@@ -1248,7 +1258,7 @@
           const rows = await ensureAppSheetRows(SG_SHEET_URL, _sgCache);
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          titleEl.textContent = 'Singapore';
+          titleEl.textContent = 'National';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['RON92', fmtPerL('SGD', rSel.ron92, 2)],
@@ -1282,7 +1292,7 @@
           const rows = await ensureAppSheetRows(BN_SHEET_URL, _bnCache);
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          titleEl.textContent = 'Brunei';
+          titleEl.textContent = 'National';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['Gasoline', fmtPerL('BND', rSel.gasoline, 2)],

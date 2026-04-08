@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PetrolPrice — Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -20,6 +20,9 @@
       --text: #0f0f0f;
       --muted: rgba(0,0,0,0.55);
       --line: rgba(0,0,0,0.10);
+      --hairline: rgba(0, 0, 0, 0.08);
+      --metric-k: rgba(0, 0, 0, 0.52);
+      --metric-v: rgba(0, 0, 0, 0.88);
       --shadow: 0 10px 28px rgba(0,0,0,0.08);
       --shadow-2: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
@@ -390,44 +393,6 @@
       outline-offset: 2px;
     }
 
-    .sidebar-currency {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      width: 100%;
-      padding: 0 8px 6px;
-      flex-shrink: 0;
-    }
-    .sidebar-curr {
-      width: 100%;
-      min-height: 30px;
-      padding: 5px 2px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.45);
-      font-family: var(--font);
-      font-size: 0.56rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.48);
-      cursor: pointer;
-      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
-    }
-    .sidebar-curr:hover {
-      background: rgba(0,0,0,0.04);
-      color: rgba(0,0,0,0.68);
-    }
-    .sidebar-curr.is-active {
-      background: rgba(255,106,0,0.12);
-      border-color: rgba(255,106,0,0.28);
-      color: var(--orange);
-    }
-    .sidebar-curr:focus-visible {
-      outline: 2px solid rgba(255,106,0,0.55);
-      outline-offset: 2px;
-    }
-
     /* Left panel */
     .left {
       grid-area: left;
@@ -449,22 +414,8 @@
       margin: 0;
       box-shadow: 0 12px 28px rgba(0,0,0,0.14);
     }
-    .back {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: rgba(0,0,0,0.55);
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      font-size: 0.62rem;
-      user-select: none;
-    }
-    .back:hover { color: rgba(0,0,0,0.72); }
-    .back svg { width: 16px; height: 16px; opacity: 0.55; }
     .left-head {
-      margin-top: 10px;
+      margin-top: 0;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -543,8 +494,6 @@
       padding: 12px 12px 12px;
     }
     .country-card .card-title { font-size: 0.98rem; }
-    .country-card .metrics { margin-top: 10px; }
-    .country-card .metric { padding-top: 8px; }
     .country-card .mini-bars { display: none; }
     .oil-context{
       margin-top: 10px;
@@ -604,7 +553,7 @@
       border: 1px solid rgba(0,0,0,0.10);
       background: rgba(255,255,255,0.7);
       border-radius: 999px;
-      font-family: var(--mono);
+      font-family: var(--font);
       font-size: 0.68rem;
       letter-spacing: 0.06em;
       color: rgba(0,0,0,0.7);
@@ -616,28 +565,44 @@
     .dot.orange { background: var(--orange); }
     .dot.green { background: #16a34a; }
 
-    .metrics {
+    /* Overview numbers — match app.html #card-overview metrics */
+    .overview-metrics{
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 14px;
+    }
+    .overview-row{
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 12px;
-    }
-    .metric {
-      border-top: 1px solid rgba(0,0,0,0.08);
+      border-top: 1px solid var(--hairline);
       padding-top: 10px;
+      padding-bottom: 14px;
     }
-    .metric .k {
+    .overview-metric-empty{
+      min-width: 0;
+      pointer-events: none;
+    }
+    .overview-metrics .metric{
+      min-width: 0;
+    }
+    .overview-metrics .metric .k{
+      font-family: var(--font);
       font-size: 0.66rem;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.52);
+      color: var(--metric-k);
     }
-    .metric .v {
+    .overview-metrics .metric .v{
       margin-top: 6px;
-      font-family: var(--mono);
-      font-size: 1rem;
+      font-family: var(--font);
+      font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--metric-v);
+      line-height: 1.25;
     }
 
     .mini-bars {
@@ -660,57 +625,6 @@
     .mini-bars span:nth-child(3n){ height: 65%; }
     .mini-bars span:nth-child(4n){ height: 25%; }
     .mini-bars span:nth-child(5n){ height: 85%; }
-
-    .field-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
-    .select {
-      appearance: none;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.8);
-      border-radius: 12px;
-      padding: 10px 38px 10px 12px;
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      letter-spacing: 0.02em;
-      color: rgba(0,0,0,0.85);
-      cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23777777' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      min-width: 200px;
-    }
-    .select:focus { outline: none; border-color: rgba(255,106,0,0.45); }
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 12px;
-      margin-top: 12px;
-      border-top: 1px solid rgba(0,0,0,0.08);
-      padding-top: 12px;
-    }
-    .kpi .k {
-      font-size: 0.66rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.52);
-    }
-    .kpi .v {
-      margin-top: 6px;
-      font-family: var(--mono);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      font-size: 0.95rem;
-      color: rgba(0,0,0,0.88);
-    }
-    .kpi .v.muted { color: rgba(0,0,0,0.55); font-weight: 700; }
-    .delta.up { color: #b91c1c; }
-    .delta.down { color: #166534; }
-    .delta.same { color: rgba(0,0,0,0.55); }
 
     /* Main map area */
     .main {
@@ -852,7 +766,7 @@
       filter: drop-shadow(0 0 3px rgba(254,94,14,0.6));
     }
     .live-tag {
-      font-family: var(--mono);
+      font-family: var(--font);
       font-weight: 700;
       fill: #fe5e0e;
       dominant-baseline: middle;
@@ -890,7 +804,7 @@
       font-size: 0.7rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      font-family: var(--mono);
+      font-family: var(--font);
       color: rgba(0,0,0,0.55);
     }
     .tt-status.live { color: rgba(255,106,0,0.95); }
@@ -947,7 +861,7 @@
     }
     .chart .stat .v {
       margin-top: 6px;
-      font-family: var(--mono);
+      font-family: var(--font);
       font-weight: 800;
       letter-spacing: 0.02em;
     }
@@ -1021,7 +935,7 @@
       line-height: 1.05;
     }
     .info .hint {
-      font-family: var(--mono);
+      font-family: var(--font);
       font-size: 0.78rem;
       letter-spacing: 0.06em;
       opacity: 0.8;
@@ -1030,7 +944,7 @@
       margin-top: 10px;
       display: grid;
       gap: 10px;
-      font-family: var(--mono);
+      font-family: var(--font);
       font-size: 0.78rem;
       letter-spacing: 0.02em;
       opacity: 0.95;
@@ -1122,18 +1036,8 @@
           </a>
         </li>
       </ul>
-      <div class="sidebar-currency" role="group" aria-label="Price currency">
-        <button type="button" class="sidebar-curr" id="terminal-curr-local" data-curr="local">Local</button>
-        <button type="button" class="sidebar-curr" id="terminal-curr-usd" data-curr="usd">USD</button>
-      </div>
     </nav>
     <aside class="left" aria-label="Portfolio overview">
-      <a class="back" href="./index.html" aria-label="Home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-        <span>Home</span>
-      </a>
       <div class="left-head">
         <div class="title" id="left-title">Portfolio<br/>Overview</div>
       </div>
@@ -1148,42 +1052,10 @@
             <div class="k">Oil context</div>
             <div class="v" id="left-oil-context">—</div>
           </div>
-          <div class="metrics" id="left-overview-metrics" aria-label="Overview metrics"></div>
+          <div class="overview-metrics" id="left-overview-metrics" aria-label="Overview metrics"></div>
           <div class="mini-bars" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-        </div>
-
-        <div class="card left-card" id="city-card" aria-label="City based pricing">
-          <div class="card-title" style="font-size:0.98rem;font-weight:800;letter-spacing:-0.01em;">Compare cities using live Indonesia data</div>
-
-          <div class="field-row" aria-label="Filters">
-            <select class="select" id="city-select" aria-label="City"></select>
-            <select class="select" id="fuel-select" aria-label="Fuel type"></select>
-          </div>
-
-          <div class="kpi-grid" aria-label="Key metrics">
-            <div class="kpi">
-              <div class="k">Current</div>
-              <div class="v" id="kpi-current">—</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Change</div>
-              <div class="v muted" id="kpi-change">—</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Cheapest</div>
-              <div class="v muted" id="kpi-cheapest">—</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Most expensive</div>
-              <div class="v muted" id="kpi-expensive">—</div>
-            </div>
-            <div class="kpi" style="grid-column:1 / -1;">
-              <div class="k">City spread</div>
-              <div class="v muted" id="kpi-spread">—</div>
-            </div>
           </div>
         </div>
       </div>
@@ -1227,15 +1099,15 @@
       </div>
       <div class="info">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div class="hint" id="info-kicker">Highlights</div>
+          <div class="hint" id="info-kicker">HIGHLIGHTS</div>
         </div>
         <h3 id="info-title">Malaysia</h3>
         <div class="hint" id="info-sub">Click a country to compare</div>
         <div class="lines" aria-label="Highlights" id="info-lines">
           <div class="kv"><span class="k">Status</span><span class="v">Live</span></div>
-          <div class="kv"><span class="k">Tip</span><span class="v">Pick Indonesia for city stats</span></div>
+          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region or city · ←/→ date · [ ] date · +/− map zoom</span></div>
         </div>
-        <div class="pager" aria-label="Pager (coming soon)">
+        <div class="pager" aria-label="Highlights date history">
           <button type="button" id="pager-prev" aria-label="Previous">&lt;</button>
           <button type="button" id="pager-next" aria-label="Next">&gt;</button>
         </div>
@@ -1261,54 +1133,46 @@
       360: { name: 'Indonesia',  subtitle: '', defaultCardTitle: 'Indonesia' },
     };
 
-    /** Oil context paragraphs + overview metrics (left panel) */
+    /** Oil context + overview metrics — same `metricRows` layout as app.html */
     const COUNTRY_OVERVIEW = {
       458: {
         oilContext:
           'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-        metrics: [
-          ['BOPD', '570,000'],
-          ['1P Reserves', '2.7B Barrels'],
-          ['Refinery Intake', '747,000'],
-          ['Export Value', 'RM6.2bil'],
-          ['Import Value', 'RM13.6bil'],
-          ['Status', 'Net Importer'],
+        metricRows: [
+          [['BOPD', '570,000'], ['1P Reserves', '2.7B Barrels']],
+          [['Refinery Intake', '747,000'], null],
+          [['Export Value', 'RM6.2bil'], ['Import Value', 'RM13.6bil']],
+          [['Status', 'Net Importer'], null],
         ],
       },
       96: {
         oilContext:
           'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
-        metrics: [
-          ['BOPD', '102,677'],
-          ['1P Reserves', '1.1B Barrels'],
-          ['Refinery Intake', '16,338'],
-          ['Export Value', 'BND 13.45bil'],
-          ['Import Value', 'BND 8.62bil'],
-          ['Status', 'Net Exporter'],
+        metricRows: [
+          [['BOPD', '102,677'], ['1P Reserves', '1.1B Barrels']],
+          [['Refinery Intake', '16,338'], null],
+          [['Export Value', 'BND 13.45bil'], ['Import Value', 'BND 8.62bil']],
+          [['Status', 'Net Exporter'], null],
         ],
       },
       360: {
         oilContext:
           "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
-        metrics: [
-          ['BOPD', '608,100'],
-          ['1P Reserves', '2.41B Barrels'],
-          ['Refinery Intake', '1,626,878'],
-          ['Export Value', 'US$13.07bil'],
-          ['Import Value', 'US$32.77bil'],
-          ['Status', 'Net Importer'],
+        metricRows: [
+          [['BOPD', '608,100'], ['1P Reserves', '2.41B Barrels']],
+          [['Refinery Intake', '1,626,878'], null],
+          [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
+          [['Status', 'Net Importer'], null],
         ],
       },
       702: {
         oilContext:
           'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
-        metrics: [
-          ['BOPD', '0'],
-          ['1P Reserves', '0 Barrels'],
-          ['Refinery Intake', '~1,100,000'],
-          ['Export Value', 'Not specified in available data'],
-          ['Import Value', 'Not specified in available data'],
-          ['Status', 'Net Importer (refining hub)'],
+        metricRows: [
+          [['BOPD', '0'], ['1P Reserves', '0 Barrels']],
+          [['Refinery Intake', '~1,100,000'], null],
+          [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
+          [['Status', 'Net Importer (refining hub)'], null],
         ],
       },
     };
@@ -1347,10 +1211,104 @@
     ];
     let MY_REGION = localStorage.getItem('terminal_my_region') || 'Semenanjung';
 
+    /** Geo boxes for orthographic fit — map focus only (matches app.html logic). */
+    const TERMINAL_MY_SUBREGION_FOCUS = {
+      Semenanjung: {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [99.5, 0.75], [104.95, 0.75], [104.95, 6.95], [99.5, 6.95], [99.5, 0.75],
+          ]],
+        },
+      },
+      SabahSarawak: {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [108.8, 0.45], [119.6, 0.45], [119.6, 7.55], [108.8, 7.55], [108.8, 0.45],
+          ]],
+        },
+      },
+    };
+
+    /** [lon, lat] — keys match `city` in the Indonesia sheet (see app.html). */
+    const TERMINAL_ID_CITY_LONLAT = {
+      'Jakarta Pusat': [106.8456, -6.2088],
+      'Jakarta Selatan': [106.81, -6.26],
+      'Jakarta Barat': [106.74, -6.15],
+      'Jakarta Timur': [106.9, -6.22],
+      'Jakarta Utara': [106.88, -6.13],
+      Bekasi: [106.99, -6.24],
+      Bogor: [106.8, -6.6],
+      Depok: [106.82, -6.4],
+      Tangerang: [106.63, -6.18],
+      'Tangerang Selatan': [106.71, -6.29],
+      Bandung: [107.62, -6.92],
+      Semarang: [110.42, -6.99],
+      Surabaya: [112.75, -7.26],
+      Surakarta: [110.82, -7.57],
+      Yogyakarta: [110.36, -7.8],
+      Medan: [98.67, 3.59],
+      Palembang: [104.75, -2.98],
+      Pekanbaru: [101.45, 0.51],
+      Denpasar: [115.22, -8.65],
+      Makassar: [119.43, -5.15],
+    };
+
+    function terminalLonLatBoxFeature(lon, lat, padDeg) {
+      const p = padDeg ?? 1.18;
+      return {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [lon - p, lat - p],
+            [lon + p, lat - p],
+            [lon + p, lat + p],
+            [lon - p, lat + p],
+            [lon - p, lat - p],
+          ]],
+        },
+      };
+    }
+
+    /** Same heuristics as app.html `appMalaysiaRegionFromLngLat` for click → MY_REGION. */
+    function terminalMalaysiaRegionFromLngLat(lon, lat) {
+      const PEN = { minLon: 99.5, maxLon: 104.95, minLat: 0.75, maxLat: 6.95 };
+      const EAST = { minLon: 108.8, maxLon: 119.6, minLat: 0.45, maxLat: 7.55 };
+      const inPen = lon >= PEN.minLon && lon <= PEN.maxLon && lat >= PEN.minLat && lat <= PEN.maxLat;
+      const inEast = lon >= EAST.minLon && lon <= EAST.maxLon && lat >= EAST.minLat && lat <= EAST.maxLat;
+      if (inEast && !inPen) return 'SabahSarawak';
+      if (inPen && !inEast) return 'Semenanjung';
+      if (inEast && inPen) return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
+      if (inEast) return 'SabahSarawak';
+      if (inPen) return 'Semenanjung';
+      return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
+    }
+
+    /** Valid key for TERMINAL_MY_SUBREGION_FOCUS — prefers live MY_REGION, then localStorage. */
+    function terminalResolveMalaysiaRegionForMap() {
+      let k = typeof MY_REGION === 'string' ? MY_REGION.trim() : '';
+      if (!TERMINAL_MY_SUBREGION_FOCUS[k]) {
+        try {
+          const s = localStorage.getItem('terminal_my_region');
+          const t = s && String(s).trim();
+          if (TERMINAL_MY_SUBREGION_FOCUS[t]) k = t;
+        } catch (_) {}
+      }
+      return TERMINAL_MY_SUBREGION_FOCUS[k] ? k : 'Semenanjung';
+    }
+
     function myIsEastMalaysia(regionKey) {
       return regionKey === 'SabahSarawak';
     }
     function setMalaysiaRegion(regionKey) {
+      regionKey = String(regionKey || '').trim();
       if (!regionKey) return;
       MY_REGION = regionKey;
       try { localStorage.setItem('terminal_my_region', regionKey); } catch (_) {}
@@ -1385,6 +1343,24 @@
       return BN_ROWS;
     }
 
+    /** Sorted rows for the currently selected Indonesia city (for highlights pager). */
+    function terminalIndonesiaSortedCityRows() {
+      if (!ID_ROWS) return [];
+      const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
+      return sortRowsByDate(ID_ROWS.filter((r) => r.city === city));
+    }
+
+    async function terminalPagerSeries(cid) {
+      if (cid === 458) return sortRowsByDate((await ensureMalaysiaRows()) || []);
+      if (cid === 702) return sortRowsByDate((await ensureSingaporeRows()) || []);
+      if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
+      if (cid === 360) {
+        await ensureIndonesiaRows();
+        return terminalIndonesiaSortedCityRows();
+      }
+      return [];
+    }
+
     /* Matches app.js / country pages — synced via localStorage key "currency" */
     function isTerminalUsd() {
       return (localStorage.getItem('currency') || 'local') === 'usd';
@@ -1403,31 +1379,6 @@
         return `USD ${(v * USD_RATES.IDR).toFixed(4)}/L`;
       }
       return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
-    }
-    function fmtIdrAmountPlain(v) {
-      if (!isFinite(v)) return '—';
-      if (isTerminalUsd()) return (v * USD_RATES.IDR).toFixed(4);
-      return Math.round(v).toLocaleString('en-US');
-    }
-    function fmtIdrSpreadLine(spread) {
-      if (!isFinite(spread)) return '—';
-      if (isTerminalUsd()) return `${(spread * USD_RATES.IDR).toFixed(4)} USD`;
-      return `${Math.round(spread).toLocaleString('en-US')} IDR`;
-    }
-    function deltaStr(cur, prev, currencyKey) {
-      if (!isFinite(cur) || !isFinite(prev)) return '—';
-      const diff = cur - prev;
-      const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
-      const rate = USD_RATES[currencyKey];
-      if (isTerminalUsd() && rate != null) {
-        const d = diff * rate;
-        const dec = currencyKey === 'IDR' ? 4 : 3;
-        return `${arrow} USD ${Math.abs(d).toFixed(dec)}`;
-      }
-      if (currencyKey === 'IDR') {
-        return `${arrow} IDR ${Math.round(Math.abs(diff)).toLocaleString('en-US')}`;
-      }
-      return `${arrow} ${currencyKey} ${Math.abs(diff).toFixed(2)}`;
     }
 
     function setRightPanel({ kicker, titleA, titleB, subtag, infoTitle, infoSub, infoLines }) {
@@ -1556,6 +1507,7 @@
       }
       RIGHT_CHART_COUNTRY = null;
       RIGHT_CHART_MY_DIESEL_KEY = null;
+      window.__terminalIndonesiaChartKey = null;
     }
 
     function renderRightChart({ labels, datasets, countryId, animate = true }) {
@@ -1718,41 +1670,43 @@
         }));
       };
 
-      // Indonesia: reflect selected city/fuel from city card
+      // Indonesia: reflect selected city/fuel from city card (pager = history rows for this city)
       if (countryId === 360) {
         const rows = await ensureIndonesiaRows();
-        const city = document.getElementById('city-select')?.value || localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-        const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
-        const sliceRows = takeLast(cityRows, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
+        const seriesAsc = sortRowsByDate(rows.filter((r) => r.city === city));
+
+        let idx = getPagerIndex(360);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        if (seriesAsc.length) idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        else idx = 0;
+        setPagerIndex(360, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const sliceRows = takeLast(seriesAsc, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const datasets = buildSeries({ rows: sliceRows, keys: ID_FUELS, labels });
-        const lastRow = sliceRows[sliceRows.length - 1] || null;
-        const activeFuelKey = document.getElementById('fuel-select')?.value || localStorage.getItem('terminal_id_fuel') || ID_FUELS[0].key;
-        const activeFuelLabel = (ID_FUELS.find(f => f.key === activeFuelKey)?.label) || activeFuelKey;
-        const cur = asNum(lastRow?.[activeFuelKey]);
-        const prevRow = sliceRows[sliceRows.length - 2] || null;
-        const prevV = asNum(prevRow?.[activeFuelKey]);
-        const extremes = computeCityExtremes(rows, activeFuelKey);
         setRightPanel({
           kicker: 'Indonesia Petrol Prices History',
           titleA: 'Indonesia',
           titleB: 'Overview',
           subtag: legendHtml(datasets),
           infoTitle: city,
-          infoSub: `${activeFuelLabel} · latest by city`,
-          infoLines: [
-            ['Cheapest city', extremes ? `${extremes.cheapest.city} (${fmtIdrAmountPlain(extremes.cheapest.val)})` : '—'],
-            ['Most expensive', extremes ? `${extremes.expensive.city} (${fmtIdrAmountPlain(extremes.expensive.val)})` : '—'],
-            ['Spread', extremes ? fmtIdrSpreadLine(extremes.spread) : '—'],
-            ['Updated', fmtDate(lastRow?.date)],
-            ['Change', (cur != null && prevV != null) ? deltaStr(cur, prevV, 'IDR') : '—'],
-          ],
+          infoSub: `As of ${fmtDate(rSel.date)} · Indonesia`,
+          infoLines: ID_FUELS.map((f) => [f.label, fmtIDR(parseFloat(rSel[f.key]))]),
         });
-        renderRightChart({
-          labels,
-          datasets,
-          countryId: 360,
-        });
+        const idChartMode = isTerminalUsd() ? 'usd' : 'local';
+        const idChartKey = `${city}|${idChartMode}`;
+        if (RIGHT_CHART_COUNTRY !== 360 || window.__terminalIndonesiaChartKey !== idChartKey) {
+          renderRightChart({
+            labels,
+            datasets,
+            countryId: 360,
+            animate: true,
+          });
+          window.__terminalIndonesiaChartKey = idChartKey;
+        }
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
 
@@ -1790,7 +1744,7 @@
           titleB: 'Overview',
           subtag: legendHtml(datasets),
           infoTitle: `${(MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION}`,
-          infoSub: `As of ${fmtDate(rSel.date)} · ${isEast ? 'East Malaysia' : 'Peninsular'}`,
+          infoSub: `As of ${fmtDate(rSel.date)} · Malaysia`,
           infoLines: [
             ['BUDI95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95_budi95), 2)],
             ['RON95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95), 2)],
@@ -1842,8 +1796,8 @@
           titleA: 'Singapore',
           titleB: 'Overview',
           subtag: legendHtml(datasets),
-          infoTitle: 'Singapore',
-          infoSub: `As of ${fmtDate(rSel.date)} · National`,
+          infoTitle: 'National',
+          infoSub: `As of ${fmtDate(rSel.date)} · Singapore`,
           infoLines: [
             ['RON92', fmtTerminalPerL('SGD', parseFloat(rSel.ron92), 2)],
             ['RON95', fmtTerminalPerL('SGD', parseFloat(rSel.ron95), 2)],
@@ -1887,8 +1841,8 @@
           titleA: 'Brunei',
           titleB: 'Overview',
           subtag: legendHtml(datasets),
-          infoTitle: 'Brunei',
-          infoSub: `As of ${fmtDate(rSel.date)} · National`,
+          infoTitle: 'National',
+          infoSub: `As of ${fmtDate(rSel.date)} · Brunei`,
           infoLines: [
             ['Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2)],
             ['Diesel', fmtTerminalPerL('BND', parseFloat(rSel.diesel), 2)],
@@ -1903,120 +1857,6 @@
         });
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
-      }
-    }
-
-    function uniq(arr) {
-      return [...new Set(arr.filter(Boolean))];
-    }
-
-    function getLatestTwoCityPrices(rows, city, fuelKey) {
-      const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
-
-      const vals = cityRows
-        .map(r => ({ date: r.date, val: parseFloat(r[fuelKey]) }))
-        .filter(x => isFinite(x.val) && x.val > 0);
-
-      const last = vals[vals.length - 1] || null;
-      const prev = vals[vals.length - 2] || null;
-      return { last, prev };
-    }
-
-    function computeCityExtremes(rows, fuelKey) {
-      const cities = uniq(rows.map(r => r.city));
-      const latestByCity = [];
-      for (const c of cities) {
-        const { last } = getLatestTwoCityPrices(rows, c, fuelKey);
-        if (last) latestByCity.push({ city: c, val: last.val });
-      }
-      if (!latestByCity.length) return null;
-      latestByCity.sort((a, b) => a.val - b.val);
-      const cheapest = latestByCity[0];
-      const expensive = latestByCity[latestByCity.length - 1];
-      return {
-        cheapest,
-        expensive,
-        spread: expensive.val - cheapest.val,
-      };
-    }
-
-    async function renderIndonesiaCityCard({ city, fuelKey } = {}) {
-      const card = document.getElementById('city-card');
-      if (!card) return;
-
-      // Only show this card for Indonesia
-      const isIndonesia = window.__terminalSelectedCountryId === 360;
-      card.style.display = isIndonesia ? '' : 'none';
-      if (!isIndonesia) return;
-
-      const rows = await ensureIndonesiaRows();
-      const citySel = document.getElementById('city-select');
-      const fuelSel = document.getElementById('fuel-select');
-      const kCur = document.getElementById('kpi-current');
-      const kChg = document.getElementById('kpi-change');
-      const kMin = document.getElementById('kpi-cheapest');
-      const kMax = document.getElementById('kpi-expensive');
-      const kSpr = document.getElementById('kpi-spread');
-
-      const cities = uniq(rows.map(r => r.city)).sort((a, b) => a.localeCompare(b));
-      const fuels = ID_FUELS;
-
-      const storedCity = localStorage.getItem('terminal_id_city');
-      const storedFuel = localStorage.getItem('terminal_id_fuel');
-      const activeCity = city || storedCity || cities[0] || 'Jakarta Pusat';
-      const activeFuel = fuelKey || storedFuel || fuels[0].key;
-
-      // Populate selects
-      if (citySel && !citySel.dataset.ready) {
-        citySel.innerHTML = cities.map(c => `<option value="${c}">${c}</option>`).join('');
-        citySel.dataset.ready = '1';
-        citySel.onchange = () => {
-          localStorage.setItem('terminal_id_city', citySel.value);
-          renderIndonesiaCityCard({ city: citySel.value, fuelKey: fuelSel?.value });
-        };
-      }
-      if (fuelSel && !fuelSel.dataset.ready) {
-        fuelSel.innerHTML = fuels.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
-        fuelSel.dataset.ready = '1';
-        fuelSel.onchange = () => {
-          localStorage.setItem('terminal_id_fuel', fuelSel.value);
-          renderIndonesiaCityCard({ city: citySel?.value, fuelKey: fuelSel.value });
-        };
-      }
-      if (citySel) citySel.value = activeCity;
-      if (fuelSel) fuelSel.value = activeFuel;
-
-      // Compute KPIs
-      const { last, prev } = getLatestTwoCityPrices(rows, activeCity, activeFuel);
-      const current = last?.val ?? null;
-      const diff = (current != null && prev?.val != null) ? (current - prev.val) : null;
-
-      const extremes = computeCityExtremes(rows, activeFuel);
-
-      if (kCur) kCur.textContent = current != null ? fmtIDR(current) : '—';
-
-      if (kChg) {
-        if (diff == null) {
-          kChg.textContent = '—';
-          kChg.className = 'v muted';
-        } else {
-          const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
-          const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
-          const diffTxt = isTerminalUsd()
-            ? (Math.abs(diff) * USD_RATES.IDR).toFixed(4)
-            : Math.round(Math.abs(diff)).toLocaleString('en-US');
-          kChg.textContent = `${arrow} ${isTerminalUsd() ? 'USD ' : ''}${diffTxt}`;
-          kChg.className = `v delta ${cls}`;
-        }
-      }
-
-      if (kMin) kMin.textContent = extremes ? `${extremes.cheapest.city} · ${fmtIDR(extremes.cheapest.val)}` : '—';
-      if (kMax) kMax.textContent = extremes ? `${extremes.expensive.city} · ${fmtIDR(extremes.expensive.val)}` : '—';
-      if (kSpr) kSpr.textContent = extremes ? `${fmtIdrSpreadLine(extremes.spread)} spread` : '—';
-
-      // Keep the right panel in sync when Indonesia is selected
-      if (window.__terminalSelectedCountryId === 360) {
-        updateRightPanelForCountry(360).catch(() => {});
       }
     }
 
@@ -2042,11 +1882,15 @@
       const ov = COUNTRY_OVERVIEW[countryId];
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
       if (metricsEl) {
-        const rows = ov?.metrics;
-        metricsEl.innerHTML = Array.isArray(rows) && rows.length
-          ? rows.map(([k, v]) => {
-              const fullWidth = k === 'Status';
-              return `<div class="metric"${fullWidth ? ' style="grid-column:1 / -1;"' : ''}><div class="k">${k}</div><div class="v">${v}</div></div>`;
+        const rowData = ov?.metricRows;
+        const cellHtml = (m) => m
+          ? `<div class="metric"><div class="k">${m[0]}</div><div class="v">${m[1]}</div></div>`
+          : '<div class="overview-metric-empty" aria-hidden="true"></div>';
+        metricsEl.innerHTML = Array.isArray(rowData) && rowData.length
+          ? rowData.map((pair) => {
+              const left = pair[0];
+              const right = pair[1];
+              return `<div class="overview-row">${cellHtml(left)}${cellHtml(right)}</div>`;
             }).join('')
           : '';
       }
@@ -2063,8 +1907,6 @@
         else hiTitle.removeAttribute('title');
       }
 
-      // Show/hide + render country-specific cards
-      renderIndonesiaCityCard().catch(() => {});
       // Reset/keep paging state based on country
       if (countryId !== 458) MY_INDEX = null;
       updateRightPanelForCountry(countryId).catch(() => {});
@@ -2108,6 +1950,7 @@
           el.addEventListener('click', () => {
             const region = el.getAttribute('data-region');
             setMalaysiaRegion(region);
+            if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
             closeMenu();
           });
         });
@@ -2421,10 +2264,8 @@
               if (id === 458) {
                 const [px, py] = d3.pointer(e, svg.node());
                 const inv = projection.invert([px, py]);
-                if (inv && isFinite(inv[0])) {
-                  const lon = inv[0];
-                  const regionKey = lon < 108 ? 'Semenanjung' : 'SabahSarawak';
-                  setMalaysiaRegion(regionKey);
+                if (inv && isFinite(inv[0]) && isFinite(inv[1])) {
+                  setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
                 }
               }
               setLeftOverview(id);
@@ -2442,10 +2283,8 @@
                   const px = t.clientX - box.left;
                   const py = t.clientY - box.top;
                   const inv = projection.invert([px, py]);
-                  if (inv && isFinite(inv[0])) {
-                    const lon = inv[0];
-                    const regionKey = lon < 108 ? 'Semenanjung' : 'SabahSarawak';
-                    setMalaysiaRegion(regionKey);
+                  if (inv && isFinite(inv[0]) && isFinite(inv[1])) {
+                    setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
                   }
                 }
               }
@@ -2570,44 +2409,133 @@
             setScale(projection.scale() * k, false);
           }, { passive: false });
 
-          function computeFitScale(feature, rotateArr, padPx) {
+          /** Orthographic fit without mutating the live projection (d3-geo fitExtent). */
+          function terminalProjectionFitFeature(feature, padPx) {
+            const c = d3.geoCentroid(feature);
+            if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
+            const p = d3.geoOrthographic()
+              .clipAngle(90)
+              .precision(0.3)
+              .rotate([-c[0], -c[1], 0]);
+            try {
+              p.fitExtent([[padPx, padPx], [W - padPx, H - padPx]], feature);
+            } catch (_) {
+              return null;
+            }
+            const sc = p.scale();
+            const tr = p.translate();
+            const rot = p.rotate();
+            if (!Number.isFinite(sc) || sc <= 0) return null;
+            if (!Array.isArray(tr) || tr.length < 2 || !Number.isFinite(tr[0]) || !Number.isFinite(tr[1])) return null;
+            return {
+              scale: sc,
+              translate: [tr[0], tr[1]],
+              rotate: [rot[0], rot[1], rot[2] || 0],
+            };
+          }
+
+          /** Same approach as app.html: bounds at scale 1, then absolute scale. */
+          function computeFitScaleBounds(feature, rotateArr, padPx) {
             const s0 = projection.scale();
             const r0 = projection.rotate();
+            const t0 = projection.translate();
             try {
-              projection.scale(1).rotate(rotateArr);
+              projection.scale(1).rotate(rotateArr).translate([W / 2, H / 2]);
               const b = path.bounds(feature);
               const dx = b[1][0] - b[0][0];
               const dy = b[1][1] - b[0][1];
               if (!(dx > 0) || !(dy > 0)) return null;
               const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
-              if (!isFinite(s) || s <= 0) return null;
+              if (!Number.isFinite(s) || s <= 0) return null;
               return s;
             } finally {
-              projection.scale(s0).rotate(r0);
+              projection.scale(s0).rotate(r0).translate(t0);
             }
           }
 
-          // Programmatic "focus": rotate + zoom to country
+          function terminalInterpRotate(from, to) {
+            let dLon = to[0] - from[0];
+            while (dLon > 180) dLon -= 360;
+            while (dLon < -180) dLon += 360;
+            const r0 = from[0];
+            const r1 = from[1];
+            const r2 = from[2] || 0;
+            return t => [
+              r0 + t * dLon,
+              r1 + t * (to[1] - r1),
+              r2 + t * ((to[2] || 0) - r2),
+            ];
+          }
+
+          // Programmatic "focus": rotate + zoom to country (or sub-region / city when applicable)
           window.__terminalZoomToCountry = function zoomToCountry(countryId, animate = true) {
-            const f = countries.features.find(x => +x.id === +countryId);
-            if (!f) return;
+            const base = countries.features.find(x => +x.id === +countryId);
+            if (!base) return;
+            let f = base;
+            let subFocus458 = false;
+            let subFocus360 = false;
+            if (+countryId === 458) {
+              const myKey = terminalResolveMalaysiaRegionForMap();
+              if (TERMINAL_MY_SUBREGION_FOCUS[myKey]) {
+                f = TERMINAL_MY_SUBREGION_FOCUS[myKey];
+                subFocus458 = true;
+              }
+            } else if (+countryId === 360) {
+              try {
+                const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
+                const ll = TERMINAL_ID_CITY_LONLAT[city];
+                if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
+                  f = terminalLonLatBoxFeature(ll[0], ll[1], 1.22);
+                  subFocus360 = true;
+                }
+              } catch (_) {}
+            }
             const [lon, lat] = d3.geoCentroid(f);
+            if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
             const target = [-lon, -lat, 0];
             const padZ = mobile ? 52 : 74;
-            const fitS = computeFitScale(f, target, padZ);
-            const nextScale = fitS ? Math.max(baseScale * 0.85, Math.min(baseScale * 4.8, fitS)) : projection.scale();
+
+            const fitted = terminalProjectionFitFeature(f, padZ);
+            let nextScale;
+            let nextTranslate;
+            let nextRotate;
+            if (fitted) {
+              nextScale = fitted.scale;
+              nextTranslate = fitted.translate;
+              nextRotate = fitted.rotate;
+            } else {
+              const fitS = computeFitScaleBounds(f, target, padZ);
+              nextScale = fitS
+                ? Math.max(baseScale * 0.85, Math.min(baseScale * 4.8, fitS))
+                : projection.scale();
+              nextTranslate = [W / 2, H / 2];
+              nextRotate = target;
+            }
+
+            nextScale = Math.max(baseScale * 0.75, Math.min(baseScale * 4.8, nextScale));
+            if (subFocus458) {
+              const myKey = terminalResolveMalaysiaRegionForMap();
+              const floor = baseScale * (myKey === 'SabahSarawak' ? 2.45 : 2.12);
+              nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
+            }
+            if (subFocus360) {
+              const floor = baseScale * 2.15;
+              nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
+            }
             if (!animate) {
-              projection.rotate(target);
-              if (fitS) projection.scale(nextScale);
+              projection.rotate(nextRotate).scale(nextScale).translate(nextTranslate);
               updateAll();
               return;
             }
+            svg.interrupt();
             const r0 = projection.rotate();
             const s0 = projection.scale();
-            const interpR = d3.interpolate(r0, target);
+            const tr0 = projection.translate();
+            const interpR = terminalInterpRotate(r0, nextRotate);
             const interpS = d3.interpolateNumber(s0, nextScale);
+            const interpT = d3.interpolate(tr0, nextTranslate);
             svg.transition().duration(360).tween('globeFocus', () => t => {
-              projection.rotate(interpR(t)).scale(interpS(t));
+              projection.rotate(interpR(t)).scale(interpS(t)).translate(interpT(t));
               updateAll();
             });
           };
@@ -2651,13 +2579,7 @@
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
-      const PAGER_COUNTRIES = new Set([458, 702, 96]); // MY + SG + BN
-      const ensureRowsFor = async (cid) => {
-        if (cid === 458) return await ensureMalaysiaRows();
-        if (cid === 702) return await ensureSingaporeRows();
-        if (cid === 96) return await ensureBruneiRows();
-        return null;
-      };
+      const PAGER_COUNTRIES = new Set([360, 458, 702, 96]); // ID + MY + SG + BN
 
       function syncPager() {
         const cid = +window.__terminalSelectedCountryId;
@@ -2667,11 +2589,12 @@
         if (!show) return;
 
         // While data is still loading, keep buttons clickable so the first click can fetch.
-        const rows =
-          cid === 458 ? MY_ROWS :
-          cid === 702 ? SG_ROWS :
-          cid === 96 ? BN_ROWS :
-          null;
+        let rows = null;
+        if (cid === 458) rows = MY_ROWS;
+        else if (cid === 702) rows = SG_ROWS;
+        else if (cid === 96) rows = BN_ROWS;
+        else if (cid === 360) rows = ID_ROWS ? terminalIndonesiaSortedCityRows() : null;
+
         const idx = (typeof getPagerIndex === 'function') ? getPagerIndex(cid) : null;
         const hasRows = Array.isArray(rows) && rows.length > 0;
         if (!hasRows || idx == null) {
@@ -2692,8 +2615,8 @@
       prevBtn.addEventListener('click', async () => {
         const cid = +window.__terminalSelectedCountryId;
         if (!PAGER_COUNTRIES.has(cid)) return;
-        const rows = await ensureRowsFor(cid);
-        const seriesLen = (rows || []).filter(r => r?.date).length || (rows || []).length;
+        const seriesAsc = await terminalPagerSeries(cid);
+        const seriesLen = seriesAsc.filter(r => r?.date).length || seriesAsc.length;
         if (!seriesLen) return;
         let idx = getPagerIndex(cid);
         if (idx == null) idx = seriesLen - 1;
@@ -2706,8 +2629,8 @@
       nextBtn.addEventListener('click', async () => {
         const cid = +window.__terminalSelectedCountryId;
         if (!PAGER_COUNTRIES.has(cid)) return;
-        const rows = await ensureRowsFor(cid);
-        const seriesLen = (rows || []).filter(r => r?.date).length || (rows || []).length;
+        const seriesAsc = await terminalPagerSeries(cid);
+        const seriesLen = seriesAsc.filter(r => r?.date).length || seriesAsc.length;
         if (!seriesLen) return;
         let idx = getPagerIndex(cid);
         if (idx == null) idx = seriesLen - 1;
@@ -2729,7 +2652,31 @@
       syncPager();
     })();
 
-    // Keyboard: ↑/↓ = zoom in/out (same as +/−), ←/→ = Malaysia weekly pager (< />)
+    const TERMINAL_MY_REGION_CYCLE = ['Semenanjung', 'SabahSarawak'];
+    function terminalCycleMalaysiaRegion(step) {
+      const i = TERMINAL_MY_REGION_CYCLE.indexOf(MY_REGION);
+      const base = i >= 0 ? i : 0;
+      const n = (base + step + TERMINAL_MY_REGION_CYCLE.length) % TERMINAL_MY_REGION_CYCLE.length;
+      setMalaysiaRegion(TERMINAL_MY_REGION_CYCLE[n]);
+      if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
+    }
+    function terminalCycleIndonesiaCity(step) {
+      const cities = Object.keys(TERMINAL_ID_CITY_LONLAT).sort((a, b) => a.localeCompare(b));
+      if (!cities.length) return;
+      let cur = '';
+      try { cur = localStorage.getItem('terminal_id_city') || ''; } catch (_) {}
+      let i = cities.indexOf(cur);
+      if (i < 0) i = cities.indexOf('Jakarta Pusat');
+      if (i < 0) i = 0;
+      const n = (i + step + cities.length) % cities.length;
+      try { localStorage.setItem('terminal_id_city', cities[n]); } catch (_) {}
+      delete TERMINAL_PAGER_INDEX[360];
+      updateRightPanelForCountry(360).catch(() => {});
+      if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+      if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
+    }
+
+    // Keyboard: ↑/↓ = Malaysia region / Indonesia city (+ map); ←/→ = date pager; SG/BN ↑/↓ = zoom; [ ] = date pager
     (function initTerminalKeyboardShortcuts() {
       function isTypingTarget(el) {
         if (!el || el.nodeType !== 1) return false;
@@ -2739,12 +2686,35 @@
         return !!el.closest?.('[contenteditable="true"]');
       }
 
+      function clickPagerPrev() {
+        const prev = document.getElementById('pager-prev');
+        if (!prev || prev.style.display === 'none' || prev.disabled) return;
+        prev.click();
+      }
+      function clickPagerNext() {
+        const next = document.getElementById('pager-next');
+        if (!next || next.style.display === 'none' || next.disabled) return;
+        next.click();
+      }
+
       document.addEventListener('keydown', (e) => {
         if (e.defaultPrevented) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         if (isTypingTarget(e.target)) return;
 
+        const cid = +window.__terminalSelectedCountryId;
+
         if (e.key === 'ArrowUp') {
+          if (cid === 458) {
+            e.preventDefault();
+            terminalCycleMalaysiaRegion(-1);
+            return;
+          }
+          if (cid === 360) {
+            e.preventDefault();
+            terminalCycleIndonesiaCity(-1);
+            return;
+          }
           const z = document.getElementById('zoom-in');
           if (!z || typeof z.onclick !== 'function') return;
           e.preventDefault();
@@ -2752,10 +2722,30 @@
           return;
         }
         if (e.key === 'ArrowDown') {
+          if (cid === 458) {
+            e.preventDefault();
+            terminalCycleMalaysiaRegion(1);
+            return;
+          }
+          if (cid === 360) {
+            e.preventDefault();
+            terminalCycleIndonesiaCity(1);
+            return;
+          }
           const z = document.getElementById('zoom-out');
           if (!z || typeof z.onclick !== 'function') return;
           e.preventDefault();
           z.click();
+          return;
+        }
+        if (e.key === '[' || e.key === 'BracketLeft') {
+          e.preventDefault();
+          clickPagerPrev();
+          return;
+        }
+        if (e.key === ']' || e.key === 'BracketRight') {
+          e.preventDefault();
+          clickPagerNext();
           return;
         }
         if (e.key === 'ArrowLeft') {
@@ -2773,32 +2763,6 @@
           return;
         }
       });
-    })();
-
-    (function initTerminalCurrencyRail() {
-      const localBtn = document.getElementById('terminal-curr-local');
-      const usdBtn = document.getElementById('terminal-curr-usd');
-      function sync() {
-        const usd = isTerminalUsd();
-        if (localBtn) {
-          localBtn.classList.toggle('is-active', !usd);
-          localBtn.setAttribute('aria-pressed', (!usd).toString());
-        }
-        if (usdBtn) {
-          usdBtn.classList.toggle('is-active', usd);
-          usdBtn.setAttribute('aria-pressed', String(usd));
-        }
-      }
-      function apply(mode) {
-        localStorage.setItem('currency', mode);
-        sync();
-        const id = window.__terminalSelectedCountryId;
-        if (id) updateRightPanelForCountry(id).catch(() => {});
-        renderIndonesiaCityCard({}).catch(() => {});
-      }
-      localBtn?.addEventListener('click', () => apply('local'));
-      usdBtn?.addEventListener('click', () => apply('usd'));
-      sync();
     })();
 
     window.addEventListener('resize', () => {
