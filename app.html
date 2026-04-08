@@ -58,12 +58,24 @@
       opacity: 0.26;
       pointer-events:none;
     }
-    .map svg{ width: 100%; height: 100%; display:block; }
+    /* Pinch / wheel zoom on the globe — browser must not handle gestures here */
+    .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
     .sphere { fill: #e7eef7; }
     .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
     .country { fill: #d9d6d2; stroke:none; }
     .country.live { fill: rgba(17, 24, 39, 0.28); }
     .country.live.selected { fill: rgba(255,106,0,0.26); }
+    /* Singapore is not a separate polygon in countries-110m (merged into Malaysia); overlay + stroke vs MY */
+    .country.live.country-sg{
+      stroke: rgba(32, 32, 32, 0.58);
+      stroke-width: 1.15px;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+    }
+    .country.live.country-sg.selected{
+      stroke: rgba(255, 106, 0, 0.9);
+      stroke-width: 1.85px;
+    }
     .border-mesh { fill:none; stroke: rgba(48,48,48,0.14); stroke-width: 0.5; pointer-events:none; }
     .border-live { fill:none; stroke: rgba(17, 24, 39, 0.45); stroke-width: 1; pointer-events:none; }
     .border-live.selected { stroke: rgba(255,106,0,0.78); }
@@ -81,7 +93,7 @@
     }
     .search{
       flex: 1;
-      height: 36px;
+      height: 40px;
       display:flex;
       align-items:center;
       gap: 8px;
@@ -111,18 +123,45 @@
       outline: none;
       background: transparent;
       font-family: var(--font);
-      font-size: 0.9375rem;
+      /* ≥16px prevents iOS Safari focus-zoom (stuck zoom after blur) */
+      font-size: 16px;
       font-weight: 400;
-      letter-spacing: 0.025em;
+      letter-spacing: 0.02em;
       color: rgba(0, 0, 0, 0.72);
     }
     .search input::placeholder{
       color: rgba(0, 0, 0, 0.36);
       font-weight: 300;
     }
+    .topbar-circle{
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.38);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.72) inset,
+        0 0 0 0.5px rgba(0, 0, 0, 0.04),
+        0 8px 28px rgba(0, 0, 0, 0.07),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+      pointer-events: none;
+    }
+    .topbar-circle svg{
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      opacity: 0.42;
+      color: rgba(0, 0, 0, 0.45);
+    }
     .search-menu{
       position: absolute;
-      top: calc(12px + 36px + 8px);
+      top: calc(12px + 40px + 8px);
       left: 12px;
       right: 12px;
       z-index: 11;
@@ -154,7 +193,7 @@
     }
     .search-item:hover{ background: rgba(0,0,0,0.04); }
 
-    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll only when mostly expanded */
+    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
     .sheet{
       position: absolute;
       left: 10px;
@@ -171,15 +210,17 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-    /* Collapsed: vertical drags resize sheet (not browser scroll) */
-    .sheet:not(.sheet-expanded){
+    /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
+    .sheet:not(.sheet-scrollable){
       touch-action: none;
+    }
+    .sheet.sheet-scrollable:not(.sheet-expanded){
+      touch-action: manipulation;
     }
     .grab{
       flex-shrink: 0;
-      /* ≥44px touch target for phones */
-      min-height: 44px;
-      padding: 14px 0 12px;
+      min-height: 36px;
+      padding: 5px 0 6px;
       margin: 0;
       background: transparent;
       touch-action: none;
@@ -203,18 +244,41 @@
       min-height: 0;
       overflow-y: hidden;
       overscroll-behavior-y: none;
-      padding: 8px 14px 20px;
-      display: grid;
+      /* Inset from sheet edges so the scrollbar stops above the rounded bottom corners */
+      margin: 0 8px 16px 8px;
+      padding: 0 4px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      box-sizing: border-box;
+      border-radius: 0 0 16px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+    }
+    .sheet-scroll::-webkit-scrollbar{
+      width: 5px;
+    }
+    .sheet-scroll::-webkit-scrollbar-thumb{
+      background: rgba(0, 0, 0, 0.22);
+      border-radius: 999px;
+    }
+    .sheet-scroll::-webkit-scrollbar-track{
+      background: transparent;
+    }
+    .sheet-cards-stack{
+      display: flex;
+      flex-direction: column;
       gap: 22px;
+      min-height: 0;
     }
     /* Masks on scrollers break iOS touch scrolling — keep fade on fine pointers only */
     @media (hover: hover) and (pointer: fine){
       .sheet-scroll{
         -webkit-mask-image:
-          linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+          linear-gradient(to bottom, #000 0%, #000 90%, transparent 100%),
           linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
         mask-image:
-          linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+          linear-gradient(to bottom, #000 0%, #000 90%, transparent 100%),
           linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
         -webkit-mask-composite: source-in;
         mask-composite: intersect;
@@ -223,7 +287,7 @@
         -webkit-mask-size: 100% 100%;
       }
     }
-    .sheet.sheet-expanded .sheet-scroll{
+    .sheet.sheet-scrollable .sheet-scroll{
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
@@ -237,6 +301,86 @@
       background: transparent;
     }
     .card .pad{ padding: 14px; }
+    #card-highlights .pad{ padding-top: 2px; }
+    /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
+    .sheet-region-sticky{
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      flex-shrink: 0;
+      margin: 0 -4px 0 -12px;
+      padding: 0 14px 8px 26px;
+      background: #fff;
+      box-shadow: none;
+      transition: box-shadow 0.2s ease;
+    }
+    .sheet-region-sticky .title{
+      margin: 0;
+    }
+    .sheet-region-sticky.sheet-region-sticky--raised{
+      box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.12);
+    }
+    /* Highlights: date line + export beside the text */
+    .card-sub-row{
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      min-width: 0;
+      margin-top: 6px;
+    }
+    #card-highlights .card-sub-row .sub{
+      margin-top: 0;
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+    }
+    /* Kicker + export beside the text */
+    .card-head-inline{
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      min-width: 0;
+    }
+    .card-head-inline .kicker{
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .card-export{
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: rgba(0, 0, 0, 0.42);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card-export:disabled{
+      opacity: 0.45;
+      cursor: wait;
+      pointer-events: none;
+    }
+    .card-export svg{
+      width: 14px;
+      height: 14px;
+    }
+    .card-export:focus-visible{
+      outline: 2px solid rgba(255, 106, 0, 0.45);
+      outline-offset: 2px;
+    }
     .kicker{
       font-family: var(--font);
       font-size: 0.72rem;
@@ -297,19 +441,30 @@
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
     .chart-wrap{ height: 210px; padding: 12px; }
     .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
-    .sheet.sheet-expanded .chart-wrap{
+    .sheet.sheet-scrollable .chart-wrap{
       touch-action: pan-y;
     }
     .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: rgba(0,0,0,0.78); }
     .overview-metrics{
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 14px;
+    }
+    .overview-row{
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 14px;
-    }
-    .overview-metrics .metric{
       border-top: 1px solid rgba(0,0,0,0.08);
       padding-top: 10px;
+      padding-bottom: 14px;
+    }
+    .overview-metric-empty{
+      min-width: 0;
+      pointer-events: none;
+    }
+    .overview-metrics .metric{
+      min-width: 0;
     }
     .overview-metrics .metric .k{
       font-family: var(--font);
@@ -326,12 +481,124 @@
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
       color: rgba(0,0,0,0.88);
+      line-height: 1.25;
     }
 
     @media (min-width: 900px){
       /* "App" can still run on desktop, but keep it phone-ish */
       .sheet{ left: 16px; right: 16px; max-width: 520px; margin: 0 auto; }
       .topbar{ left: 16px; right: 16px; max-width: 520px; margin: 0 auto; }
+    }
+
+    /* Export: IG story preview (9:16) — save via share sheet or download on tap */
+    .export-story-modal{
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0.22s;
+    }
+    .export-story-modal.export-story-modal--open{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .export-story-backdrop{
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .export-story-dialog{
+      position: relative;
+      z-index: 1;
+      width: min(100%, 380px);
+      max-height: min(94dvh, 900px);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .export-story-header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 2px;
+    }
+    .export-story-heading{
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+    }
+    .export-story-close{
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .export-story-close:focus-visible{
+      outline: 2px solid var(--orange);
+      outline-offset: 2px;
+    }
+    .export-story-frame{
+      width: min(100%, 300px);
+      aspect-ratio: 9 / 16;
+      margin: 0 auto;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #0a0a0a;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    }
+    .export-story-frame img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #fff;
+    }
+    .export-story-save{
+      margin: 0;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      background: var(--orange);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 106, 0, 0.35);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .export-story-save:focus-visible{
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+    .export-story-save:disabled{
+      opacity: 0.55;
+      cursor: wait;
     }
   </style>
 </head>
@@ -347,24 +614,57 @@
         </svg>
         <input id="country-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
       </div>
+      <div class="topbar-circle" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 21v-7" />
+          <path d="M4 10V3" />
+          <path d="M12 21v-9" />
+          <path d="M12 8V3" />
+          <path d="M20 21v-5" />
+          <path d="M20 12V3" />
+          <path d="M2 14h4" />
+          <path d="M10 8h4" />
+          <path d="M18 16h4" />
+        </svg>
+      </div>
     </div>
-    <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
+    <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
 
     <div class="sheet" id="sheet" aria-label="Details sheet">
       <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
       <div class="sheet-scroll" id="sheet-scroll">
+        <div class="sheet-region-sticky" id="sheet-region-sticky">
+          <div class="title" id="hi-title">Semenanjung</div>
+        </div>
+        <div class="sheet-cards-stack">
         <div class="card" id="card-highlights">
           <div class="pad">
-            <div class="kicker">Highlights</div>
-            <div class="title" id="hi-title">Semenanjung</div>
-            <div class="sub" id="hi-sub">—</div>
+            <div class="card-sub-row">
+              <div class="sub" id="hi-sub">—</div>
+              <button type="button" class="card-export" aria-label="Export highlights" title="Export">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                </svg>
+              </button>
+            </div>
             <div class="lines hi-lines" id="hi-lines"></div>
           </div>
         </div>
 
         <div class="card" id="card-history">
           <div class="pad">
-            <div class="kicker" id="chart-kicker">Malaysia petrol prices history</div>
+            <div class="card-head-inline">
+              <div class="kicker" id="chart-kicker">Malaysia petrol prices history</div>
+              <button type="button" class="card-export" aria-label="Export price history" title="Export">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="chart-wrap">
             <canvas id="chart"></canvas>
@@ -373,15 +673,40 @@
 
         <div class="card" id="card-overview">
           <div class="pad">
-            <div class="kicker" id="ov-kicker">Malaysia overview</div>
+            <div class="card-head-inline">
+              <div class="kicker" id="ov-kicker">Malaysia overview</div>
+              <button type="button" class="card-export" aria-label="Export overview" title="Export">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                </svg>
+              </button>
+            </div>
             <div class="oil" id="overview-text">—</div>
             <div class="overview-metrics" id="overview-metrics" aria-label="Key metrics"></div>
           </div>
         </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="export-story-modal" id="export-story-modal" aria-hidden="true">
+      <div class="export-story-backdrop" aria-hidden="true"></div>
+      <div class="export-story-dialog" role="dialog" aria-modal="true" aria-labelledby="export-story-heading">
+        <div class="export-story-header">
+          <h2 class="export-story-heading" id="export-story-heading">Story preview</h2>
+          <button type="button" class="export-story-close" id="export-story-close" aria-label="Close">×</button>
+        </div>
+        <div class="export-story-frame">
+          <img id="export-story-preview" alt="" width="1080" height="1920" />
+        </div>
+        <button type="button" class="export-story-save" id="export-story-save">Save to gallery</button>
       </div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const COUNTRIES = {
       458: { name: 'Malaysia' },
@@ -391,54 +716,46 @@
     };
     const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = { 458: true, 702: true, 96: true, 360: true };
-    /** Same oil context + metrics as terminal.html left overview */
+    /** Same oil context as terminal.html; metricRows = 2-col layout per row */
     const APP_COUNTRY_OVERVIEW = {
       458: {
         oilContext:
           'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-        metrics: [
-          ['BOPD', '570,000'],
-          ['1P Reserves', '2.7B Barrels'],
-          ['Refinery Intake', '747,000'],
-          ['Export Value', 'RM6.2bil'],
-          ['Import Value', 'RM13.6bil'],
-          ['Status', 'Net Importer'],
+        metricRows: [
+          [['BOPD', '570,000'], ['1P Reserves', '2.7B Barrels']],
+          [['Refinery Intake', '747,000'], null],
+          [['Export Value', 'RM6.2bil'], ['Import Value', 'RM13.6bil']],
+          [['Status', 'Net Importer'], null],
         ],
       },
       96: {
         oilContext:
           'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
-        metrics: [
-          ['BOPD', '102,677'],
-          ['1P Reserves', '1.1B Barrels'],
-          ['Refinery Intake', '16,338'],
-          ['Export Value', 'BND 13.45bil'],
-          ['Import Value', 'BND 8.62bil'],
-          ['Status', 'Net Exporter'],
+        metricRows: [
+          [['BOPD', '102,677'], ['1P Reserves', '1.1B Barrels']],
+          [['Refinery Intake', '16,338'], null],
+          [['Export Value', 'BND 13.45bil'], ['Import Value', 'BND 8.62bil']],
+          [['Status', 'Net Exporter'], null],
         ],
       },
       360: {
         oilContext:
           "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
-        metrics: [
-          ['BOPD', '608,100'],
-          ['1P Reserves', '2.41B Barrels'],
-          ['Refinery Intake', '1,626,878'],
-          ['Export Value', 'US$13.07bil'],
-          ['Import Value', 'US$32.77bil'],
-          ['Status', 'Net Importer'],
+        metricRows: [
+          [['BOPD', '608,100'], ['1P Reserves', '2.41B Barrels']],
+          [['Refinery Intake', '1,626,878'], null],
+          [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
+          [['Status', 'Net Importer'], null],
         ],
       },
       702: {
         oilContext:
           'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
-        metrics: [
-          ['BOPD', '0'],
-          ['1P Reserves', '0 Barrels'],
-          ['Refinery Intake', '~1,100,000'],
-          ['Export Value', 'Not specified in available data'],
-          ['Import Value', 'Not specified in available data'],
-          ['Status', 'Net Importer (refining hub)'],
+        metricRows: [
+          [['BOPD', '0'], ['1P Reserves', '0 Barrels']],
+          [['Refinery Intake', '~1,100,000'], null],
+          [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
+          [['Status', 'Net Importer (refining hub)'], null],
         ],
       },
     };
@@ -460,6 +777,45 @@
       { key: 'dexlite', label: 'Dexlite' },
       { key: 'pertamina_dex', label: 'Pertamina Dex' },
     ];
+
+    /** [lon, lat] centroids — keys must match `city` in the Indonesia Google Sheet (see indonesia.html). */
+    const APP_ID_CITY_LONLAT = {
+      'Jakarta Pusat': [106.8456, -6.2088],
+      'Jakarta Selatan': [106.81, -6.26],
+      'Jakarta Barat': [106.74, -6.15],
+      'Jakarta Timur': [106.9, -6.22],
+      'Jakarta Utara': [106.88, -6.13],
+      Bekasi: [106.99, -6.24],
+      Bogor: [106.8, -6.6],
+      Depok: [106.82, -6.4],
+      Tangerang: [106.63, -6.18],
+      'Tangerang Selatan': [106.71, -6.29],
+      Bandung: [107.62, -6.92],
+      Semarang: [110.42, -6.99],
+      Surabaya: [112.75, -7.26],
+      Surakarta: [110.82, -7.57],
+      Yogyakarta: [110.36, -7.8],
+      Medan: [98.67, 3.59],
+      Palembang: [104.75, -2.98],
+      Pekanbaru: [101.45, 0.51],
+      Denpasar: [115.22, -8.65],
+      Makassar: [119.43, -5.15],
+    };
+
+    function getAppSearchRegions() {
+      const c = COUNTRIES;
+      const rows = [];
+      rows.push({ countryId: 458, label: `${c[458].name} - Semenanjung`, myRegion: 'Semenanjung' });
+      rows.push({ countryId: 458, label: `${c[458].name} - East Malaysia`, myRegion: 'SabahSarawak' });
+      rows.push({ countryId: 702, label: `${c[702].name} - National` });
+      rows.push({ countryId: 96, label: `${c[96].name} - National` });
+      Object.keys(APP_ID_CITY_LONLAT)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((city) => {
+          rows.push({ countryId: 360, label: `${c[360].name} - ${city}`, idCity: city });
+        });
+      return rows;
+    }
 
     let _appMyRows = null;
     let _appSgRows = null;
@@ -535,6 +891,38 @@
       } catch (_) {
         return 'Jakarta Pusat';
       }
+    }
+
+    function syncSearchInputFromSelection() {
+      const inp = document.getElementById('country-search');
+      if (!inp || document.activeElement === inp) return;
+      inp.value = '';
+    }
+
+    /** Pick the sheet `city` whose centroid is closest to the click (degrees² is fine at this scale). */
+    function appIndonesiaCityFromLngLat(lon, lat) {
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return 'Jakarta Pusat';
+      let best = 'Jakarta Pusat';
+      let bestD = Infinity;
+      for (const [city, ll] of Object.entries(APP_ID_CITY_LONLAT)) {
+        const dx = lon - ll[0];
+        const dy = lat - ll[1];
+        const d = dx * dx + dy * dy;
+        if (d < bestD) {
+          bestD = d;
+          best = city;
+        }
+      }
+      return best;
+    }
+
+    function appApplyIndonesiaClickCity(event, svgNode, projection) {
+      const inv = projection.invert(d3.pointer(event, svgNode));
+      if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
+      const city = appIndonesiaCityFromLngLat(inv[0], inv[1]);
+      try {
+        localStorage.setItem('terminal_id_city', city);
+      } catch (_) {}
     }
 
     async function ensureAppMalaysiaRows() {
@@ -748,7 +1136,7 @@
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
           const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
           titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${isEast ? 'East Malaysia' : 'Peninsular'}`;
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['BUDI95', fmtAppPerL('MYR', rSel.ron95_budi95, 2)],
             ['RON95', fmtAppPerL('MYR', rSel.ron95, 2)],
@@ -783,7 +1171,7 @@
             .sort((a, b) => String(a.date).localeCompare(String(b.date)));
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Singapore';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · National`;
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['RON92', fmtAppPerL('SGD', rSel.ron92, 2)],
             ['RON95', fmtAppPerL('SGD', rSel.ron95, 2)],
@@ -820,7 +1208,7 @@
             .sort((a, b) => String(a.date).localeCompare(String(b.date)));
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Brunei';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · National`;
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['Gasoline', fmtAppPerL('BND', rSel.gasoline, 2)],
             ['Diesel', fmtAppPerL('BND', rSel.diesel, 2)],
@@ -856,7 +1244,7 @@
             .sort((a, b) => String(a.date).localeCompare(String(b.date)));
           const rSel = cityRows[cityRows.length - 1] || {};
           titleEl.textContent = city;
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · Latest in sheet`;
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
           const pairs = APP_ID_FUELS.map(f => [f.label, fmtAppIdrPerL(rSel[f.key])]);
           renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
@@ -883,6 +1271,8 @@
         subEl.textContent = 'Could not load live prices';
         renderHiRows([['Status', 'Check connection']]);
         emptyChart();
+      } finally {
+        syncSearchInputFromSelection();
       }
     }
 
@@ -892,11 +1282,15 @@
       const metricsEl = document.getElementById('overview-metrics');
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
       if (metricsEl) {
-        const rows = ov?.metrics;
-        metricsEl.innerHTML = Array.isArray(rows) && rows.length
-          ? rows.map(([k, v]) => {
-              const fullWidth = k === 'Status';
-              return `<div class="metric"${fullWidth ? ' style="grid-column:1 / -1;"' : ''}><div class="k">${k}</div><div class="v">${v}</div></div>`;
+        const rowData = ov?.metricRows;
+        const cellHtml = (m) => m
+          ? `<div class="metric"><div class="k">${m[0]}</div><div class="v">${m[1]}</div></div>`
+          : '<div class="overview-metric-empty" aria-hidden="true"></div>';
+        metricsEl.innerHTML = Array.isArray(rowData) && rowData.length
+          ? rowData.map((pair) => {
+              const left = pair[0];
+              const right = pair[1];
+              return `<div class="overview-row">${cellHtml(left)}${cellHtml(right)}</div>`;
             }).join('')
           : '';
       }
@@ -908,6 +1302,13 @@
       renderCountryOverview(cid);
       refreshHighlights(cid);
       if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(cid, true);
+    }
+
+    function syncHiStickyShadow() {
+      const sticky = document.getElementById('sheet-region-sticky');
+      const scroller = document.getElementById('sheet-scroll');
+      if (!sticky || !scroller) return;
+      sticky.classList.toggle('sheet-region-sticky--raised', scroller.scrollTop > 1);
     }
 
     function initSheet(){
@@ -931,8 +1332,11 @@
         const { half, expanded } = heights();
         const scrollThreshold = half + (expanded - half) * 0.48;
         const isExpanded = px >= scrollThreshold;
+        const allowsScroll = px >= half;
         sheet.classList.toggle('sheet-expanded', isExpanded);
-        if (!isExpanded && scroller) scroller.scrollTop = 0;
+        sheet.classList.toggle('sheet-scrollable', allowsScroll);
+        if (!allowsScroll && scroller) scroller.scrollTop = 0;
+        syncHiStickyShadow();
       };
       const nearestSnapIndex = (h) => {
         const { quarter, half, expanded } = heights();
@@ -958,6 +1362,10 @@
       function shouldStartSheetResize(e) {
         if (sheet.classList.contains('sheet-expanded')) {
           return grab.contains(e.target);
+        }
+        if (sheet.classList.contains('sheet-scrollable')) {
+          if (grab.contains(e.target)) return true;
+          return !scroller.contains(e.target);
         }
         return true;
       }
@@ -1005,6 +1413,8 @@
         }
       });
       setSnap(1);
+      scroller.addEventListener('scroll', syncHiStickyShadow, { passive: true });
+      syncHiStickyShadow();
       const onViewportResize = () => setSnap(snap);
       window.addEventListener('resize', onViewportResize);
       window.visualViewport?.addEventListener('resize', onViewportResize);
@@ -1013,16 +1423,21 @@
     function initSearch(){
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
-      const list = Object.keys(COUNTRIES).map(k => ({ id:+k, name: COUNTRIES[k].name }));
+      const list = getAppSearchRegions();
       let open = false;
       const openMenu = () => { open=true; menu.classList.add('open'); };
       const closeMenu = () => { open=false; menu.classList.remove('open'); };
       const render = (items) => {
-        menu.innerHTML = items.map(c => `<div class="search-item" role="option" data-id="${c.id}">${c.name}</div>`).join('');
+        menu.innerHTML = items
+          .map(
+            (x) =>
+              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${x.myRegion ?? ''}" data-id-city="${x.idCity ?? ''}">${x.label}</div>`
+          )
+          .join('');
       };
       const filter = () => {
         const q = (input.value||'').trim().toLowerCase();
-        const items = !q ? list : list.filter(x => x.name.toLowerCase().includes(q));
+        const items = !q ? list : list.filter((x) => x.label.toLowerCase().includes(q));
         render(items);
       };
       input.addEventListener('focus', () => { openMenu(); filter(); });
@@ -1035,9 +1450,17 @@
       menu.addEventListener('mousedown', (e) => {
         const it = e.target.closest('.search-item');
         if (!it) return;
-        const id = +it.getAttribute('data-id');
-        setSelected(id);
-        input.value = COUNTRIES[id].name;
+        const countryId = +it.getAttribute('data-country-id');
+        const mr = it.getAttribute('data-my-region');
+        const ic = it.getAttribute('data-id-city');
+        if (mr) {
+          try { localStorage.setItem('terminal_my_region', mr); } catch (_) {}
+        }
+        if (ic) {
+          try { localStorage.setItem('terminal_id_city', ic); } catch (_) {}
+        }
+        setSelected(countryId);
+        input.value = '';
         closeMenu();
         e.preventDefault();
       });
@@ -1084,8 +1507,14 @@
       const path = d3.geoPath(projection);
       const mapG = svg.append('g');
 
-      d3.json('./assets/countries-110m.json').then(world => {
+      Promise.all([
+        d3.json('./assets/countries-110m.json'),
+        d3.json('./assets/singapore-geo.json').catch(() => null),
+      ]).then(([world, sgGeo]) => {
         const countries = topojson.feature(world, world.objects.countries);
+        const sgFeature = sgGeo && sgGeo.type === 'Feature'
+          ? Object.assign({}, sgGeo, { id: 702 })
+          : null;
         const DEFAULT_CENTER = [115, 6];
         projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
 
@@ -1109,6 +1538,14 @@
                 return;
               }
             }
+            if (id === 360) {
+              appApplyIndonesiaClickCity(e, svg.node(), projection);
+              if (+selected === 360) {
+                refreshHighlights(360);
+                applySel();
+                return;
+              }
+            }
             setSelected(id);
             applySel();
           });
@@ -1124,8 +1561,25 @@
           .attr('class', 'border-live')
           .attr('d', path);
 
+        if (sgFeature) {
+          mapG.append('path')
+            .datum(sgFeature)
+            .attr('class', 'country live country-sg')
+            .attr('d', path)
+            .on('click', (e) => {
+              e.stopPropagation();
+              if (+selected === 702) {
+                refreshHighlights(702);
+                applySel();
+                return;
+              }
+              setSelected(702);
+              applySel();
+            });
+        }
+
         function applySel(){
-          mapG.selectAll('.country.live').classed('selected', d => +d.id === +selected);
+          mapG.selectAll('.country.live').classed('selected', (d) => d && +d.id === +selected);
           liveBorders.classed('selected', d => +d.id === +selected);
         }
         applySel();
@@ -1133,6 +1587,28 @@
         function updateAll(){
           mapG.selectAll('path').attr('d', path);
         }
+
+        const minZoomK = 0.90;
+        const maxZoomK = 4.8;
+        let zoom;
+        function syncZoomFromProjection() {
+          svg.call(zoom.transform, d3.zoomIdentity.scale(projection.scale() / baseScale));
+        }
+        zoom = d3.zoom()
+          .scaleExtent([minZoomK, maxZoomK])
+          .filter((event) => {
+            if (event.type === 'wheel') return true;
+            if (event.type === 'mousedown') return false;
+            if (event.type === 'dblclick') return false;
+            if (event.type === 'touchstart' || event.type === 'touchmove') {
+              return event.touches && event.touches.length >= 2;
+            }
+            return false;
+          })
+          .on('zoom', (event) => {
+            projection.scale(baseScale * event.transform.k);
+            updateAll();
+          });
 
         function computeFitScale(feature, rotateArr, padPx) {
           const s0 = projection.scale();
@@ -1153,7 +1629,9 @@
 
         // Expose: zoom/rotate to a selected country
         APP_ZOOM_TO = function zoomToCountry(countryId, animate = true) {
-          const f = countries.features.find(x => +x.id === +countryId);
+          const f = +countryId === 702 && sgFeature
+            ? sgFeature
+            : countries.features.find(x => +x.id === +countryId);
           if (!f) return;
           const [lon, lat] = d3.geoCentroid(f);
           const target = [-lon, -lat, 0];
@@ -1165,6 +1643,7 @@
             projection.rotate(target);
             if (fitS) projection.scale(nextScale);
             updateAll();
+            syncZoomFromProjection();
             return;
           }
 
@@ -1176,10 +1655,12 @@
           svg.transition().duration(420).tween('appFocus', () => (t) => {
             projection.rotate(interpR(t)).scale(interpS(t));
             updateAll();
-          });
+          }).on('end', syncZoomFromProjection);
         };
 
-        // Initial focus: selected country
+        svg.call(zoom);
+
+        // Initial focus: selected country (syncs pinch/wheel zoom state via APP_ZOOM_TO)
         APP_ZOOM_TO(selected, false);
 
         // Drag rotate (lower sensitivity)
@@ -1200,9 +1681,217 @@
       });
     }
 
+    const APP_STORY_W = 1080;
+    const APP_STORY_H = 1920;
+    const APP_STORY_PAD = 72;
+
+    let _exportStoryBlob = null;
+    let _exportStoryObjectUrl = null;
+    let _exportStoryFilename = '';
+
+    function closeExportStoryModal() {
+      const modal = document.getElementById('export-story-modal');
+      const img = document.getElementById('export-story-preview');
+      if (modal) {
+        modal.classList.remove('export-story-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      if (img) {
+        img.removeAttribute('src');
+        img.alt = '';
+      }
+      if (_exportStoryObjectUrl) {
+        URL.revokeObjectURL(_exportStoryObjectUrl);
+        _exportStoryObjectUrl = null;
+      }
+      _exportStoryBlob = null;
+      _exportStoryFilename = '';
+    }
+
+    function openExportStoryModal(blob, filename) {
+      closeExportStoryModal();
+      _exportStoryBlob = blob;
+      _exportStoryFilename = filename;
+      _exportStoryObjectUrl = URL.createObjectURL(blob);
+      const modal = document.getElementById('export-story-modal');
+      const img = document.getElementById('export-story-preview');
+      if (!modal || !img) return;
+      img.src = _exportStoryObjectUrl;
+      img.alt = 'Instagram story preview';
+      modal.classList.add('export-story-modal--open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.getElementById('export-story-save')?.focus();
+    }
+
+    async function saveExportStoryToGallery() {
+      const blob = _exportStoryBlob;
+      const filename = _exportStoryFilename || 'petrolprice-story.png';
+      if (!blob) return;
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+        }
+      }
+      if (!_exportStoryObjectUrl) return;
+      const a = document.createElement('a');
+      a.href = _exportStoryObjectUrl;
+      a.download = filename;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function initExportStoryModal() {
+      const modal = document.getElementById('export-story-modal');
+      if (!modal) return;
+      modal.querySelector('.export-story-backdrop')?.addEventListener('click', closeExportStoryModal);
+      document.getElementById('export-story-close')?.addEventListener('click', closeExportStoryModal);
+      document.getElementById('export-story-save')?.addEventListener('click', async () => {
+        const btn = document.getElementById('export-story-save');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        try {
+          await saveExportStoryToGallery();
+        } catch (err) {
+          console.error(err);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!modal.classList.contains('export-story-modal--open')) return;
+        closeExportStoryModal();
+      });
+    }
+
+    function appExportSlug(cardId) {
+      if (cardId === 'card-highlights') return 'highlights';
+      if (cardId === 'card-history') return 'history';
+      if (cardId === 'card-overview') return 'overview';
+      return 'export';
+    }
+
+    function appComposeStoryPng(snapCanvas) {
+      const out = document.createElement('canvas');
+      out.width = APP_STORY_W;
+      out.height = APP_STORY_H;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, APP_STORY_W, APP_STORY_H);
+      const maxW = APP_STORY_W - APP_STORY_PAD * 2;
+      const maxH = APP_STORY_H - APP_STORY_PAD * 2;
+      const sw = snapCanvas.width;
+      const sh = snapCanvas.height;
+      const sc = Math.min(maxW / sw, maxH / sh);
+      const dw = Math.round(sw * sc);
+      const dh = Math.round(sh * sc);
+      const dx = Math.round((APP_STORY_W - dw) / 2);
+      const dy = Math.round((APP_STORY_H - dh) / 2);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(snapCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
+      return out;
+    }
+
+    async function exportCardAsInstagramStory(cardId) {
+      const html2canvas = window.html2canvas;
+      if (typeof html2canvas !== 'function') throw new Error('html2canvas missing');
+
+      const h2cOpts = {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      };
+      const stripExports = (root) => {
+        root?.querySelectorAll('.card-export').forEach((n) => n.remove());
+      };
+
+      let snap;
+      if (cardId === 'card-highlights') {
+        const wrap = document.createElement('div');
+        wrap.style.cssText =
+          'position:fixed;left:-16000px;top:0;width:960px;background:#fff;padding:48px 44px;box-sizing:border-box;';
+        const st = document.getElementById('sheet-region-sticky')?.cloneNode(true);
+        const cd = document.getElementById('card-highlights')?.cloneNode(true);
+        stripExports(st);
+        stripExports(cd);
+        if (st) wrap.appendChild(st);
+        if (cd) wrap.appendChild(cd);
+        document.body.appendChild(wrap);
+        try {
+          snap = await html2canvas(wrap, h2cOpts);
+        } finally {
+          wrap.remove();
+        }
+      } else if (cardId === 'card-history') {
+        const live = document.getElementById('card-history');
+        if (!live) return;
+        live.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        snap = await html2canvas(live, {
+          ...h2cOpts,
+          ignoreElements: (el) => el.classList && el.classList.contains('card-export'),
+        });
+      } else if (cardId === 'card-overview') {
+        const wrap = document.createElement('div');
+        wrap.style.cssText =
+          'position:fixed;left:-16000px;top:0;width:960px;background:#fff;padding:48px 44px;box-sizing:border-box;';
+        const cd = document.getElementById('card-overview')?.cloneNode(true);
+        stripExports(cd);
+        if (cd) wrap.appendChild(cd);
+        document.body.appendChild(wrap);
+        try {
+          snap = await html2canvas(wrap, h2cOpts);
+        } finally {
+          wrap.remove();
+        }
+      } else return;
+
+      if (!snap) return;
+      const story = appComposeStoryPng(snap);
+      const blob = await new Promise((resolve, reject) => {
+        story.toBlob((b) => (b ? resolve(b) : reject(new Error('Story export failed'))), 'image/png', 0.95);
+      });
+      const slug = appExportSlug(cardId);
+      openExportStoryModal(blob, `petrolprice-${slug}-story.png`);
+    }
+
+    function initCardExport() {
+      const sheet = document.getElementById('sheet');
+      if (!sheet) return;
+      sheet.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.card-export');
+        if (!btn || !sheet.contains(btn)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const card = btn.closest('.card');
+        const cardId = card?.id;
+        if (!cardId) return;
+        if (typeof window.html2canvas !== 'function') return;
+        btn.disabled = true;
+        try {
+          await exportCardAsInstagramStory(cardId);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    }
+
     // Init
     initSheet();
     initSearch();
+    initExportStoryModal();
+    initCardExport();
     window.addEventListener('load', () => {
       initChart();
       initMap();
