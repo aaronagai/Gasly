@@ -119,6 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
   applyLang(currentLang);
   const langEl = document.getElementById('lang-current');
   if (langEl) langEl.textContent = currentLang.toUpperCase();
+  // Allow deep-linking to a specific Malaysia region
+  try {
+    const regionParam = new URLSearchParams(window.location.search).get('region');
+    if (regionParam === 'peninsular' || regionParam === 'east') {
+      selectedRegion = regionParam;
+      localStorage.setItem('region', regionParam);
+    }
+  } catch (_) {}
   document.getElementById('rbtn-peninsular')?.classList.toggle('active', selectedRegion === 'peninsular');
   document.getElementById('rbtn-east')?.classList.toggle('active', selectedRegion === 'east');
   loadData();
