@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f1f1f0" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0f0f" />
   <title>PetrolPrice — Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,6 +17,7 @@
   <script src="assets/utils.js"></script>
   <style>
     :root{
+      color-scheme: light;
       --bg: #f1f1f0;
       --panel: #f7f7f6;
       --panel-2: rgba(255,255,255,0.82);
@@ -27,14 +31,143 @@
       --shadow-2: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
       --orange-2: #ff4d00;
+      /* Highlights panel — shifted toward red-orange */
+      --highlights-red: #e53512;
+      --highlights-red-deep: #c42a0e;
+      /* Translucent layers so backdrop-filter can frost the map */
+      --highlights-glass-sheen: rgba(255, 255, 255, 0.07);
+      --highlights-glass-mix-top: 74%;
+      --highlights-glass-mix-bot: 80%;
+      /* Glass panels — translucent so backdrop-filter blurs the globe */
+      --term-glass-stroke: rgba(255, 255, 255, 0.62);
+      --term-glass-stroke-outer: rgba(0, 0, 0, 0.12);
+      --term-glass-fill: rgba(255, 255, 255, 0.22);
+      --term-glass-deep: rgba(255, 255, 255, 0.14);
+      --term-glass-inset: rgba(255, 255, 255, 0.45);
+      --term-glass-key: rgba(0, 0, 0, 0.06);
+      --term-glass-shade: rgba(0, 0, 0, 0.12);
+      --term-glass-blur: 44px;
+      --term-glass-blur-tight: 28px;
+      /* Surfaces & chrome (theme-aware; overridden in dark) */
+      --term-float-0: rgba(255, 255, 255, 0.65);
+      --term-float-1: rgba(255, 255, 255, 0.82);
+      --term-float-border-0: rgba(0, 0, 0, 0.08);
+      --term-float-border-1: rgba(0, 0, 0, 0.12);
+      --term-float-shadow: rgba(0, 0, 0, 0.08);
+      --term-fg-secondary: rgba(0, 0, 0, 0.72);
+      --term-fg-tertiary: rgba(0, 0, 0, 0.55);
+      --term-fg-strong: rgba(0, 0, 0, 0.86);
+      --term-menu-bg: rgba(255, 255, 255, 0.96);
+      --term-menu-shadow: rgba(0, 0, 0, 0.10);
+      --term-row-hover: rgba(0, 0, 0, 0.035);
+      --term-row-hover-2: rgba(0, 0, 0, 0.04);
+      --term-zoom-chrome: rgba(0, 0, 0, 0.035);
+      --term-tooltip-bg: rgba(255, 255, 255, 0.97);
+      --term-tooltip-border: rgba(0, 0, 0, 0.10);
+      --term-tooltip-shadow: rgba(0, 0, 0, 0.12);
+      --term-tooltip-fg: rgba(0, 0, 0, 0.9);
+      --term-tooltip-muted: rgba(0, 0, 0, 0.55);
+      --term-ghost-bg: rgba(255, 255, 255, 0.70);
+      --term-ghost-bg-hover: rgba(255, 255, 255, 0.86);
+      --term-ghost-bg-active: rgba(255, 255, 255, 0.92);
+      --term-ghost-border: rgba(0, 0, 0, 0.10);
+      --term-ghost-fg: rgba(0, 0, 0, 0.62);
+      --term-ghost-fg-hover: rgba(0, 0, 0, 0.74);
+      --term-tag-bg: rgba(255, 255, 255, 0.7);
+      --term-tag-border: rgba(0, 0, 0, 0.10);
+      --term-tag-fg: rgba(0, 0, 0, 0.7);
+      --term-dot-muted: rgba(0, 0, 0, 0.25);
+      --term-info-fg: #111;
+      --term-legend-ring: rgba(0, 0, 0, 0.06);
+      --term-chart-small: rgba(0, 0, 0, 0.55);
+      --term-chart-stat-k: rgba(0, 0, 0, 0.5);
+      --term-mini-bar: rgba(0, 0, 0, 0.08);
+      --term-divider-soft: rgba(0, 0, 0, 0.08);
+      --term-gutter-idle: rgba(0, 0, 0, 0.10);
+      --term-map-svg-shadow: rgba(0, 0, 0, 0.06);
+      --term-chart-tick: rgba(0, 0, 0, 0.45);
+      --term-chart-grid: rgba(0, 0, 0, 0.06);
+      --term-chart-tooltip-bg: rgba(255, 255, 255, 0.96);
+      --term-chart-tooltip-border: rgba(0, 0, 0, 0.12);
+      --term-chart-tooltip-title: rgba(0, 0, 0, 0.9);
+      --term-chart-tooltip-body: rgba(0, 0, 0, 0.75);
+      --term-chart-line-muted: #111827;
+      --term-toggle-shadow: rgba(0, 0, 0, 0.14);
 
-      /* Resizable layout + fixed left sidebar */
-      --railW: 64px;
-      /* Defaults scale across common desktop sizes; JS resizer still overrides these vars. */
+      /* Resizable layout; JS resizer overrides these vars. */
       --leftW: clamp(240px, 26vw, 360px);
       --rightW: clamp(320px, 36vw, 520px);
       --leftScale: 1;
       --rightScale: 1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #0f0f0f;
+        --panel: rgba(28, 28, 28, 0.94);
+        --panel-2: rgba(32, 32, 32, 0.88);
+        --text: #f0f0f0;
+        --muted: rgba(255, 255, 255, 0.55);
+        --line: rgba(255, 255, 255, 0.12);
+        --hairline: rgba(255, 255, 255, 0.1);
+        --metric-k: rgba(255, 255, 255, 0.52);
+        --metric-v: rgba(255, 255, 255, 0.92);
+        --shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+        --shadow-2: 0 20px 56px rgba(0, 0, 0, 0.55);
+        --highlights-glass-sheen: rgba(255, 255, 255, 0.06);
+        --term-glass-stroke: rgba(255, 255, 255, 0.18);
+        --term-glass-stroke-outer: rgba(0, 0, 0, 0.55);
+        --term-glass-fill: rgba(32, 32, 32, 0.48);
+        --term-glass-deep: rgba(24, 24, 24, 0.55);
+        --term-glass-inset: rgba(255, 255, 255, 0.08);
+        --term-glass-key: rgba(255, 255, 255, 0.08);
+        --term-glass-shade: rgba(0, 0, 0, 0.45);
+        --term-float-0: rgba(40, 40, 40, 0.88);
+        --term-float-1: rgba(52, 52, 52, 0.92);
+        --term-float-border-0: rgba(255, 255, 255, 0.14);
+        --term-float-border-1: rgba(255, 255, 255, 0.22);
+        --term-float-shadow: rgba(0, 0, 0, 0.4);
+        --term-fg-secondary: rgba(255, 255, 255, 0.78);
+        --term-fg-tertiary: rgba(255, 255, 255, 0.52);
+        --term-fg-strong: rgba(255, 255, 255, 0.92);
+        --term-menu-bg: rgba(28, 28, 28, 0.94);
+        --term-menu-shadow: rgba(0, 0, 0, 0.5);
+        --term-row-hover: rgba(255, 255, 255, 0.06);
+        --term-row-hover-2: rgba(255, 255, 255, 0.07);
+        --term-zoom-chrome: rgba(255, 255, 255, 0.08);
+        --term-tooltip-bg: rgba(28, 28, 28, 0.96);
+        --term-tooltip-border: rgba(255, 255, 255, 0.14);
+        --term-tooltip-shadow: rgba(0, 0, 0, 0.5);
+        --term-tooltip-fg: rgba(255, 255, 255, 0.95);
+        --term-tooltip-muted: rgba(255, 255, 255, 0.55);
+        --term-ghost-bg: rgba(40, 40, 40, 0.85);
+        --term-ghost-bg-hover: rgba(50, 50, 50, 0.9);
+        --term-ghost-bg-active: rgba(56, 56, 56, 0.95);
+        --term-ghost-border: rgba(255, 255, 255, 0.12);
+        --term-ghost-fg: rgba(255, 255, 255, 0.72);
+        --term-ghost-fg-hover: rgba(255, 255, 255, 0.88);
+        --term-tag-bg: rgba(40, 40, 40, 0.75);
+        --term-tag-border: rgba(255, 255, 255, 0.12);
+        --term-tag-fg: rgba(255, 255, 255, 0.78);
+        --term-dot-muted: rgba(255, 255, 255, 0.35);
+        --term-info-fg: rgba(255, 255, 255, 0.95);
+        --term-legend-ring: rgba(255, 255, 255, 0.12);
+        --term-chart-small: rgba(255, 255, 255, 0.55);
+        --term-chart-stat-k: rgba(255, 255, 255, 0.5);
+        --term-mini-bar: rgba(255, 255, 255, 0.12);
+        --term-divider-soft: rgba(255, 255, 255, 0.1);
+        --term-gutter-idle: rgba(255, 255, 255, 0.14);
+        --term-map-svg-shadow: rgba(0, 0, 0, 0.35);
+        --term-chart-tick: rgba(255, 255, 255, 0.45);
+        --term-chart-grid: rgba(255, 255, 255, 0.08);
+        --term-chart-tooltip-bg: rgba(28, 28, 28, 0.96);
+        --term-chart-tooltip-border: rgba(255, 255, 255, 0.16);
+        --term-chart-tooltip-title: rgba(255, 255, 255, 0.95);
+        --term-chart-tooltip-body: rgba(255, 255, 255, 0.72);
+        --term-chart-line-muted: #a8a8a8;
+        --term-toggle-shadow: rgba(0, 0, 0, 0.5);
+      }
     }
 
     * { box-sizing: border-box; }
@@ -51,10 +184,31 @@
       height: 100%;
       height: 100dvh;
       display: grid;
-      grid-template-columns: var(--railW) var(--leftW) 1fr var(--rightW);
+      grid-template-columns: var(--leftW) 1fr var(--rightW);
       grid-template-rows: 1fr;
-      grid-template-areas: "rail left main right";
+      grid-template-areas: "left main right";
       position: relative;
+      isolation: isolate;
+    }
+
+    /* Full-viewport globe behind chrome so glass panels actually frost the map */
+    .app-map-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: auto;
+      background: var(--bg);
+    }
+    .app-map-backdrop .terminal-map-wrap {
+      position: absolute;
+      inset: 0;
+    }
+
+    .left,
+    .main,
+    .right {
+      position: relative;
+      z-index: 1;
     }
 
     /* Resizer gutters */
@@ -76,7 +230,7 @@
       transform: translateX(-50%);
       width: 2px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.10);
+      background: var(--term-gutter-idle);
       opacity: 0;
       transition: opacity 0.12s ease, background 0.12s ease;
     }
@@ -85,8 +239,8 @@
       opacity: 1;
       background: rgba(255,106,0,0.55);
     }
-    .gutter-left { grid-column: 3; }  /* boundary between left and map */
-    .gutter-right { grid-column: 4; } /* boundary between map and right */
+    .gutter-left { grid-column: 2; }  /* boundary between left and map */
+    .gutter-right { grid-column: 3; } /* boundary between map and right */
 
     body.resizing {
       cursor: col-resize;
@@ -126,18 +280,18 @@
       display: grid;
       place-items: center;
       border: none;
-      background: rgba(255,255,255,0.65);
-      border: 1px solid rgba(0,0,0,0.08);
-      color: rgba(0,0,0,0.72);
+      background: var(--term-float-0);
+      border: 1px solid var(--term-float-border-0);
+      color: var(--term-fg-secondary);
       cursor: pointer;
       border-radius: 12px;
       margin-right: 10px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 24px var(--term-float-shadow);
       transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
     .panel-toggle:hover{
-      background: rgba(255,255,255,0.82);
-      border-color: rgba(0,0,0,0.12);
+      background: var(--term-float-1);
+      border-color: var(--term-float-border-1);
       transform: translateY(-1px);
     }
     .panel-toggle:active{ transform: translateY(0px); }
@@ -145,7 +299,7 @@
 
     /* Collapsed left panel */
     .left-collapsed .app{
-      grid-template-columns: var(--railW) 0px 1fr var(--rightW);
+      grid-template-columns: 0px 1fr var(--rightW);
     }
     .left-collapsed .left,
     .left-collapsed #gutter-left{
@@ -162,7 +316,7 @@
       border-radius: 0;
       border: none;
       background: transparent;
-      color: rgba(0,0,0,0.72);
+      color: var(--term-fg-secondary);
       font-size: 1rem;
     }
     .search svg { opacity: 0.7; width: 16px; height: 16px; }
@@ -175,7 +329,7 @@
       width: min(260px, 42vw);
       height: 100%;
     }
-    .search input::placeholder { color: rgba(0,0,0,0.55); }
+    .search input::placeholder { color: var(--term-fg-tertiary); }
     .search-menu{
       position: absolute;
       left: 14px;
@@ -185,10 +339,10 @@
       max-width: min(520px, calc(100% - 28px));
       max-height: min(320px, calc(100vh - 120px));
       overflow: auto;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.96);
+      border: 1px solid var(--term-float-border-0);
+      background: var(--term-menu-bg);
       border-radius: 0;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+      box-shadow: 0 10px 26px var(--term-menu-shadow);
       padding: 4px;
       display: none;
     }
@@ -201,11 +355,11 @@
       border-radius: 0;
       cursor: pointer;
       user-select: none;
-      color: rgba(0,0,0,0.86);
+      color: var(--term-fg-strong);
     }
     .search-item:hover,
     .search-item.active{
-      background: rgba(0,0,0,0.035);
+      background: var(--term-row-hover);
     }
     .search-item .label{
       font-weight: 700;
@@ -213,17 +367,19 @@
     }
     .search-item .sub{
       font-size: 0.83rem;
-      color: rgba(0,0,0,0.55);
+      color: var(--term-fg-tertiary);
     }
     .search-empty{
       padding: 12px 10px;
-      color: rgba(0,0,0,0.55);
+      color: var(--term-fg-tertiary);
       font-size: 0.9rem;
     }
-    #info-title.switchable{
+    #info-title {
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
+    }
+    #info-title.switchable {
       cursor: pointer;
     }
     .city-menu{
@@ -233,9 +389,9 @@
       max-width: min(320px, calc(100vw - 24px));
       max-height: min(320px, calc(100vh - 24px));
       overflow: auto;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.97);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+      border: 1px solid var(--term-tooltip-border);
+      background: var(--term-tooltip-bg);
+      box-shadow: 0 16px 48px var(--term-tooltip-shadow);
       padding: 6px;
       display: none;
     }
@@ -248,19 +404,19 @@
       padding: 9px 10px;
       cursor: pointer;
       user-select: none;
-      color: rgba(0,0,0,0.86);
+      color: var(--term-fg-strong);
     }
-    .city-item:hover{ background: rgba(0,0,0,0.04); }
+    .city-item:hover{ background: var(--term-row-hover-2); }
     .city-item.active{ background: rgba(255,106,0,0.10); }
     .city-item .label{ font-weight: 700; letter-spacing: 0.01em; }
-    .city-item .sub{ font-size: 0.82rem; color: rgba(0,0,0,0.55); }
+    .city-item .sub{ font-size: 0.82rem; color: var(--term-fg-tertiary); }
     .spacer { flex: 1; }
     .zoom {
       display: inline-flex;
-      border: 1px solid rgba(0,0,0,0.10);
+      border: 1px solid var(--term-float-border-0);
       border-radius: 0;
       overflow: hidden;
-      background: rgba(0,0,0,0.035);
+      background: var(--term-zoom-chrome);
     }
     .zoom button {
       width: 42px; height: 34px;
@@ -269,12 +425,12 @@
       font-size: 1.05rem;
       line-height: 1;
       cursor: pointer;
-      color: rgba(0,0,0,0.7);
+      color: var(--term-fg-secondary);
       transition: background 0.12s ease, color 0.12s ease;
     }
     .zoom button + button { border-left: 1px solid var(--line); }
-    .zoom button:hover { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.82); }
-    .zoom button:active { background: rgba(0,0,0,0.06); }
+    .zoom button:hover { background: var(--term-row-hover-2); color: var(--text); }
+    .zoom button:active { background: var(--term-row-hover); }
     .top-actions {
       display: flex;
       align-items: center;
@@ -285,7 +441,7 @@
       display: grid;
       place-items: center;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.75);
+      background: var(--term-float-0);
       border-radius: 10px;
       cursor: not-allowed;
       opacity: 0.85;
@@ -296,108 +452,32 @@
       display: grid;
       place-items: center;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.75);
+      background: var(--term-float-0);
       border-radius: 10px;
       cursor: pointer;
       opacity: 0.9;
       transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
     }
     .icon-action:hover{
-      background: rgba(255,255,255,0.88);
-      border-color: rgba(0,0,0,0.14);
+      background: var(--term-float-1);
+      border-color: var(--term-float-border-1);
       opacity: 1;
     }
     .icon-action:active{
-      background: rgba(255,255,255,0.95);
+      background: var(--term-float-1);
     }
     .icon-action svg { width: 16px; height: 16px; opacity: 0.8; }
-
-    /* Left icon rail (global nav) */
-    .sidebar-rail {
-      grid-area: rail;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 0 16px;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,0.028) 0%, transparent 42%),
-        var(--panel);
-      border-right: 1px solid var(--line);
-      z-index: 5;
-      min-height: 0;
-    }
-    .sidebar-brand {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      overflow: hidden;
-      flex-shrink: 0;
-      opacity: 0.94;
-      transition: opacity 0.12s ease, transform 0.12s ease;
-    }
-    .sidebar-brand:hover {
-      opacity: 1;
-      transform: scale(1.04);
-    }
-    .sidebar-brand img {
-      width: 26px;
-      height: 26px;
-      display: block;
-    }
-    .sidebar-items {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      flex: 1;
-      min-height: 0;
-    }
-    .sidebar-icon-link {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: rgba(0,0,0,0.52);
-      text-decoration: none;
-      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
-    }
-    .sidebar-icon-link svg {
-      width: 20px;
-      height: 20px;
-      opacity: 0.88;
-    }
-    .sidebar-icon-link:hover {
-      background: rgba(0,0,0,0.045);
-      color: rgba(0,0,0,0.78);
-    }
-    .sidebar-icon-link[aria-current="page"] {
-      background: rgba(255,106,0,0.12);
-      border-color: rgba(255,106,0,0.24);
-      color: var(--orange);
-    }
-    .sidebar-icon-link[aria-current="page"] svg {
-      opacity: 1;
-    }
-    .sidebar-icon-link:focus-visible,
-    .sidebar-brand:focus-visible {
-      outline: 2px solid rgba(255,106,0,0.55);
-      outline-offset: 2px;
-    }
 
     /* Left panel */
     .left {
       grid-area: left;
-      background: var(--panel);
-      border-right: 1px solid var(--line);
+      background: var(--term-glass-fill);
+      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      border-right: 1px solid var(--term-glass-stroke);
+      box-shadow:
+        inset -1px 0 0 var(--term-glass-key),
+        1px 0 0 var(--term-glass-stroke-outer);
       padding: 16px 18px 22px;
       overflow: hidden;
       position: relative;
@@ -412,7 +492,7 @@
       width: 36px;
       height: 36px;
       margin: 0;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.14);
+      box-shadow: 0 12px 28px var(--term-toggle-shadow);
     }
     .left-head {
       margin-top: 0;
@@ -427,6 +507,7 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       line-height: 1.02;
+      color: var(--text);
     }
     .left-actions {
       display: flex;
@@ -437,16 +518,16 @@
       width: 34px;
       height: 34px;
       border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--term-ghost-border);
+      background: var(--term-float-0);
       display: grid;
       place-items: center;
       cursor: not-allowed;
     }
     .mini-btn svg { width: 16px; height: 16px; opacity: 0.75; }
     .ghost-btn{
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.70);
+      border: 1px solid var(--term-ghost-border);
+      background: var(--term-ghost-bg);
       border-radius: 12px;
       padding: 9px 10px;
       font-family: var(--font);
@@ -454,18 +535,18 @@
       font-size: 0.66rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.62);
+      color: var(--term-ghost-fg);
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
       user-select: none;
     }
     .ghost-btn:hover{
-      background: rgba(255,255,255,0.86);
+      background: var(--term-ghost-bg-hover);
       border-color: rgba(255,106,0,0.35);
-      color: rgba(0,0,0,0.74);
+      color: var(--term-ghost-fg-hover);
     }
     .ghost-btn:active{
-      background: rgba(255,255,255,0.92);
+      background: var(--term-ghost-bg-active);
     }
     .ghost-btn[aria-pressed="true"]{
       border-color: rgba(255,106,0,0.40);
@@ -479,10 +560,15 @@
       padding-top: 8px;
     }
     .card {
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.75);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
+      border: 1px solid var(--term-glass-stroke);
+      background: var(--term-glass-deep);
+      backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(160%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(160%);
+      border-radius: 16px;
+      box-shadow:
+        0 1px 0 var(--term-glass-inset) inset,
+        0 0 0 0.5px var(--term-glass-key),
+        0 12px 40px var(--term-glass-shade);
       overflow: hidden;
     }
     .left-card {
@@ -498,8 +584,8 @@
     .oil-context{
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid rgba(0,0,0,0.08);
-      color: rgba(0,0,0,0.72);
+      border-top: 1px solid var(--term-divider-soft);
+      color: var(--term-fg-secondary);
       font-size: 0.9rem;
       line-height: 1.35;
     }
@@ -512,13 +598,13 @@
     }
     .oil-context .v{
       font-weight: 600;
-      color: rgba(0,0,0,0.76);
+      color: var(--text);
     }
     .card-topline {
       font-size: 0.7rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.55);
+      color: var(--muted);
     }
     .card-topline-row{
       display: flex;
@@ -538,6 +624,7 @@
       font-weight: 800;
       letter-spacing: -0.01em;
       line-height: 1.12;
+      color: var(--text);
     }
     .pill-row {
       margin-top: 10px;
@@ -550,17 +637,17 @@
       align-items: center;
       gap: 6px;
       padding: 6px 8px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--term-tag-border);
+      background: var(--term-tag-bg);
       border-radius: 999px;
       font-family: var(--font);
       font-size: 0.68rem;
       letter-spacing: 0.06em;
-      color: rgba(0,0,0,0.7);
+      color: var(--term-tag-fg);
     }
     .dot {
       width: 7px; height: 7px; border-radius: 50%;
-      background: rgba(0,0,0,0.25);
+      background: var(--term-dot-muted);
     }
     .dot.orange { background: var(--orange); }
     .dot.green { background: #16a34a; }
@@ -607,7 +694,7 @@
 
     .mini-bars {
       height: 76px;
-      border-top: 1px solid rgba(0,0,0,0.08);
+      border-top: 1px solid var(--term-divider-soft);
       margin-top: 12px;
       padding-top: 12px;
       display: grid;
@@ -620,65 +707,30 @@
       display: block;
       height: 40%;
       border-radius: 6px;
-      background: rgba(0,0,0,0.08);
+      background: var(--term-mini-bar);
     }
     .mini-bars span:nth-child(3n){ height: 65%; }
     .mini-bars span:nth-child(4n){ height: 25%; }
     .mini-bars span:nth-child(5n){ height: 85%; }
 
-    /* Main map area */
+    /* Map chrome only: globe lives in .app-map-backdrop; pass clicks through to globe */
     .main {
       grid-area: main;
       position: relative;
-      background:
-        radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
-        radial-gradient(1200px 680px at 44% 56%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.00) 62%),
-        linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
-        #d7d7d7;
-      overflow: hidden;
-    }
-    .main::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:
-        repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px);
-      opacity: 0.26;
-      pointer-events:none;
-    }
-    .main::after{
-      content:'';
-      position:absolute;
-      inset:-40px;
-      background:
-        radial-gradient(circle at 35% 50%, rgba(0,0,0,0.08) 0 1px, transparent 2px) 0 0/32px 32px;
-      opacity: 0.12;
-      pointer-events:none;
-    }
-    /* Fade map near the top so the search bar stays clean */
-    .main .map-fade-top{
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 120px;
-      z-index: 6; /* above the map, below search (7/8) */
+      background: transparent;
+      overflow: visible;
       pointer-events: none;
-      background: linear-gradient(
-        to bottom,
-        rgba(241,241,240,0.98) 0%,
-        rgba(241,241,240,0.92) 18%,
-        rgba(241,241,240,0.70) 42%,
-        rgba(241,241,240,0.00) 100%
-      );
+    }
+    .main > * {
+      pointer-events: auto;
     }
 
-    /* Floating map controls (zoom only) */
+    /* Floating map controls (zoom only) — above full-bleed map SVG hit targets */
     .map-controls {
       position: absolute;
       top: 14px;
       right: 14px;
-      z-index: 6;
+      z-index: 25;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -690,19 +742,20 @@
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
       user-select: none;
+      pointer-events: auto;
     }
     .map-controls .zoom {
       border-radius: 0;
-      background: rgba(255,255,255,0.65);
-      border-color: rgba(0,0,0,0.08);
+      background: var(--term-float-0);
+      border-color: var(--term-float-border-0);
     }
     .map-controls .zoom button {
       width: 44px;
       height: 36px;
       font-size: 1.15rem;
-      color: rgba(0,0,0,0.75);
+      color: var(--term-fg-secondary);
     }
-    .map-controls .zoom button + button { border-left: 1px solid rgba(0,0,0,0.10); }
+    .map-controls .zoom button + button { border-left: 1px solid var(--term-float-border-0); }
     /* ── Map (reuse homepage style) ─────────────────────────────── */
     .terminal-map-wrap {
       position: absolute;
@@ -711,7 +764,7 @@
       z-index: 1;
     }
     .terminal-map-wrap svg{
-      filter: drop-shadow(0 20px 40px rgba(0,0,0,0.06));
+      filter: drop-shadow(0 20px 40px var(--term-map-svg-shadow));
     }
     .terminal-map-wrap svg {
       position: absolute;
@@ -719,23 +772,24 @@
       width: 100%;
       height: 100%;
       display: block;
+      touch-action: none;
     }
     /* Slightly bluer ocean so the globe reads on mobile */
     .sphere { fill: #e7eef7; }
     .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
     .country {
-      fill: #d9d6d2;
-      stroke: none;
+      fill: none;
+      stroke: rgba(48, 48, 48, 0.22);
+      stroke-width: 0.5;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
       cursor: default;
-      transition: fill 0.12s;
+      transition: stroke 0.12s ease;
     }
-    .country:hover { fill: #d6d3d0; }
-    .country.sea {
-      fill: #d8d5d2;
-      stroke: none;
-      cursor: pointer;
+    .country:hover {
+      fill: none;
+      stroke: rgba(48, 48, 48, 0.36);
     }
-    .country.sea:hover { fill: #c8c4c0; }
     .country.live {
       fill: rgba(17, 24, 39, 0.28); /* dark grey for non-selected live */
       stroke: none;
@@ -746,7 +800,17 @@
       fill: rgba(254,94,14,0.26); /* orange for selected */
     }
     .country.live.selected:hover { fill: rgba(254,94,14,0.34); }
-    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: contrast(1.2); pointer-events: none; }
+    /* Singapore overlay (countries-110m may merge SG into MY) — matches app.html */
+    .country.live.country-sg{
+      stroke: rgba(32, 32, 32, 0.58);
+      stroke-width: 1.15px;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+    }
+    .country.live.country-sg.selected{
+      stroke: rgba(255, 106, 0, 0.9);
+      stroke-width: 1.85px;
+    }
     .border-mesh {
       fill: none;
       stroke: rgba(48,48,48,0.14);
@@ -762,17 +826,61 @@
     .border-live.selected {
       stroke: rgba(254,94,14,0.75); /* orange for selected only */
     }
-    .ping-dot {
-      fill: #fe5e0e;
-      filter: drop-shadow(0 0 3px rgba(254,94,14,0.6));
-    }
-    .live-tag {
-      font-family: var(--font);
-      font-weight: 700;
-      fill: #fe5e0e;
-      dominant-baseline: middle;
-      text-anchor: start;
-      letter-spacing: 0.12em;
+
+    /* Dark globe — after light rules; #terminal-map raises specificity so this wins over .sphere/.country */
+    @media (prefers-color-scheme: dark) {
+      #terminal-map svg {
+        filter: drop-shadow(0 20px 40px var(--term-map-svg-shadow));
+      }
+      #terminal-map .sphere { fill: #1a1a1a; }
+      #terminal-map .graticule {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.08);
+        stroke-width: 0.3;
+      }
+      #terminal-map .country {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.2);
+        stroke-width: 0.5;
+        vector-effect: non-scaling-stroke;
+        paint-order: stroke fill;
+      }
+      #terminal-map .country:hover {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.34);
+      }
+      #terminal-map .country.live {
+        fill: rgba(255, 255, 255, 0.2);
+        stroke: none;
+      }
+      #terminal-map .country.live:hover { fill: rgba(255, 255, 255, 0.3); }
+      #terminal-map .country.live.selected {
+        fill: rgba(255, 106, 0, 0.32);
+      }
+      #terminal-map .country.live.selected:hover { fill: rgba(255, 106, 0, 0.42); }
+      #terminal-map .country.live.country-sg {
+        stroke: rgba(255, 255, 255, 0.4);
+        stroke-width: 1.15px;
+        vector-effect: non-scaling-stroke;
+        paint-order: stroke fill;
+      }
+      #terminal-map .country.live.country-sg.selected {
+        stroke: rgba(255, 200, 140, 0.95);
+        stroke-width: 1.85px;
+      }
+      #terminal-map .border-mesh {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.12);
+        stroke-width: 0.5;
+      }
+      #terminal-map .border-live {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.28);
+        stroke-width: 1;
+      }
+      #terminal-map .border-live.selected {
+        stroke: rgba(255, 106, 0, 0.85);
+      }
     }
 
     /* Tooltip (reuse homepage) */
@@ -782,13 +890,13 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.12s ease;
-      background: rgba(255,255,255,0.97);
-      border: 1px solid rgba(0,0,0,0.10);
+      background: var(--term-tooltip-bg);
+      border: 1px solid var(--term-tooltip-border);
       border-radius: 10px;
       padding: 9px 14px 8px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 28px var(--term-tooltip-shadow);
       min-width: 148px;
     }
     #tooltip.show { opacity: 1; }
@@ -796,7 +904,7 @@
       display: block;
       font-size: 0.85rem;
       font-weight: 700;
-      color: rgba(0,0,0,0.9);
+      color: var(--term-tooltip-fg);
       letter-spacing: 0.02em;
       margin-bottom: 3px;
     }
@@ -806,27 +914,30 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       font-family: var(--font);
-      color: rgba(0,0,0,0.55);
+      color: var(--term-tooltip-muted);
     }
     .tt-status.live { color: rgba(255,106,0,0.95); }
 
     /* Right panel */
     .right {
       grid-area: right;
-      background: var(--panel);
+      background: transparent;
       border-left: 1px solid var(--line);
       display: grid;
       grid-template-rows: 1fr 1fr;
       min-height: 0;
     }
 
-    /* Desktop layout: chart (white) on top, highlights (orange) below */
+    /* Desktop layout: chart (history) on top, highlights below */
     .chart {
       padding: 28px 26px;
-      border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
-        #e9e9e8;
+      border-bottom: 1px solid var(--term-glass-key);
+      background: var(--term-glass-fill);
+      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      box-shadow:
+        inset 0 -1px 0 var(--term-glass-key),
+        -1px 0 0 var(--term-glass-stroke-outer);
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -839,11 +950,12 @@
       font-weight: 800;
       letter-spacing: -0.04em;
       line-height: 0.95;
+      color: var(--text);
     }
     /* Hide the large country title in the white panel */
     #right-title { display: none; }
     .chart .small {
-      color: rgba(0,0,0,0.55);
+      color: var(--term-chart-small);
       font-size: 0.75rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -858,13 +970,14 @@
       font-size: 0.66rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.5);
+      color: var(--term-chart-stat-k);
     }
     .chart .stat .v {
       margin-top: 6px;
       font-family: var(--font);
       font-weight: 800;
       letter-spacing: 0.02em;
+      color: var(--text);
     }
     .chart .toolbar {
       margin-top: auto;
@@ -880,7 +993,7 @@
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      color: rgba(0,0,0,0.55);
+      color: var(--term-chart-small);
       font-family: var(--font);
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -896,7 +1009,7 @@
       width: 8px;
       height: 8px;
       border-radius: 999px;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
+      box-shadow: 0 0 0 2px var(--term-legend-ring);
       flex: 0 0 auto;
     }
     /* export buttons now use .icon-action */
@@ -905,10 +1018,14 @@
       position: relative;
       flex: 1;
       min-height: 220px;
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.65);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.07);
+      border: 1px solid var(--term-glass-stroke);
+      border-radius: 16px;
+      background: var(--term-glass-deep);
+      backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(155%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(155%);
+      box-shadow:
+        0 1px 0 var(--term-glass-inset) inset,
+        0 8px 28px var(--term-glass-shade);
       padding: 12px 12px 10px;
     }
     .chart-canvas-wrap canvas {
@@ -917,8 +1034,17 @@
       display: block;
     }
     .info {
-      background: var(--orange);
-      color: #111;
+      background-color: transparent;
+      background-image:
+        linear-gradient(180deg, var(--highlights-glass-sheen) 0%, transparent 40%),
+        linear-gradient(
+          165deg,
+          color-mix(in srgb, var(--highlights-red) var(--highlights-glass-mix-top), transparent) 0%,
+          color-mix(in srgb, var(--highlights-red-deep) var(--highlights-glass-mix-bot), transparent) 100%
+        );
+      backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
+      color: var(--term-info-fg);
       padding: 28px 26px;
       position: relative;
       display: flex;
@@ -927,6 +1053,12 @@
       gap: 10px;
       min-height: 0;
       overflow: auto;
+      border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 55%, rgba(0, 0, 0, 0.18));
+      box-shadow:
+        inset 0 1px 0 rgba(0, 0, 0, 0.06),
+        inset 0 -1px 0 rgba(90, 20, 8, 0.14),
+        -1px 0 0 var(--term-glass-stroke-outer),
+        0 10px 36px color-mix(in srgb, var(--highlights-red-deep) 34%, transparent);
     }
     .info h3 {
       margin: 0;
@@ -941,6 +1073,10 @@
       letter-spacing: 0.06em;
       opacity: 0.8;
     }
+    .info #info-kicker {
+      color: var(--orange);
+      opacity: 1;
+    }
     .info .lines {
       margin-top: 10px;
       display: grid;
@@ -950,15 +1086,40 @@
       letter-spacing: 0.02em;
       opacity: 0.95;
     }
-    .kv {
+    .info .kv {
       display: flex;
       justify-content: space-between;
       gap: 14px;
       padding-top: 10px;
-      border-top: 1px solid rgba(0,0,0,0.18);
+      border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 45%, rgba(0, 0, 0, 0.2));
     }
     .kv .k { opacity: 0.72; }
     .kv .v { font-weight: 800; }
+
+    @media (prefers-color-scheme: dark) {
+      .info {
+        background-color: var(--term-glass-fill);
+        background-image: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 42%
+        );
+        background-repeat: no-repeat;
+        backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+        -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+        color: var(--term-info-fg);
+        border-top: 1px solid var(--term-glass-key);
+        box-shadow:
+          inset 0 1px 0 var(--term-glass-inset),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+          -1px 0 0 var(--term-glass-stroke-outer),
+          0 8px 32px var(--term-glass-shade);
+      }
+      .info .kv {
+        border-top: 1px solid var(--hairline);
+      }
+    }
+
     .pager {
       position: absolute;
       right: 20px;
@@ -1001,43 +1162,14 @@
 </head>
 <body>
   <div class="app" role="application" aria-label="Terminal">
+    <div class="app-map-backdrop">
+      <div class="terminal-map-wrap" id="terminal-map"></div>
+    </div>
     <button type="button" class="panel-toggle" id="left-panel-toggle" aria-label="Toggle left panel" aria-expanded="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M15 18l-6-6 6-6"></path>
       </svg>
     </button>
-    <nav class="sidebar-rail" aria-label="Main navigation">
-      <a class="sidebar-brand" href="./index.html" aria-label="PetrolPrice home">
-        <img src="./logo.svg" alt="" width="26" height="26" decoding="async" />
-      </a>
-      <ul class="sidebar-items">
-        <li>
-          <a class="sidebar-icon-link" href="./index.html" aria-label="Home">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z"></path>
-            </svg>
-          </a>
-        </li>
-        <li>
-          <a class="sidebar-icon-link" href="./terminal.html" aria-label="Terminal" aria-current="page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-              <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-              <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-              <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-            </svg>
-          </a>
-        </li>
-        <li>
-          <a class="sidebar-icon-link" href="./app.html" aria-label="App">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="6" y="2" width="12" height="20" rx="2"></rect>
-              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.4"></line>
-            </svg>
-          </a>
-        </li>
-      </ul>
-    </nav>
     <aside class="left" aria-label="Portfolio overview">
       <div class="left-head">
         <div class="title" id="left-title">Portfolio<br/>Overview</div>
@@ -1065,7 +1197,6 @@
     <div class="gutter gutter-left" id="gutter-left" role="separator" aria-label="Resize left panel" aria-orientation="vertical" tabindex="0"></div>
 
     <main class="main" aria-label="Country map">
-      <div class="map-fade-top" aria-hidden="true"></div>
       <div class="map-topbar" aria-label="Search and panel controls">
         <div class="search" aria-label="Search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1082,7 +1213,6 @@
           <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
         </div>
       </div>
-      <div class="terminal-map-wrap" id="terminal-map"></div>
     </main>
 
     <div class="gutter gutter-right" id="gutter-right" role="separator" aria-label="Resize right panel" aria-orientation="vertical" tabindex="0"></div>
@@ -1095,7 +1225,7 @@
           <canvas id="right-chart"></canvas>
         </div>
         <div class="toolbar">
-          <span class="tag" id="right-subtag" style="background:transparent;border-color:transparent;padding:0;color:rgba(0,0,0,0.5);font-family:var(--font);font-weight:700;letter-spacing:0.02em;">Live</span>
+          <span class="tag" id="right-subtag" style="background:transparent;border-color:transparent;padding:0;color:var(--term-chart-small);font-family:var(--font);font-weight:700;letter-spacing:0.02em;">Live</span>
         </div>
       </div>
       <div class="info">
@@ -1290,6 +1420,23 @@
       if (inEast) return 'SabahSarawak';
       if (inPen) return 'Semenanjung';
       return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
+    }
+
+    /** Nearest sheet `city` to a click — same idea as app.html `appIndonesiaCityFromLngLat`. */
+    function terminalIndonesiaCityFromLngLat(lon, lat) {
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return 'Jakarta Pusat';
+      let best = 'Jakarta Pusat';
+      let bestD = Infinity;
+      for (const [city, ll] of Object.entries(TERMINAL_ID_CITY_LONLAT)) {
+        const dx = lon - ll[0];
+        const dy = lat - ll[1];
+        const d = dx * dx + dy * dy;
+        if (d < bestD) {
+          bestD = d;
+          best = city;
+        }
+      }
+      return best;
     }
 
     /** Valid key for TERMINAL_MY_SUBREGION_FOCUS — prefers live MY_REGION, then localStorage. */
@@ -1498,6 +1645,50 @@
     }
 
     // Right-panel chart
+    function terminalCssVar(name, fallback) {
+      try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return v || fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function terminalChartThemeOptions() {
+      const tick = terminalCssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
+      return {
+        tooltip: {
+          backgroundColor: terminalCssVar('--term-chart-tooltip-bg', 'rgba(255,255,255,0.96)'),
+          borderColor: terminalCssVar('--term-chart-tooltip-border', 'rgba(0,0,0,0.12)'),
+          borderWidth: 1,
+          titleColor: terminalCssVar('--term-chart-tooltip-title', 'rgba(0,0,0,0.9)'),
+          bodyColor: terminalCssVar('--term-chart-tooltip-body', 'rgba(0,0,0,0.75)'),
+          titleFont: { family: 'Inter', size: 12, weight: '700' },
+          bodyFont: { family: 'Inter', size: 12, weight: '600' },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: tick, font: { family: 'Inter', size: 11 }, maxRotation: 0 },
+          },
+          y: {
+            grid: { color: terminalCssVar('--term-chart-grid', 'rgba(0,0,0,0.06)') },
+            ticks: { color: tick, font: { family: 'Inter', size: 11 } },
+          },
+        },
+      };
+    }
+
+    function terminalApplyChartTheme(chart) {
+      if (!chart?.options?.plugins?.tooltip || !chart?.options?.scales) return;
+      const t = terminalChartThemeOptions();
+      Object.assign(chart.options.plugins.tooltip, t.tooltip);
+      chart.options.scales.x.grid = { ...chart.options.scales.x.grid, ...t.scales.x.grid };
+      chart.options.scales.x.ticks = { ...chart.options.scales.x.ticks, ...t.scales.x.ticks };
+      chart.options.scales.y.grid = { ...chart.options.scales.y.grid, ...t.scales.y.grid };
+      chart.options.scales.y.ticks = { ...chart.options.scales.y.ticks, ...t.scales.y.ticks };
+    }
+
     let RIGHT_CHART = null;
     let RIGHT_CHART_COUNTRY = null;
     let RIGHT_CHART_MY_DIESEL_KEY = null;
@@ -1568,7 +1759,8 @@
         pointRadius: 0,
         pointHoverRadius: 4,
         pointHoverBackgroundColor: ds.color,
-        tension: 0.35,
+        tension: 0.55,
+        cubicInterpolationMode: 'default',
         fill: true,
         spanGaps: true,
       }));
@@ -1584,6 +1776,7 @@
         nextDs.forEach((ds, i) => {
           RIGHT_CHART.data.datasets[i] = { ...RIGHT_CHART.data.datasets[i], ...ds };
         });
+        terminalApplyChartTheme(RIGHT_CHART);
 
         if (animate) {
           const prevAnim = RIGHT_CHART.options.animation;
@@ -1597,6 +1790,7 @@
       }
 
       destroyRightChart();
+      const themeChart = terminalChartThemeOptions();
       RIGHT_CHART = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: nextDs },
@@ -1606,26 +1800,9 @@
           animation: animate ? { duration: 0 } : { duration: 0 },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              backgroundColor: 'rgba(255,255,255,0.96)',
-              borderColor: 'rgba(0,0,0,0.12)',
-              borderWidth: 1,
-              titleColor: 'rgba(0,0,0,0.9)',
-              bodyColor: 'rgba(0,0,0,0.75)',
-              titleFont: { family: 'Inter', size: 12, weight: '700' },
-              bodyFont:  { family: 'Inter', size: 12, weight: '600' },
-            },
+            tooltip: themeChart.tooltip,
           },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: 'rgba(0,0,0,0.45)', font: { family: 'Inter', size: 11 }, maxRotation: 0 },
-            },
-            y: {
-              grid: { color: 'rgba(0,0,0,0.06)' },
-              ticks: { color: 'rgba(0,0,0,0.45)', font: { family: 'Inter', size: 11 } },
-            },
-          },
+          scales: themeChart.scales,
         },
       });
       RIGHT_CHART_COUNTRY = countryId ?? null;
@@ -1727,7 +1904,7 @@
         const labels = sliceRows.map(r => r.__label);
         const isEast = myIsEastMalaysia(MY_REGION);
         const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
-        const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
+        const dieselLabel = 'Diesel';
         const keys = [
           { key: 'ron95', label: 'RON95' },
           { key: 'ron97', label: 'RON97' },
@@ -1736,7 +1913,7 @@
         const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 }).map(ds => {
           if (ds.label === 'RON95') return { ...ds, color: '#fbbf24' }; // yellow/amber
           if (ds.label === 'RON97') return { ...ds, color: '#16a34a' }; // green
-          if (ds.label === dieselLabel) return { ...ds, color: '#111827' }; // near-black
+          if (ds.label === dieselLabel) return { ...ds, color: terminalCssVar('--term-chart-line-muted', '#111827') };
           return ds;
         });
         setRightPanel({
@@ -2184,9 +2361,6 @@
     function hideTip() { tooltip.classList.remove('show'); }
     document.addEventListener('touchstart', hideTip, { passive: true });
 
-    /* Terrain source pixels — loaded once, reused across renderTerminalMap() calls */
-    let _terrSrcPx = null, _terrSrcW = 0, _terrSrcH = 0;
-
     function renderTerminalMap() {
       const root = document.getElementById('terminal-map');
       if (!root) return;
@@ -2201,413 +2375,288 @@
         .attr('viewBox', `0 0 ${W} ${H}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
 
-      const mobile = W < 640;
-      // Orthographic scale: start "zoomed in" (not full globe)
-      const baseScale = (Math.min(W, H) * (mobile ? 1.55 : 1.65)) / 2;
+      const baseScale = (Math.min(W, H) * 1.55) / 2;
+      const mapCenterY = H * 0.34;
       const projection = d3.geoOrthographic()
-        .translate([W / 2, H / 2])
+        .translate([W / 2, mapCenterY])
         .scale(baseScale)
         .clipAngle(90)
         .precision(0.3);
       const path = d3.geoPath(projection);
       const mapG = svg.append('g');
 
-      d3.json('./assets/countries-110m.json')
-        .then(world => {
-          const countries = topojson.feature(world, world.objects.countries);
+      Promise.all([
+        d3.json('./assets/countries-110m.json'),
+        d3.json('./assets/singapore-geo.json').catch(() => null),
+      ]).then(([world, sgGeo]) => {
+        const countries = topojson.feature(world, world.objects.countries);
+        const sgFeature = sgGeo && sgGeo.type === 'Feature'
+          ? Object.assign({}, sgGeo, { id: 702 })
+          : null;
+        const DEFAULT_CENTER = [115, 6];
+        projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
 
-          // Initial globe rotation: center SEA / Malaysia
-          const DEFAULT_CENTER = [115, 6]; // lon, lat
-          projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
+        mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
+        mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
 
-          // Background layers (after fitting projection)
-          const spherePath = mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
-          const graticuleDatum = d3.geoGraticule().step([10, 10])();
-          const graticulePath = mapG.append('path').datum(graticuleDatum).attr('class', 'graticule').attr('d', path);
+        mapG.selectAll('.bg')
+          .data(countries.features.filter(d => !SEA.has(+d.id)))
+          .enter().append('path').attr('class', 'country').attr('d', path)
+          .on('mousemove', (e, d) => showTip(e, +d.id))
+          .on('mouseleave', hideTip)
+          .on('touchstart', (e, d) => {
+            e.stopPropagation();
+            const t = e.touches[0];
+            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
+          }, { passive: true });
 
-          const bgPaths = mapG.selectAll('.bg')
-            .data(countries.features.filter(d => !SEA.has(+d.id)))
-            .enter().append('path').attr('class', 'country').attr('d', path)
-            .on('mousemove', (e, d) => showTip(e, +d.id))
-            .on('mouseleave', hideTip)
-            .on('touchstart', (e, d) => {
-              e.stopPropagation();
-              const t = e.touches[0];
-              showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
-            }, { passive: true });
-
-          const seaPaths = mapG.selectAll('.sea-c')
-            .data(countries.features.filter(d => SEA.has(+d.id) && !LIVE[+d.id]))
-            .enter().append('path').attr('class', 'country sea').attr('d', path)
-            .on('mousemove', (e, d) => showTip(e, +d.id))
-            .on('mouseleave', hideTip)
-            .on('touchstart', (e, d) => {
-              e.stopPropagation();
-              const t = e.touches[0];
-              showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
-            }, { passive: true });
-
-          const livePaths = mapG.selectAll('.live-c')
-            .data(countries.features.filter(d => LIVE[+d.id]))
-            .enter().append('path')
-            .attr('class', 'country live')
-            .attr('d', path);
-
-          function applyLiveSelection() {
-            const sel = window.__terminalSelectedCountryId;
-            livePaths.classed('selected', d => +d.id === +sel);
-          }
-
-          applyLiveSelection();
-
-          livePaths
-            .on('mousemove', (e, d) => showTip(e, +d.id))
-            .on('mouseleave', hideTip)
-            .on('click', (e, d) => {
-              const id = +d.id;
-              if (id === 458) {
-                const [px, py] = d3.pointer(e, svg.node());
-                const inv = projection.invert([px, py]);
-                if (inv && isFinite(inv[0]) && isFinite(inv[1])) {
-                  setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
-                }
+        const livePaths = mapG.selectAll('.live-c')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'country live')
+          .attr('d', path)
+          .on('mousemove', (e, d) => showTip(e, +d.id))
+          .on('mouseleave', hideTip)
+          .on('click', (e, d) => {
+            const id = +d.id;
+            if (id === 458) {
+              const inv = projection.invert(d3.pointer(e, svg.node()));
+              if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
+                setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
               }
-              setLeftOverview(id);
-              applyLiveSelection();
-              applyLiveBorderSelection();
-              if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(id, true);
-            })
-            .on('touchend', (e, d) => {
-              e.preventDefault();
-              const id = +d.id;
-              if (id === 458) {
-                const t = e.changedTouches && e.changedTouches[0];
-                if (t) {
-                  const box = svg.node().getBoundingClientRect();
-                  const px = t.clientX - box.left;
-                  const py = t.clientY - box.top;
-                  const inv = projection.invert([px, py]);
-                  if (inv && isFinite(inv[0]) && isFinite(inv[1])) {
-                    setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
-                  }
-                }
+              if (+window.__terminalSelectedCountryId === 458) {
+                updateRightPanelForCountry(458).catch(() => {});
+                applySel();
+                if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
+                return;
               }
-              setLeftOverview(id);
-              applyLiveSelection();
-              applyLiveBorderSelection();
-              if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(id, true);
+            }
+            if (id === 360) {
+              const inv = projection.invert(d3.pointer(e, svg.node()));
+              if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
+                const city = terminalIndonesiaCityFromLngLat(inv[0], inv[1]);
+                try { localStorage.setItem('terminal_id_city', city); } catch (_) {}
+              }
+              if (+window.__terminalSelectedCountryId === 360) {
+                updateRightPanelForCountry(360).catch(() => {});
+                applySel();
+                if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
+                return;
+              }
+            }
+            setLeftOverview(id);
+            applySel();
+          });
+
+        mapG.append('path')
+          .datum(topojson.mesh(world, world.objects.countries))
+          .attr('class', 'border-mesh')
+          .attr('d', path);
+
+        const liveBorders = mapG.selectAll('.border-live-p')
+          .data(countries.features.filter(d => LIVE[+d.id]))
+          .enter().append('path')
+          .attr('class', 'border-live')
+          .attr('d', path);
+
+        if (sgFeature) {
+          mapG.append('path')
+            .datum(sgFeature)
+            .attr('class', 'country live country-sg')
+            .attr('d', path)
+            .on('mousemove', (e) => showTip(e, 702))
+            .on('mouseleave', hideTip)
+            .on('click', (e) => {
+              e.stopPropagation();
+              if (+window.__terminalSelectedCountryId === 702) {
+                updateRightPanelForCountry(702).catch(() => {});
+                applySel();
+                return;
+              }
+              setLeftOverview(702);
+              applySel();
             });
+        }
 
-          /* Terrain texture — canvas-sampled, reprojects on every rotation */
-          const _tW = Math.ceil(W / 3), _tH = Math.ceil(H / 3);
-          const _tCanvas = document.createElement('canvas');
-          _tCanvas.width = _tW; _tCanvas.height = _tH;
-          const _tCtx = _tCanvas.getContext('2d');
-          const _tImgEl = mapG.append('image')
-            .attr('class', 'terrain-img')
-            .attr('x', 0).attr('y', 0).attr('width', W).attr('height', H)
-            .attr('preserveAspectRatio', 'none');
+        function applySel() {
+          const sel = window.__terminalSelectedCountryId;
+          mapG.selectAll('.country.live').classed('selected', (d) => d && +d.id === +sel);
+          liveBorders.classed('selected', d => +d.id === +sel);
+        }
+        applySel();
 
-          function _drawTerrain() {
-            if (!_terrSrcPx) return;
-            const out = _tCtx.createImageData(_tW, _tH);
-            const d = out.data;
-            for (let oy = 0; oy < _tH; oy++) {
-              for (let ox = 0; ox < _tW; ox++) {
-                const coords = projection.invert([ox * 3 + 1.5, oy * 3 + 1.5]);
-                const di = (oy * _tW + ox) << 2;
-                if (!coords) { d[di + 3] = 0; continue; }
-                const [lon, lat] = coords;
-                if (lon < -180 || lon > 180 || lat < -90 || lat > 90) { d[di + 3] = 0; continue; }
-                let ix = ((lon + 180) / 360 * _terrSrcW) | 0;
-                ix = ((ix % _terrSrcW) + _terrSrcW) % _terrSrcW;
-                const iy = ((90 - lat) / 180 * _terrSrcH) | 0;
-                if (iy < 0 || iy >= _terrSrcH) { d[di + 3] = 0; continue; }
-                const si = (iy * _terrSrcW + ix) << 2;
-                const gray = (0.299 * _terrSrcPx[si] + 0.587 * _terrSrcPx[si + 1] + 0.114 * _terrSrcPx[si + 2]) | 0;
-                d[di] = d[di + 1] = d[di + 2] = gray; d[di + 3] = 255;
-              }
+        function updateAll() {
+          mapG.selectAll('path').attr('d', path);
+        }
+
+        const minZoomK = 0.90;
+        const maxZoomK = 9.5;
+        let zoom;
+        function syncZoomFromProjection() {
+          svg.call(zoom.transform, d3.zoomIdentity.scale(projection.scale() / baseScale));
+        }
+        zoom = d3.zoom()
+          .scaleExtent([minZoomK, maxZoomK])
+          .filter((event) => {
+            if (event.type === 'wheel') return true;
+            if (event.type === 'mousedown') return false;
+            if (event.type === 'dblclick') return false;
+            if (event.type === 'touchstart' || event.type === 'touchmove') {
+              return event.touches && event.touches.length >= 2;
             }
-            _tCtx.putImageData(out, 0, 0);
-            _tImgEl.attr('href', _tCanvas.toDataURL('image/jpeg', 0.8));
-          }
-
-          if (_terrSrcPx) {
-            _drawTerrain();
-          } else {
-            const _img = new Image();
-            _img.onload = () => {
-              const c = document.createElement('canvas');
-              c.width = _img.width; c.height = _img.height;
-              c.getContext('2d').drawImage(_img, 0, 0);
-              const id = c.getContext('2d').getImageData(0, 0, _img.width, _img.height);
-              _terrSrcPx = id.data; _terrSrcW = _img.width; _terrSrcH = _img.height;
-              _drawTerrain();
-            };
-            _img.src = 'assets/terrain.jpg';
-          }
-
-          const borderMesh = mapG.append('path')
-            .datum(topojson.mesh(world, world.objects.countries))
-            .attr('class', 'border-mesh').attr('d', path);
-
-          const liveBorders = mapG.selectAll('.border-live-p')
-            .data(countries.features.filter(d => LIVE[+d.id]))
-            .enter().append('path')
-            .attr('class', 'border-live').attr('d', path);
-
-          function applyLiveBorderSelection() {
-            const sel = window.__terminalSelectedCountryId;
-            liveBorders.classed('selected', d => +d.id === +sel);
-          }
-
-          applyLiveBorderSelection();
-
-          // Singapore pin
-          const sg = mapG.append('g').attr('class', 'sg-pin');
-          const sgCircle = sg.append('circle')
-            .attr('r', mobile ? 18 : 14)
-            .attr('fill', 'transparent').attr('cursor', 'pointer')
-            .on('mousemove', e => showTip(e, 702)).on('mouseleave', hideTip)
-            .on('click', () => { setLeftOverview(702); if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(702, true); })
-            .on('touchend', e => { e.preventDefault(); setLeftOverview(702); if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(702, true); })
-            .on('touchstart', e => {
-              e.stopPropagation();
-              const t = e.touches[0];
-              showTip({ clientX: t.clientX, clientY: t.clientY }, 702);
-            }, { passive: true });
-
-          // Malaysia LIVE tag
-          const MY = countries.features.find(f => +f.id === 458);
-          const myPingG = mapG.append('g').attr('pointer-events', 'none');
-          const myDot = myPingG.append('circle').attr('class', 'ping-dot').attr('r', mobile ? 3.5 : 4);
-          const myText = myPingG.append('text').attr('class', 'live-tag')
-            .attr('font-size', mobile ? 8 : 7).text('LIVE');
-          if (MY) {
-            // positioned by updateAll()
-          }
-
-          const zIn  = document.getElementById('zoom-in');
-          const zOut = document.getElementById('zoom-out');
-
-          function updateAll(){
-            spherePath.attr('d', path);
-            graticulePath.attr('d', path);
-            bgPaths.attr('d', path);
-            seaPaths.attr('d', path);
-            livePaths.attr('d', path);
-            _drawTerrain();
-            borderMesh.attr('d', path);
-            liveBorders.attr('d', path);
-
-            const [sgx, sgy] = projection([103.82, 1.35]) || [NaN, NaN];
-            const sgVisible = isFinite(sgx) && isFinite(sgy) && sgx >= 0 && sgx <= W && sgy >= 0 && sgy <= H;
-            sgCircle.attr('display', sgVisible ? null : 'none')
-              .attr('cx', sgx).attr('cy', sgy);
-
-            if (MY) {
-              const [cx, cy] = path.centroid(MY);
-              const dotR = mobile ? 3.5 : 4;
-              myDot.attr('display', null).attr('cx', cx).attr('cy', cy);
-              myText.attr('display', null).attr('x', cx + dotR + 5).attr('y', cy - 10);
-            } else {
-              myDot.attr('display', 'none');
-              myText.attr('display', 'none');
-            }
-          }
-
-          function setScale(next, animate = true){
-            const s = Math.max(baseScale * 0.75, Math.min(baseScale * 4.8, next));
-            if (!animate) {
-              projection.scale(s);
-              updateAll();
-              return;
-            }
-            const s0 = projection.scale();
-            const interp = d3.interpolateNumber(s0, s);
-            svg.transition().duration(160).tween('globeScale', () => t => {
-              projection.scale(interp(t));
-              updateAll();
-            });
-          }
-
-          function rotateBy(dx, dy){
-            const r = projection.rotate(); // [lambda, phi, gamma]
-            // Lower sensitivity so the globe feels less twitchy,
-            // especially on trackpads and high-DPI touch devices.
-            const sens = 0.06;
-            // Deadzone to ignore tiny micro-movements.
-            const ddx = Math.abs(dx) < 1.5 ? 0 : dx;
-            const ddy = Math.abs(dy) < 1.5 ? 0 : dy;
-            const next = [
-              r[0] + ddx * sens,
-              Math.max(-85, Math.min(85, r[1] - ddy * sens)),
-              0
-            ];
-            projection.rotate(next);
+            return false;
+          })
+          .on('zoom', (event) => {
+            projection.scale(baseScale * event.transform.k);
             updateAll();
+          });
+
+        function computeFitScale(feature, rotateArr, padPx) {
+          const s0 = projection.scale();
+          const r0 = projection.rotate();
+          try {
+            projection.scale(1).rotate(rotateArr);
+            const b = path.bounds(feature);
+            const dx = b[1][0] - b[0][0];
+            const dy = b[1][1] - b[0][1];
+            if (!(dx > 0) || !(dy > 0)) return null;
+            const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
+            if (!isFinite(s) || s <= 0) return null;
+            return s;
+          } finally {
+            projection.scale(s0).rotate(r0);
           }
+        }
 
-          // Drag to rotate (globe motion)
-          svg.style('cursor', 'grab');
-          svg.call(d3.drag()
-            .on('start', () => svg.style('cursor', 'grabbing'))
-            .on('drag', (event) => { rotateBy(event.dx, event.dy); })
-            .on('end', () => svg.style('cursor', 'grab'))
-          );
+        window.__terminalZoomToCountry = function zoomToCountry(countryId, animate = true) {
+          const f = +countryId === 702 && sgFeature
+            ? sgFeature
+            : countries.features.find(x => +x.id === +countryId);
+          if (!f) return;
 
-          // Wheel to zoom (change globe scale)
-          svg.on('wheel', (event) => {
-            event.preventDefault();
-            const k = event.deltaY < 0 ? 1.10 : 0.90;
-            setScale(projection.scale() * k, false);
-          }, { passive: false });
-
-          /** Orthographic fit without mutating the live projection (d3-geo fitExtent). */
-          function terminalProjectionFitFeature(feature, padPx) {
-            const c = d3.geoCentroid(feature);
-            if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
-            const p = d3.geoOrthographic()
-              .clipAngle(90)
-              .precision(0.3)
-              .rotate([-c[0], -c[1], 0]);
-            try {
-              p.fitExtent([[padPx, padPx], [W - padPx, H - padPx]], feature);
-            } catch (_) {
-              return null;
-            }
-            const sc = p.scale();
-            const tr = p.translate();
-            const rot = p.rotate();
-            if (!Number.isFinite(sc) || sc <= 0) return null;
-            if (!Array.isArray(tr) || tr.length < 2 || !Number.isFinite(tr[0]) || !Number.isFinite(tr[1])) return null;
-            return {
-              scale: sc,
-              translate: [tr[0], tr[1]],
-              rotate: [rot[0], rot[1], rot[2] || 0],
-            };
-          }
-
-          /** Same approach as app.html: bounds at scale 1, then absolute scale. */
-          function computeFitScaleBounds(feature, rotateArr, padPx) {
-            const s0 = projection.scale();
-            const r0 = projection.rotate();
-            const t0 = projection.translate();
-            try {
-              projection.scale(1).rotate(rotateArr).translate([W / 2, H / 2]);
-              const b = path.bounds(feature);
-              const dx = b[1][0] - b[0][0];
-              const dy = b[1][1] - b[0][1];
-              if (!(dx > 0) || !(dy > 0)) return null;
-              const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
-              if (!Number.isFinite(s) || s <= 0) return null;
-              return s;
-            } finally {
-              projection.scale(s0).rotate(r0).translate(t0);
-            }
-          }
-
-          function terminalInterpRotate(from, to) {
-            let dLon = to[0] - from[0];
-            while (dLon > 180) dLon -= 360;
-            while (dLon < -180) dLon += 360;
-            const r0 = from[0];
-            const r1 = from[1];
-            const r2 = from[2] || 0;
-            return t => [
-              r0 + t * dLon,
-              r1 + t * (to[1] - r1),
-              r2 + t * ((to[2] || 0) - r2),
-            ];
-          }
-
-          // Programmatic "focus": rotate + zoom to country (or sub-region / city when applicable)
-          window.__terminalZoomToCountry = function zoomToCountry(countryId, animate = true) {
-            const base = countries.features.find(x => +x.id === +countryId);
-            if (!base) return;
-            let f = base;
-            let subFocus458 = false;
-            let subFocus360 = false;
-            if (+countryId === 458) {
-              const myKey = terminalResolveMalaysiaRegionForMap();
-              if (TERMINAL_MY_SUBREGION_FOCUS[myKey]) {
-                f = TERMINAL_MY_SUBREGION_FOCUS[myKey];
-                subFocus458 = true;
-              }
-            } else if (+countryId === 360) {
-              try {
-                const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-                const ll = TERMINAL_ID_CITY_LONLAT[city];
-                if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
-                  f = terminalLonLatBoxFeature(ll[0], ll[1], 1.22);
-                  subFocus360 = true;
-                }
-              } catch (_) {}
-            }
-            const [lon, lat] = d3.geoCentroid(f);
-            if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
-            const target = [-lon, -lat, 0];
-            const padZ = mobile ? 52 : 74;
-
-            const fitted = terminalProjectionFitFeature(f, padZ);
-            let nextScale;
-            let nextTranslate;
-            let nextRotate;
-            if (fitted) {
-              nextScale = fitted.scale;
-              nextTranslate = fitted.translate;
-              nextRotate = fitted.rotate;
+          let lon; let lat; let subFocus = false;
+          if (+countryId === 360) {
+            let city = 'Jakarta Pusat';
+            try { city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) {}
+            const ll = TERMINAL_ID_CITY_LONLAT[city];
+            if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
+              [lon, lat] = ll;
+              subFocus = true;
             } else {
-              const fitS = computeFitScaleBounds(f, target, padZ);
-              nextScale = fitS
-                ? Math.max(baseScale * 0.85, Math.min(baseScale * 4.8, fitS))
-                : projection.scale();
-              nextTranslate = [W / 2, H / 2];
-              nextRotate = target;
+              [lon, lat] = d3.geoCentroid(f);
             }
-
-            nextScale = Math.max(baseScale * 0.75, Math.min(baseScale * 4.8, nextScale));
-            if (subFocus458) {
-              const myKey = terminalResolveMalaysiaRegionForMap();
-              const floor = baseScale * (myKey === 'SabahSarawak' ? 2.45 : 2.12);
-              nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
+          } else if (+countryId === 458) {
+            let region = 'Semenanjung';
+            try {
+              const k = localStorage.getItem('terminal_my_region') || 'Semenanjung';
+              region = k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
+            } catch (_) {}
+            if (region === 'SabahSarawak') {
+              lon = 115; lat = 4;
+            } else {
+              lon = 102; lat = 4;
             }
-            if (subFocus360) {
-              const floor = baseScale * 2.15;
-              nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
-            }
-            if (!animate) {
-              projection.rotate(nextRotate).scale(nextScale).translate(nextTranslate);
-              updateAll();
-              return;
-            }
-            svg.interrupt();
-            const r0 = projection.rotate();
-            const s0 = projection.scale();
-            const tr0 = projection.translate();
-            const interpR = terminalInterpRotate(r0, nextRotate);
-            const interpS = d3.interpolateNumber(s0, nextScale);
-            const interpT = d3.interpolate(tr0, nextTranslate);
-            svg.transition().duration(360).tween('globeFocus', () => t => {
-              projection.rotate(interpR(t)).scale(interpS(t)).translate(interpT(t));
-              updateAll();
-            });
-          };
+            subFocus = true;
+          } else {
+            [lon, lat] = d3.geoCentroid(f);
+          }
 
-          // On first render, focus on selected country
-          const initialId = window.__terminalSelectedCountryId ?? 458;
-          window.__terminalZoomToCountry(initialId, false);
+          const target = [-lon, -lat, 0];
+          const padZ = 10;
+          const fitS = subFocus ? null : computeFitScale(f, target, padZ);
+          const zoomFocusBoost = 1.38;
+          let nextScale = fitS
+            ? Math.max(
+                baseScale * 0.90,
+                Math.min(baseScale * maxZoomK, fitS * zoomFocusBoost)
+              )
+            : projection.scale();
+          if (subFocus) {
+            const floor = +countryId === 458 ? baseScale * 3.25 : baseScale * 3.35;
+            nextScale = Math.max(nextScale, Math.min(baseScale * maxZoomK, floor));
+          }
+          /* Extra punch on fit / region floor (cap so wheel zoom stays in sync) */
+          nextScale = Math.min(baseScale * maxZoomK, nextScale * 1.65);
 
-          if (zIn) zIn.onclick = () => setScale(projection.scale() * 1.18, true);
-          if (zOut) zOut.onclick = () => setScale(projection.scale() * 0.85, true);
+          if (!animate) {
+            projection.rotate(target);
+            projection.scale(nextScale);
+            updateAll();
+            syncZoomFromProjection();
+            return;
+          }
 
-          // Initial paint
+          const r0 = projection.rotate();
+          const s0 = projection.scale();
+          let dLon = target[0] - r0[0];
+          while (dLon > 180) dLon -= 360;
+          while (dLon < -180) dLon += 360;
+          const interpR = t => [r0[0] + t * dLon, r0[1] + t * (target[1] - r0[1]), 0];
+          const interpS = d3.interpolateNumber(s0, nextScale);
+          svg.interrupt();
+          svg.transition().duration(420).tween('termFocus', () => (t) => {
+            projection.rotate(interpR(t)).scale(interpS(t));
+            updateAll();
+          }).on('end', syncZoomFromProjection);
+        };
+
+        svg.call(zoom);
+
+        function rotateBy(dx, dy) {
+          const r = projection.rotate();
+          const sens = 0.06;
+          const ddx = Math.abs(dx) < 1.5 ? 0 : dx;
+          const ddy = Math.abs(dy) < 1.5 ? 0 : dy;
+          projection.rotate([r[0] + ddx * sens, Math.max(-85, Math.min(85, r[1] - ddy * sens)), 0]);
           updateAll();
-        });
+        }
+        svg.style('cursor', 'grab');
+        svg.call(d3.drag()
+          .on('start', () => svg.style('cursor', 'grabbing'))
+          .on('drag', (ev) => rotateBy(ev.dx, ev.dy))
+          .on('end', () => svg.style('cursor', 'grab'))
+        );
+
+        const zIn = document.getElementById('zoom-in');
+        const zOut = document.getElementById('zoom-out');
+        /* Use zoom.scaleBy so d3-zoom's internal __zoom stays in sync with projection (wheel + buttons). */
+        function zoomStepBy(factor) {
+          svg.interrupt();
+          svg.transition().duration(140).call(zoom.scaleBy, factor);
+        }
+        if (zIn) {
+          zIn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            zoomStepBy(1.18);
+          });
+        }
+        if (zOut) {
+          zOut.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            zoomStepBy(0.85);
+          });
+        }
+
+        const initialId = window.__terminalSelectedCountryId ?? 458;
+        window.__terminalZoomToCountry(initialId, false);
+
+        updateAll();
+      });
     }
 
     // Initial render + resize handling
     renderTerminalMap();
+    try {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        try { renderTerminalMap(); } catch (_) {}
+        try {
+          const st = window.__terminalRightChartState;
+          if (st) renderRightChart({ ...st, animate: false });
+        } catch (_) {}
+      });
+    } catch (_) {}
     // Default selection (allow deep-linking from homepage)
     (function initFromURL() {
       let cid = 458;
@@ -2857,20 +2906,18 @@
       } catch (_) {}
 
       function currentSizes() {
-        const railW = getNumVar('--railW', 88);
         const leftW = getNumVar('--leftW', 280);
         const rightW = getNumVar('--rightW', 420);
-        return { railW, leftW, rightW };
+        return { leftW, rightW };
       }
 
       function bounds() {
         const W = window.innerWidth;
-        const { railW } = currentSizes();
         return {
           leftMin: 220,
-          leftMax: Math.max(260, Math.min(520, W - railW - 360)),
+          leftMax: Math.max(260, Math.min(520, W - 360)),
           rightMin: 320,
-          rightMax: Math.max(360, Math.min(560, W - railW - 260)),
+          rightMax: Math.max(360, Math.min(560, W - 260)),
         };
       }
 
@@ -2987,8 +3034,7 @@
           const top = mapTopbar
             ? Math.round(mapTopbar.getBoundingClientRect().top + 140) /* below search */
             : fallback;
-          const railW = getComputedStyle(document.documentElement).getPropertyValue('--railW').trim() || '0px';
-          btnBorder.style.left = `calc(${railW} + 12px)`;
+          btnBorder.style.left = '12px';
           btnBorder.style.top = `${clampY(top)}px`;
           btnBorder.style.transform = 'translate(0, -50%)';
           return;

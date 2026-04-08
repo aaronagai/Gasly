@@ -35,8 +35,10 @@
       --surface: #ffffff;
       --sticky-bg: #ffffff;
       --glass-stroke: rgba(255, 255, 255, 0.55);
-      --glass-fill: rgba(255, 255, 255, 0.38);
-      --glass-fill-menu: rgba(255, 255, 255, 0.52);
+      --glass-fill: rgba(255, 255, 255, 0.28);
+      --glass-fill-menu: rgba(255, 255, 255, 0.36);
+      --glass-blur: 40px;
+      --glass-blur-card: 32px;
       --glass-inset: rgba(255, 255, 255, 0.72);
       --glass-shadow-outer: rgba(0, 0, 0, 0.07);
       --glass-keyline: rgba(0, 0, 0, 0.04);
@@ -70,6 +72,7 @@
       --land-live-selected: rgba(255, 106, 0, 0.26);
       --graticule: rgba(48, 48, 48, 0.05);
       --border-mesh: rgba(48, 48, 48, 0.14);
+      --map-country-outline: rgba(48, 48, 48, 0.22);
       --border-live: rgba(17, 24, 39, 0.45);
       --border-live-selected: rgba(255, 106, 0, 0.78);
       --sg-stroke: rgba(32, 32, 32, 0.58);
@@ -87,9 +90,11 @@
         --shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
         --surface: #1c1c1e;
         --sticky-bg: #1c1c1e;
-        --glass-stroke: rgba(255, 255, 255, 0.12);
-        --glass-fill: rgba(40, 40, 44, 0.72);
-        --glass-fill-menu: rgba(40, 40, 44, 0.92);
+        --glass-stroke: rgba(255, 255, 255, 0.18);
+        --glass-fill: rgba(32, 32, 36, 0.45);
+        --glass-fill-menu: rgba(28, 28, 32, 0.52);
+        --glass-blur: 44px;
+        --glass-blur-card: 36px;
         --glass-inset: rgba(255, 255, 255, 0.08);
         --glass-shadow-outer: rgba(0, 0, 0, 0.4);
         --glass-keyline: rgba(255, 255, 255, 0.06);
@@ -123,6 +128,7 @@
         --land-live-selected: rgba(255, 106, 0, 0.32);
         --graticule: rgba(255, 255, 255, 0.06);
         --border-mesh: rgba(255, 255, 255, 0.12);
+        --map-country-outline: rgba(255, 255, 255, 0.2);
         --border-live: rgba(226, 232, 240, 0.35);
         --border-live-selected: rgba(255, 106, 0, 0.85);
         --sg-stroke: rgba(226, 232, 240, 0.45);
@@ -171,8 +177,14 @@
     .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
     .sphere { fill: var(--sphere); }
     .graticule { fill: none; stroke: var(--graticule); stroke-width: 0.3; }
-    .country { fill: var(--land); stroke:none; }
-    .country.live { fill: var(--land-live); }
+    .country {
+      fill: none;
+      stroke: var(--map-country-outline);
+      stroke-width: 0.5;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+    }
+    .country.live { fill: var(--land-live); stroke: none; }
     .country.live.selected { fill: var(--land-live-selected); }
     /* Singapore is not a separate polygon in countries-110m (merged into Malaysia); overlay + stroke vs MY */
     .country.live.country-sg{
@@ -185,7 +197,6 @@
       stroke: var(--sg-stroke-selected);
       stroke-width: 1.85px;
     }
-    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: contrast(1.2); pointer-events: none; }
     .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
     .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
     .border-live.selected { stroke: var(--border-live-selected); }
@@ -315,9 +326,15 @@
       display: flex;
       flex-direction: column;
       border-radius: 22px;
-      border: none;
-      background: var(--surface);
-      box-shadow: var(--shadow);
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill-menu);
+      backdrop-filter: blur(var(--glass-blur)) saturate(200%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%);
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 18px 48px var(--glass-shadow-outer),
+        0 8px 24px var(--menu-shadow);
       overflow: hidden;
     }
     /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
@@ -405,23 +422,51 @@
       touch-action: pan-y;
     }
     .card{
-      border-radius: 0;
-      border: none;
-      overflow: visible;
-      background: transparent;
+      border-radius: 20px;
+      border: 1px solid var(--glass-stroke);
+      overflow: hidden;
+      background: var(--glass-fill);
+      backdrop-filter: blur(var(--glass-blur-card)) saturate(190%);
+      -webkit-backdrop-filter: blur(var(--glass-blur-card)) saturate(190%);
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 10px 28px var(--glass-shadow-outer);
     }
     .card .pad{ padding: 14px; }
     #card-highlights .pad{ padding-top: 2px; }
+    /* Highlights block: bright red-orange tint + real glass (translucent stack + sheen) */
+    #sheet-region-sticky,
+    #card-highlights{
+      background-color: transparent;
+      background-image:
+        linear-gradient(180deg, rgba(255, 240, 230, 0.06) 0%, transparent 32%),
+        linear-gradient(
+          165deg,
+          color-mix(in srgb, #e53512 70%, var(--glass-fill)) 0%,
+          color-mix(in srgb, #c42a0e 76%, var(--glass-fill)) 100%
+        );
+      border-color: color-mix(in srgb, #e53512 62%, rgba(0, 0, 0, 0.14));
+      backdrop-filter: blur(var(--glass-blur-card)) saturate(200%);
+      -webkit-backdrop-filter: blur(var(--glass-blur-card)) saturate(200%);
+    }
     /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
     .sheet-region-sticky{
       position: sticky;
       top: 0;
       z-index: 6;
       flex-shrink: 0;
-      margin: 0 -4px 0 -12px;
-      padding: 0 14px 8px 26px;
-      background: var(--sticky-bg);
-      box-shadow: none;
+      margin: 0 -4px 10px -12px;
+      padding: 0 14px 10px 26px;
+      border-radius: 18px;
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill);
+      backdrop-filter: blur(var(--glass-blur-card)) saturate(190%);
+      -webkit-backdrop-filter: blur(var(--glass-blur-card)) saturate(190%);
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 8px 24px var(--glass-shadow-outer);
       transition: box-shadow 0.2s ease;
     }
     .sheet-region-sticky .hi-kicker{
@@ -438,6 +483,21 @@
     }
     .sheet-region-sticky.sheet-region-sticky--raised{
       box-shadow: 0 6px 12px -8px var(--sticky-raised);
+    }
+    /* Region headline: drop white glass rim + bright inset (read as a white outline) */
+    #sheet-region-sticky{
+      border-color: color-mix(in srgb, #e53512 72%, rgba(0, 0, 0, 0.2));
+      box-shadow:
+        inset 0 1px 0 rgba(0, 0, 0, 0.06),
+        0 0 0 0.5px color-mix(in srgb, #c42a0e 38%, transparent),
+        0 8px 24px var(--glass-shadow-outer);
+    }
+    #sheet-region-sticky.sheet-region-sticky--raised{
+      box-shadow:
+        inset 0 1px 0 rgba(0, 0, 0, 0.06),
+        0 0 0 0.5px color-mix(in srgb, #c42a0e 38%, transparent),
+        0 10px 22px -8px var(--sticky-raised),
+        0 8px 24px var(--glass-shadow-outer);
     }
     /* Highlights: date line + export beside the text */
     .card-sub-row{
@@ -514,6 +574,11 @@
       letter-spacing: -0.02em;
       line-height: 1.05;
     }
+    #hi-title {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
     .sub{
       margin-top: 6px;
       font-family: var(--font);
@@ -558,7 +623,17 @@
     }
     .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
-    .chart-wrap{ height: 210px; padding: 12px; }
+    .chart-wrap{
+      height: 210px;
+      padding: 12px;
+      margin: 0 2px;
+      border-radius: 14px;
+      border: 1px solid var(--hairline);
+      background: color-mix(in srgb, var(--surface) 38%, transparent);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      box-shadow: 0 1px 0 var(--glass-inset) inset;
+    }
     .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
     .sheet.sheet-scrollable .chart-wrap{
       touch-action: pan-y;
@@ -1175,7 +1250,8 @@
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 0,
-        tension: 0.35,
+        tension: 0.55,
+        cubicInterpolationMode: 'default',
         fill: true,
         spanGaps: true,
       }));
@@ -1226,7 +1302,7 @@
           const regionKey = appMalaysiaRegionKey();
           const isEast = regionKey === 'SabahSarawak';
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
-          const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
+          const dieselLabel = 'Diesel';
           titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
@@ -1635,52 +1711,6 @@
             applySel();
           });
 
-        /* Terrain texture — canvas-sampled, reprojects on every rotation */
-        let _terrSrcPx = null, _terrSrcW = 0, _terrSrcH = 0;
-        const _tW = Math.ceil(W / 3), _tH = Math.ceil(H / 3);
-        const _tCanvas = document.createElement('canvas');
-        _tCanvas.width = _tW; _tCanvas.height = _tH;
-        const _tCtx = _tCanvas.getContext('2d');
-        const _tImgEl = mapG.append('image')
-          .attr('class', 'terrain-img')
-          .attr('x', 0).attr('y', 0).attr('width', W).attr('height', H)
-          .attr('preserveAspectRatio', 'none');
-
-        function _drawTerrain() {
-          if (!_terrSrcPx) return;
-          const out = _tCtx.createImageData(_tW, _tH);
-          const d = out.data;
-          for (let oy = 0; oy < _tH; oy++) {
-            for (let ox = 0; ox < _tW; ox++) {
-              const coords = projection.invert([ox * 3 + 1.5, oy * 3 + 1.5]);
-              const di = (oy * _tW + ox) << 2;
-              if (!coords) { d[di + 3] = 0; continue; }
-              const [lon, lat] = coords;
-              if (lon < -180 || lon > 180 || lat < -90 || lat > 90) { d[di + 3] = 0; continue; }
-              let ix = ((lon + 180) / 360 * _terrSrcW) | 0;
-              ix = ((ix % _terrSrcW) + _terrSrcW) % _terrSrcW;
-              const iy = ((90 - lat) / 180 * _terrSrcH) | 0;
-              if (iy < 0 || iy >= _terrSrcH) { d[di + 3] = 0; continue; }
-              const si = (iy * _terrSrcW + ix) << 2;
-              const gray = (0.299 * _terrSrcPx[si] + 0.587 * _terrSrcPx[si + 1] + 0.114 * _terrSrcPx[si + 2]) | 0;
-              d[di] = d[di + 1] = d[di + 2] = gray; d[di + 3] = 255;
-            }
-          }
-          _tCtx.putImageData(out, 0, 0);
-          _tImgEl.attr('href', _tCanvas.toDataURL('image/jpeg', 0.8));
-        }
-
-        const _img = new Image();
-        _img.onload = () => {
-          const c = document.createElement('canvas');
-          c.width = _img.width; c.height = _img.height;
-          c.getContext('2d').drawImage(_img, 0, 0);
-          const id = c.getContext('2d').getImageData(0, 0, _img.width, _img.height);
-          _terrSrcPx = id.data; _terrSrcW = _img.width; _terrSrcH = _img.height;
-          _drawTerrain();
-        };
-        _img.src = 'assets/terrain.jpg';
-
         const mesh = mapG.append('path')
           .datum(topojson.mesh(world, world.objects.countries))
           .attr('class', 'border-mesh')
@@ -1717,7 +1747,6 @@
 
         function updateAll(){
           mapG.selectAll('path').attr('d', path);
-          _drawTerrain();
         }
 
         const minZoomK = 0.90;

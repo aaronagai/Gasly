@@ -164,19 +164,19 @@
     /* Grid lines */
     .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
 
-    /* Rest of world */
-    .country {
-      fill: #e4e2df; stroke: none;
-      cursor: default; transition: fill 0.12s;
+    /* Non-live countries: outline only */
+    .country:not(.live) {
+      fill: none;
+      stroke: rgba(48, 48, 48, 0.2);
+      stroke-width: 0.5;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+      cursor: default;
+      transition: stroke 0.12s ease;
     }
-    .country:hover { fill: #d6d3d0; }
-
-    /* Southeast Asia */
-    .country.sea {
-      fill: #d8d5d2; stroke: none;
-      cursor: pointer;
-    }
-    .country.sea:hover { fill: #c8c4c0; }
+    .country:not(.live):hover { stroke: rgba(48, 48, 48, 0.32); }
+    .country.sea:not(.live) { cursor: pointer; }
+    .country.sea:not(.live):hover { stroke: rgba(48, 48, 48, 0.38); }
 
     /* Live countries */
     .country.live {
@@ -185,7 +185,6 @@
     }
     .country.live:hover { fill: rgba(254,94,14,0.3); }
 
-    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
     /* Border mesh */
     .border-mesh {
       fill: none; stroke: rgba(48,48,48,0.14); stroke-width: 0.5;
@@ -604,23 +603,6 @@
             e.preventDefault();
             const c = LIVE[+d.id]; if (c) window.location.href = c.url;
           });
-
-        /* Terrain texture — Natural Earth Gray Earth, clipped to land */
-        const landGeom = topojson.merge(world, world.objects.countries.geometries);
-        svg.append('defs').append('clipPath')
-          .attr('id', 'land-clip')
-          .append('path')
-          .datum(landGeom)
-          .attr('d', path);
-        const [tlX, tlY] = projection([-180, 60]);
-        const [brX, brY] = projection([180, -60]);
-        mapG.append('image')
-          .attr('class', 'terrain-img')
-          .attr('href', 'assets/terrain.jpg')
-          .attr('x', tlX).attr('y', tlY)
-          .attr('width', brX - tlX).attr('height', brY - tlY)
-          .attr('preserveAspectRatio', 'none')
-          .attr('clip-path', 'url(#land-clip)');
 
         /* Border mesh — every shared/coastal edge drawn exactly once */
         mapG.append('path')
