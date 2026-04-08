@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-title" content="PetrolPrice" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#ff6a00" />
+  <meta name="theme-color" id="meta-theme-color" content="#ff6a00" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="assets/icons/applogo.png" />
@@ -21,6 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <style>
     :root{
+      color-scheme: light dark;
       --bg: #f1f1f0;
       --panel: rgba(247,247,246,0.92);
       --text: #0f0f0f;
@@ -29,6 +30,103 @@
       --shadow: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --surface: #ffffff;
+      --sticky-bg: #ffffff;
+      --glass-stroke: rgba(255, 255, 255, 0.55);
+      --glass-fill: rgba(255, 255, 255, 0.38);
+      --glass-fill-menu: rgba(255, 255, 255, 0.52);
+      --glass-inset: rgba(255, 255, 255, 0.72);
+      --glass-shadow-outer: rgba(0, 0, 0, 0.07);
+      --glass-keyline: rgba(0, 0, 0, 0.04);
+      --input-fg: rgba(0, 0, 0, 0.72);
+      --input-ph: rgba(0, 0, 0, 0.36);
+      --icon-fg: rgba(0, 0, 0, 0.45);
+      --menu-hover: rgba(0, 0, 0, 0.04);
+      --menu-shadow: rgba(0, 0, 0, 0.1);
+      --hairline: rgba(0, 0, 0, 0.08);
+      --hi-label: rgba(0, 0, 0, 0.72);
+      --hi-value: rgba(0, 0, 0, 0.88);
+      --oil: rgba(0, 0, 0, 0.78);
+      --metric-k: rgba(0, 0, 0, 0.52);
+      --metric-v: rgba(0, 0, 0, 0.88);
+      --grab: rgba(0, 0, 0, 0.2);
+      --scroll-thumb: rgba(0, 0, 0, 0.22);
+      --sticky-raised: rgba(0, 0, 0, 0.12);
+      --export-icon: rgba(0, 0, 0, 0.42);
+      --chart-legend: rgba(0, 0, 0, 0.48);
+      --chart-tick: rgba(0, 0, 0, 0.45);
+      --chart-grid: rgba(0, 0, 0, 0.06);
+      --chart-line-muted: #111827;
+      --chart-empty: #d4d4d4;
+      --map-vignette: rgba(0, 0, 0, 0.06);
+      --map-overlay: linear-gradient(0deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
+      --map-base: #d7d7d7;
+      --map-scan: rgba(0, 0, 0, 0.03);
+      --sphere: #e7eef7;
+      --land: #d9d6d2;
+      --land-live: rgba(17, 24, 39, 0.28);
+      --land-live-selected: rgba(255, 106, 0, 0.26);
+      --graticule: rgba(48, 48, 48, 0.05);
+      --border-mesh: rgba(48, 48, 48, 0.14);
+      --border-live: rgba(17, 24, 39, 0.45);
+      --border-live-selected: rgba(255, 106, 0, 0.78);
+      --sg-stroke: rgba(32, 32, 32, 0.58);
+      --sg-stroke-selected: rgba(255, 106, 0, 0.9);
+      --export-story-img-bg: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0d0f;
+        --panel: rgba(28, 28, 32, 0.94);
+        --text: #f2f2f7;
+        --muted: rgba(255, 255, 255, 0.55);
+        --line: rgba(255, 255, 255, 0.12);
+        --shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
+        --surface: #1c1c1e;
+        --sticky-bg: #1c1c1e;
+        --glass-stroke: rgba(255, 255, 255, 0.12);
+        --glass-fill: rgba(40, 40, 44, 0.72);
+        --glass-fill-menu: rgba(40, 40, 44, 0.92);
+        --glass-inset: rgba(255, 255, 255, 0.08);
+        --glass-shadow-outer: rgba(0, 0, 0, 0.4);
+        --glass-keyline: rgba(255, 255, 255, 0.06);
+        --input-fg: rgba(255, 255, 255, 0.88);
+        --input-ph: rgba(255, 255, 255, 0.38);
+        --icon-fg: rgba(255, 255, 255, 0.5);
+        --menu-hover: rgba(255, 255, 255, 0.06);
+        --menu-shadow: rgba(0, 0, 0, 0.45);
+        --hairline: rgba(255, 255, 255, 0.1);
+        --hi-label: rgba(255, 255, 255, 0.72);
+        --hi-value: rgba(255, 255, 255, 0.95);
+        --oil: rgba(255, 255, 255, 0.82);
+        --metric-k: rgba(255, 255, 255, 0.52);
+        --metric-v: rgba(255, 255, 255, 0.92);
+        --grab: rgba(255, 255, 255, 0.28);
+        --scroll-thumb: rgba(255, 255, 255, 0.22);
+        --sticky-raised: rgba(0, 0, 0, 0.5);
+        --export-icon: rgba(255, 255, 255, 0.45);
+        --chart-legend: rgba(255, 255, 255, 0.5);
+        --chart-tick: rgba(255, 255, 255, 0.45);
+        --chart-grid: rgba(255, 255, 255, 0.08);
+        --chart-line-muted: #9ca3af;
+        --chart-empty: #6b7280;
+        --map-vignette: rgba(0, 0, 0, 0.45);
+        --map-overlay: linear-gradient(0deg, rgba(18, 18, 20, 0.75), rgba(18, 18, 20, 0.75));
+        --map-base: #2a2a2e;
+        --map-scan: rgba(255, 255, 255, 0.04);
+        --sphere: #1e293b;
+        --land: #3d3d42;
+        --land-live: rgba(148, 163, 184, 0.35);
+        --land-live-selected: rgba(255, 106, 0, 0.32);
+        --graticule: rgba(255, 255, 255, 0.06);
+        --border-mesh: rgba(255, 255, 255, 0.12);
+        --border-live: rgba(226, 232, 240, 0.35);
+        --border-live-selected: rgba(255, 106, 0, 0.85);
+        --sg-stroke: rgba(226, 232, 240, 0.45);
+        --sg-stroke-selected: rgba(255, 200, 140, 0.95);
+        --export-story-img-bg: #1c1c1e;
+      }
     }
 
     *{ box-sizing: border-box; }
@@ -53,9 +151,9 @@
       z-index: 0;
       background:
         radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
-        radial-gradient(1200px 680px at 44% 56%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.00) 62%),
-        linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
-        #d7d7d7;
+        radial-gradient(1200px 680px at 44% 56%, var(--map-vignette) 0%, transparent 62%),
+        var(--map-overlay),
+        var(--map-base);
       overflow: hidden;
     }
 
@@ -63,31 +161,31 @@
       content:'';
       position:absolute;
       inset:0;
-      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 8px);
+      background: repeating-linear-gradient(0deg, var(--map-scan) 0px, var(--map-scan) 1px, transparent 1px, transparent 8px);
       opacity: 0.26;
       pointer-events:none;
     }
     /* Pinch / wheel zoom on the globe — browser must not handle gestures here */
     .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
-    .sphere { fill: #e7eef7; }
-    .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
-    .country { fill: #d9d6d2; stroke:none; }
-    .country.live { fill: rgba(17, 24, 39, 0.28); }
-    .country.live.selected { fill: rgba(255,106,0,0.26); }
+    .sphere { fill: var(--sphere); }
+    .graticule { fill: none; stroke: var(--graticule); stroke-width: 0.3; }
+    .country { fill: var(--land); stroke:none; }
+    .country.live { fill: var(--land-live); }
+    .country.live.selected { fill: var(--land-live-selected); }
     /* Singapore is not a separate polygon in countries-110m (merged into Malaysia); overlay + stroke vs MY */
     .country.live.country-sg{
-      stroke: rgba(32, 32, 32, 0.58);
+      stroke: var(--sg-stroke);
       stroke-width: 1.15px;
       vector-effect: non-scaling-stroke;
       paint-order: stroke fill;
     }
     .country.live.country-sg.selected{
-      stroke: rgba(255, 106, 0, 0.9);
+      stroke: var(--sg-stroke-selected);
       stroke-width: 1.85px;
     }
-    .border-mesh { fill:none; stroke: rgba(48,48,48,0.14); stroke-width: 0.5; pointer-events:none; }
-    .border-live { fill:none; stroke: rgba(17, 24, 39, 0.45); stroke-width: 1; pointer-events:none; }
-    .border-live.selected { stroke: rgba(255,106,0,0.78); }
+    .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
+    .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
+    .border-live.selected { stroke: var(--border-live-selected); }
 
     /* Top search */
     .topbar{
@@ -108,22 +206,22 @@
       gap: 8px;
       padding: 0 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      background: rgba(255, 255, 255, 0.38);
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.72) inset,
-        0 0 0 0.5px rgba(0, 0, 0, 0.04),
-        0 8px 28px rgba(0, 0, 0, 0.07),
-        0 2px 8px rgba(0, 0, 0, 0.04);
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 8px 28px var(--glass-shadow-outer),
+        0 2px 8px var(--glass-shadow-outer);
     }
     .search svg{
       width: 15px;
       height: 15px;
       flex-shrink: 0;
       opacity: 0.42;
-      color: rgba(0, 0, 0, 0.45);
+      color: var(--icon-fg);
     }
     .search input{
       flex: 1;
@@ -136,10 +234,10 @@
       font-size: 16px;
       font-weight: 400;
       letter-spacing: 0.02em;
-      color: rgba(0, 0, 0, 0.72);
+      color: var(--input-fg);
     }
     .search input::placeholder{
-      color: rgba(0, 0, 0, 0.36);
+      color: var(--input-ph);
       font-weight: 300;
     }
     .topbar-circle{
@@ -150,15 +248,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      background: rgba(255, 255, 255, 0.38);
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.72) inset,
-        0 0 0 0.5px rgba(0, 0, 0, 0.04),
-        0 8px 28px rgba(0, 0, 0, 0.07),
-        0 2px 8px rgba(0, 0, 0, 0.04);
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 8px 28px var(--glass-shadow-outer),
+        0 2px 8px var(--glass-shadow-outer);
       pointer-events: none;
     }
     .topbar-circle svg{
@@ -166,7 +264,7 @@
       height: 17px;
       flex-shrink: 0;
       opacity: 0.42;
-      color: rgba(0, 0, 0, 0.45);
+      color: var(--icon-fg);
     }
     .search-menu{
       position: absolute;
@@ -174,15 +272,15 @@
       left: 12px;
       right: 12px;
       z-index: 11;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill-menu);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       border-radius: 18px;
       box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.65) inset,
-        0 12px 40px rgba(0, 0, 0, 0.1),
-        0 2px 10px rgba(0, 0, 0, 0.05);
+        0 1px 0 var(--glass-inset) inset,
+        0 12px 40px var(--menu-shadow),
+        0 2px 10px var(--glass-shadow-outer);
       padding: 6px;
       display:none;
       max-height: min(320px, calc(100dvh - 180px));
@@ -200,7 +298,7 @@
       font-weight: 400;
       letter-spacing: 0.02em;
     }
-    .search-item:hover{ background: rgba(0,0,0,0.04); }
+    .search-item:hover{ background: var(--menu-hover); }
 
     /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
     .sheet{
@@ -215,7 +313,7 @@
       flex-direction: column;
       border-radius: 22px;
       border: none;
-      background: #fff;
+      background: var(--surface);
       box-shadow: var(--shadow);
       overflow: hidden;
     }
@@ -245,7 +343,7 @@
       width: 46px;
       height: 5px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.20);
+      background: var(--grab);
       margin: 0 auto;
     }
     .sheet-scroll{
@@ -262,13 +360,13 @@
       box-sizing: border-box;
       border-radius: 0 0 16px 16px;
       scrollbar-width: thin;
-      scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+      scrollbar-color: var(--scroll-thumb) transparent;
     }
     .sheet-scroll::-webkit-scrollbar{
       width: 5px;
     }
     .sheet-scroll::-webkit-scrollbar-thumb{
-      background: rgba(0, 0, 0, 0.22);
+      background: var(--scroll-thumb);
       border-radius: 999px;
     }
     .sheet-scroll::-webkit-scrollbar-track{
@@ -319,7 +417,7 @@
       flex-shrink: 0;
       margin: 0 -4px 0 -12px;
       padding: 0 14px 8px 26px;
-      background: #fff;
+      background: var(--sticky-bg);
       box-shadow: none;
       transition: box-shadow 0.2s ease;
     }
@@ -327,7 +425,7 @@
       margin: 0;
     }
     .sheet-region-sticky.sheet-region-sticky--raised{
-      box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 6px 12px -8px var(--sticky-raised);
     }
     /* Highlights: date line + export beside the text */
     .card-sub-row{
@@ -373,7 +471,7 @@
       border: none;
       border-radius: 6px;
       background: transparent;
-      color: rgba(0, 0, 0, 0.42);
+      color: var(--export-icon);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
@@ -430,7 +528,7 @@
       align-items: baseline;
       gap: 14px;
       padding: 11px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid var(--hairline);
       font-family: var(--font);
       font-size: 0.84rem;
     }
@@ -438,12 +536,12 @@
     .hi-k{
       font-weight: 600;
       letter-spacing: 0.04em;
-      color: rgba(0,0,0,0.72);
+      color: var(--hi-label);
     }
     .hi-v{
       font-weight: 750;
       font-variant-numeric: tabular-nums;
-      color: rgba(0,0,0,0.88);
+      color: var(--hi-value);
       text-align: right;
     }
     .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
@@ -453,7 +551,7 @@
     .sheet.sheet-scrollable .chart-wrap{
       touch-action: pan-y;
     }
-    .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: rgba(0,0,0,0.78); }
+    .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: var(--oil); }
     .overview-metrics{
       display: flex;
       flex-direction: column;
@@ -464,7 +562,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      border-top: 1px solid rgba(0,0,0,0.08);
+      border-top: 1px solid var(--hairline);
       padding-top: 10px;
       padding-bottom: 14px;
     }
@@ -480,7 +578,7 @@
       font-size: 0.66rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(0,0,0,0.52);
+      color: var(--metric-k);
     }
     .overview-metrics .metric .v{
       margin-top: 6px;
@@ -489,7 +587,7 @@
       font-weight: 700;
       letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
-      color: rgba(0,0,0,0.88);
+      color: var(--metric-v);
       line-height: 1.25;
     }
 
@@ -584,7 +682,7 @@
       height: 100%;
       object-fit: contain;
       display: block;
-      background: #fff;
+      background: var(--export-story-img-bg);
     }
     .export-story-save{
       margin: 0;
@@ -988,7 +1086,16 @@
     const _idCache = { val: null };
 
     const APP_CHART_POINTS = 30;
-    const APP_CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#111827', '#0ea5e9', '#ef4444'];
+
+    function appCssVar(name, fallback) {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return v || fallback;
+    }
+
+    function appChartColors() {
+      const muted = appCssVar('--chart-line-muted', '#111827');
+      return ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', muted, '#0ea5e9', '#ef4444'];
+    }
 
     function takeLastApp(arr, n) {
       return arr.slice(Math.max(0, arr.length - n));
@@ -1000,9 +1107,10 @@
     }
 
     function buildAppChartSeries(rows, keys, labels) {
+      const palette = appChartColors();
       return keys.map((k, i) => ({
         label: k.label,
-        color: k.color || APP_CHART_COLORS[i % APP_CHART_COLORS.length],
+        color: k.color || palette[i % palette.length],
         data: labels.map((lab) => {
           const r = rows.find((x) => x.__label === lab);
           return r ? appAsNum(r[k.key]) : null;
@@ -1011,6 +1119,9 @@
     }
 
     function appChartOptions(countryId) {
+      const legendColor = appCssVar('--chart-legend', 'rgba(0,0,0,0.48)');
+      const tickColor = appCssVar('--chart-tick', 'rgba(0,0,0,0.45)');
+      const gridColor = appCssVar('--chart-grid', 'rgba(0,0,0,0.06)');
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -1035,7 +1146,7 @@
                 size: 8,
                 weight: '400',
               },
-              color: 'rgba(0,0,0,0.48)',
+              color: legendColor,
               generateLabels(chart) {
                 const ds = chart.data.datasets || [];
                 return ds.map((d, i) => ({
@@ -1055,12 +1166,12 @@
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: 'rgba(0,0,0,0.45)', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+            ticks: { color: tickColor, font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
           },
           y: {
-            grid: { color: 'rgba(0,0,0,0.06)' },
+            grid: { color: gridColor },
             ticks: {
-              color: 'rgba(0,0,0,0.45)',
+              color: tickColor,
               font: { size: 10 },
               callback(v) {
                 if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
@@ -1158,7 +1269,7 @@
       function emptyChart() {
         updateAppChart({
           labels: ['—'],
-          datasets: [{ label: 'No data', data: [null], color: '#d4d4d4' }],
+          datasets: [{ label: 'No data', data: [null], color: appCssVar('--chart-empty', '#d4d4d4') }],
           countryId: null,
         });
       }
@@ -1188,7 +1299,7 @@
             { key: 'ron95_budi95', label: 'BUDI95', color: '#9333ea' },
             { key: 'ron95', label: 'RON95', color: '#fbbf24' },
             { key: 'ron97', label: 'RON97', color: '#16a34a' },
-            { key: dieselKey, label: dieselLabel, color: '#111827' },
+            { key: dieselKey, label: dieselLabel, color: appCssVar('--chart-line-muted', '#111827') },
           ];
           if (labels.length) {
             updateAppChart({
@@ -1509,7 +1620,7 @@
       if (!cv || !window.Chart) return;
       updateAppChart({
         labels: [''],
-        datasets: [{ label: 'Loading…', data: [null], color: '#d4d4d4' }],
+        datasets: [{ label: 'Loading…', data: [null], color: appCssVar('--chart-empty', '#d4d4d4') }],
         countryId: 458,
       });
     }
@@ -1810,7 +1921,7 @@
       out.width = APP_STORY_W;
       out.height = APP_STORY_H;
       const ctx = out.getContext('2d');
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = appCssVar('--surface', '#ffffff');
       ctx.fillRect(0, 0, APP_STORY_W, APP_STORY_H);
       const maxW = APP_STORY_W - APP_STORY_PAD * 2;
       const maxH = APP_STORY_H - APP_STORY_PAD * 2;
@@ -1831,9 +1942,10 @@
       const html2canvas = window.html2canvas;
       if (typeof html2canvas !== 'function') throw new Error('html2canvas missing');
 
+      const exportBg = appCssVar('--surface', '#ffffff');
       const h2cOpts = {
         scale: 2,
-        backgroundColor: '#ffffff',
+        backgroundColor: exportBg,
         logging: false,
         useCORS: true,
         allowTaint: true,
@@ -1846,7 +1958,7 @@
       if (cardId === 'card-highlights') {
         const wrap = document.createElement('div');
         wrap.style.cssText =
-          'position:fixed;left:-16000px;top:0;width:960px;background:#fff;padding:48px 44px;box-sizing:border-box;';
+          `position:fixed;left:-16000px;top:0;width:960px;background:${exportBg};padding:48px 44px;box-sizing:border-box;`;
         const st = document.getElementById('sheet-region-sticky')?.cloneNode(true);
         const cd = document.getElementById('card-highlights')?.cloneNode(true);
         stripExports(st);
@@ -1871,7 +1983,7 @@
       } else if (cardId === 'card-overview') {
         const wrap = document.createElement('div');
         wrap.style.cssText =
-          'position:fixed;left:-16000px;top:0;width:960px;background:#fff;padding:48px 44px;box-sizing:border-box;';
+          `position:fixed;left:-16000px;top:0;width:960px;background:${exportBg};padding:48px 44px;box-sizing:border-box;`;
         const cd = document.getElementById('card-overview')?.cloneNode(true);
         stripExports(cd);
         if (cd) wrap.appendChild(cd);
@@ -1920,6 +2032,21 @@
     initSearch();
     initExportStoryModal();
     initCardExport();
+
+    (function initAppColorScheme() {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      function syncThemeMeta() {
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', mq.matches ? '#1c1c1e' : '#ff6a00');
+      }
+      function onSchemeChange() {
+        syncThemeMeta();
+        refreshHighlights(selected).catch(() => {});
+      }
+      syncThemeMeta();
+      mq.addEventListener('change', onSchemeChange);
+    })();
+
     window.addEventListener('load', () => {
       initChart();
       initMap();
