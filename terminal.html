@@ -746,6 +746,7 @@
       fill: rgba(254,94,14,0.26); /* orange for selected */
     }
     .country.live.selected:hover { fill: rgba(254,94,14,0.34); }
+    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
     .border-mesh {
       fill: none;
       stroke: rgba(48,48,48,0.14);
@@ -2293,6 +2294,20 @@
               applyLiveBorderSelection();
               if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(id, true);
             });
+
+          /* Terrain texture — Natural Earth Gray Earth, clipped to sphere */
+          svg.append('defs').append('clipPath')
+            .attr('id', 'sphere-clip')
+            .append('path')
+            .datum({ type: 'Sphere' })
+            .attr('d', path);
+          mapG.append('image')
+            .attr('class', 'terrain-img')
+            .attr('href', 'assets/terrain.jpg')
+            .attr('x', W / 2 - baseScale).attr('y', H / 2 - baseScale)
+            .attr('width', baseScale * 2).attr('height', baseScale * 2)
+            .attr('preserveAspectRatio', 'xMidYMid slice')
+            .attr('clip-path', 'url(#sphere-clip)');
 
           const borderMesh = mapG.append('path')
             .datum(topojson.mesh(world, world.objects.countries))

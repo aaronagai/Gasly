@@ -185,6 +185,7 @@
       stroke: var(--sg-stroke-selected);
       stroke-width: 1.85px;
     }
+    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
     .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
     .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
     .border-live.selected { stroke: var(--border-live-selected); }
@@ -1631,6 +1632,20 @@
             setSelected(id);
             applySel();
           });
+
+        /* Terrain texture — Natural Earth Gray Earth, clipped to sphere */
+        svg.append('defs').append('clipPath')
+          .attr('id', 'sphere-clip')
+          .append('path')
+          .datum({ type: 'Sphere' })
+          .attr('d', path);
+        mapG.append('image')
+          .attr('class', 'terrain-img')
+          .attr('href', 'assets/terrain.jpg')
+          .attr('x', W / 2 - baseScale).attr('y', mapCenterY - baseScale)
+          .attr('width', baseScale * 2).attr('height', baseScale * 2)
+          .attr('preserveAspectRatio', 'xMidYMid slice')
+          .attr('clip-path', 'url(#sphere-clip)');
 
         const mesh = mapG.append('path')
           .datum(topojson.mesh(world, world.objects.countries))

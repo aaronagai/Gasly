@@ -185,6 +185,7 @@
     }
     .country.live:hover { fill: rgba(254,94,14,0.3); }
 
+    .terrain-img { opacity: 0.5; mix-blend-mode: soft-light; filter: grayscale(1) contrast(1.2); pointer-events: none; }
     /* Border mesh */
     .border-mesh {
       fill: none; stroke: rgba(48,48,48,0.14); stroke-width: 0.5;
@@ -603,6 +604,23 @@
             e.preventDefault();
             const c = LIVE[+d.id]; if (c) window.location.href = c.url;
           });
+
+        /* Terrain texture — Natural Earth Gray Earth, clipped to land */
+        const landGeom = topojson.merge(world, world.objects.countries.geometries);
+        svg.append('defs').append('clipPath')
+          .attr('id', 'land-clip')
+          .append('path')
+          .datum(landGeom)
+          .attr('d', path);
+        const [tlX, tlY] = projection([-180, 60]);
+        const [brX, brY] = projection([180, -60]);
+        mapG.append('image')
+          .attr('class', 'terrain-img')
+          .attr('href', 'assets/terrain.jpg')
+          .attr('x', tlX).attr('y', tlY)
+          .attr('width', brX - tlX).attr('height', brY - tlY)
+          .attr('preserveAspectRatio', 'none')
+          .attr('clip-path', 'url(#land-clip)');
 
         /* Border mesh — every shared/coastal edge drawn exactly once */
         mapG.append('path')
