@@ -24,8 +24,8 @@
       --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --mono: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-      /* Resizable layout */
-      --railW: 0px;
+      /* Resizable layout + fixed left sidebar */
+      --railW: 64px;
       /* Defaults scale across common desktop sizes; JS resizer still overrides these vars. */
       --leftW: clamp(240px, 26vw, 360px);
       --rightW: clamp(320px, 36vw, 520px);
@@ -47,9 +47,9 @@
       height: 100%;
       height: 100dvh;
       display: grid;
-      grid-template-columns: var(--leftW) 1fr var(--rightW);
+      grid-template-columns: var(--railW) var(--leftW) 1fr var(--rightW);
       grid-template-rows: 1fr;
-      grid-template-areas: "left main right";
+      grid-template-areas: "rail left main right";
       position: relative;
     }
 
@@ -81,8 +81,8 @@
       opacity: 1;
       background: rgba(255,106,0,0.55);
     }
-    .gutter-left { grid-column: 2; }  /* boundary between left and map */
-    .gutter-right { grid-column: 3; } /* boundary between map and right */
+    .gutter-left { grid-column: 3; }  /* boundary between left and map */
+    .gutter-right { grid-column: 4; } /* boundary between map and right */
 
     body.resizing {
       cursor: col-resize;
@@ -141,7 +141,7 @@
 
     /* Collapsed left panel */
     .left-collapsed .app{
-      grid-template-columns: 0px 1fr var(--rightW);
+      grid-template-columns: var(--railW) 0px 1fr var(--rightW);
     }
     .left-collapsed .left,
     .left-collapsed #gutter-left{
@@ -307,6 +307,125 @@
       background: rgba(255,255,255,0.95);
     }
     .icon-action svg { width: 16px; height: 16px; opacity: 0.8; }
+
+    /* Left icon rail (global nav) */
+    .sidebar-rail {
+      grid-area: rail;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0 16px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.028) 0%, transparent 42%),
+        var(--panel);
+      border-right: 1px solid var(--line);
+      z-index: 5;
+      min-height: 0;
+    }
+    .sidebar-brand {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      opacity: 0.94;
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+    .sidebar-brand:hover {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+    .sidebar-brand img {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+    .sidebar-items {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+      min-height: 0;
+    }
+    .sidebar-icon-link {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: rgba(0,0,0,0.52);
+      text-decoration: none;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+    .sidebar-icon-link svg {
+      width: 20px;
+      height: 20px;
+      opacity: 0.88;
+    }
+    .sidebar-icon-link:hover {
+      background: rgba(0,0,0,0.045);
+      color: rgba(0,0,0,0.78);
+    }
+    .sidebar-icon-link[aria-current="page"] {
+      background: rgba(255,106,0,0.12);
+      border-color: rgba(255,106,0,0.24);
+      color: var(--orange);
+    }
+    .sidebar-icon-link[aria-current="page"] svg {
+      opacity: 1;
+    }
+    .sidebar-icon-link:focus-visible,
+    .sidebar-brand:focus-visible {
+      outline: 2px solid rgba(255,106,0,0.55);
+      outline-offset: 2px;
+    }
+
+    .sidebar-currency {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+      padding: 0 8px 6px;
+      flex-shrink: 0;
+    }
+    .sidebar-curr {
+      width: 100%;
+      min-height: 30px;
+      padding: 5px 2px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.45);
+      font-family: var(--font);
+      font-size: 0.56rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.48);
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+    .sidebar-curr:hover {
+      background: rgba(0,0,0,0.04);
+      color: rgba(0,0,0,0.68);
+    }
+    .sidebar-curr.is-active {
+      background: rgba(255,106,0,0.12);
+      border-color: rgba(255,106,0,0.28);
+      color: var(--orange);
+    }
+    .sidebar-curr:focus-visible {
+      outline: 2px solid rgba(255,106,0,0.55);
+      outline-offset: 2px;
+    }
 
     /* Left panel */
     .left {
@@ -835,8 +954,9 @@
       margin-top: auto;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 12px;
+      flex-wrap: wrap;
     }
     /* Inline legend (replaces "Gov API" tag) */
     #right-subtag{
@@ -863,23 +983,6 @@
       box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
       flex: 0 0 auto;
     }
-    .dropdown {
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(0,0,0,0.08);
-      border-radius: 12px;
-      padding: 9px 12px;
-      font-family: var(--font);
-      font-weight: 700;
-      font-size: 0.72rem;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.78);
-      cursor: not-allowed;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      user-select:none;
-    }
     /* export buttons now use .icon-action */
 
     .chart-canvas-wrap {
@@ -897,8 +1000,6 @@
       height: 100% !important;
       display: block;
     }
-    .dropdown .chev { opacity: 0.8; }
-
     .info {
       background: var(--orange);
       color: #111;
@@ -989,6 +1090,42 @@
         <path d="M15 18l-6-6 6-6"></path>
       </svg>
     </button>
+    <nav class="sidebar-rail" aria-label="Main navigation">
+      <a class="sidebar-brand" href="./index.html" aria-label="PetrolPrice home">
+        <img src="./logo.svg" alt="" width="26" height="26" decoding="async" />
+      </a>
+      <ul class="sidebar-items">
+        <li>
+          <a class="sidebar-icon-link" href="./index.html" aria-label="Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z"></path>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-icon-link" href="./terminal.html" aria-label="Terminal" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+              <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+              <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="sidebar-icon-link" href="./app.html" aria-label="App">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="6" y="2" width="12" height="20" rx="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.4"></line>
+            </svg>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-currency" role="group" aria-label="Price currency">
+        <button type="button" class="sidebar-curr" id="terminal-curr-local" data-curr="local">Local</button>
+        <button type="button" class="sidebar-curr" id="terminal-curr-usd" data-curr="usd">USD</button>
+      </div>
+    </nav>
     <aside class="left" aria-label="Portfolio overview">
       <a class="back" href="./index.html" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1010,20 +1147,7 @@
             <div class="k">Oil context</div>
             <div class="v" id="left-oil-context">—</div>
           </div>
-          <div class="metrics" aria-label="Key metrics (placeholder)">
-            <div class="metric">
-              <div class="k">BOPD</div>
-              <div class="v">500</div>
-            </div>
-            <div class="metric">
-              <div class="k">OPEX</div>
-              <div class="v">$15.50</div>
-            </div>
-            <div class="metric" style="grid-column:1 / -1;">
-              <div class="k">P10 Oil</div>
-              <div class="v">3.5 <span style="font-family:var(--font);font-weight:700;letter-spacing:0">Mtboe</span></div>
-            </div>
-          </div>
+          <div class="metrics" id="left-overview-metrics" aria-label="Overview metrics"></div>
           <div class="mini-bars" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
@@ -1097,14 +1221,7 @@
           <canvas id="right-chart"></canvas>
         </div>
         <div class="toolbar">
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span class="tag" id="right-subtag" style="background:transparent;border-color:transparent;padding:0;color:rgba(0,0,0,0.5);font-family:var(--font);font-weight:700;letter-spacing:0.02em;">Live</span>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <div class="dropdown" aria-label="Data sources (coming soon)">
-              Data sources <span class="chev">▾</span>
-            </div>
-          </div>
+          <span class="tag" id="right-subtag" style="background:transparent;border-color:transparent;padding:0;color:rgba(0,0,0,0.5);font-family:var(--font);font-weight:700;letter-spacing:0.02em;">Live</span>
         </div>
       </div>
       <div class="info">
@@ -1141,6 +1258,58 @@
       702: { name: 'Singapore',  subtitle: '', defaultCardTitle: 'Singapore' },
       96:  { name: 'Brunei',     subtitle: '', defaultCardTitle: 'Brunei' },
       360: { name: 'Indonesia',  subtitle: '', defaultCardTitle: 'Indonesia' },
+    };
+
+    /** Oil context paragraphs + overview metrics (left panel) */
+    const COUNTRY_OVERVIEW = {
+      458: {
+        oilContext:
+          'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
+        metrics: [
+          ['BOPD', '570,000'],
+          ['1P Reserves', '2.7B Barrels'],
+          ['Refinery Intake', '747,000'],
+          ['Export Value', 'RM6.2bil'],
+          ['Import Value', 'RM13.6bil'],
+          ['Status', 'Net Importer'],
+        ],
+      },
+      96: {
+        oilContext:
+          'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
+        metrics: [
+          ['BOPD', '102,677'],
+          ['1P Reserves', '1.1B Barrels'],
+          ['Refinery Intake', '16,338'],
+          ['Export Value', 'BND 13.45bil'],
+          ['Import Value', 'BND 8.62bil'],
+          ['Status', 'Net Exporter'],
+        ],
+      },
+      360: {
+        oilContext:
+          "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
+        metrics: [
+          ['BOPD', '608,100'],
+          ['1P Reserves', '2.41B Barrels'],
+          ['Refinery Intake', '1,626,878'],
+          ['Export Value', 'US$13.07bil'],
+          ['Import Value', 'US$32.77bil'],
+          ['Status', 'Net Importer'],
+        ],
+      },
+      702: {
+        oilContext:
+          'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
+        metrics: [
+          ['BOPD', '0'],
+          ['1P Reserves', '0 Barrels'],
+          ['Refinery Intake', '~1,100,000'],
+          ['Export Value', 'Not specified in available data'],
+          ['Import Value', 'Not specified in available data'],
+          ['Status', 'Net Importer (refining hub)'],
+        ],
+      },
     };
 
     // Indonesia city-based pricing (from existing Google Sheet)
@@ -1185,6 +1354,16 @@
     let SG_ROWS = null;
     let BN_ROWS = null;
     let MY_INDEX = null; // selected week index in ascending series
+    // Per-country selected index for the highlights pager (all non-Malaysia).
+    const TERMINAL_PAGER_INDEX = Object.create(null);
+    function getPagerIndex(countryId) {
+      if (+countryId === 458) return MY_INDEX;
+      return TERMINAL_PAGER_INDEX[+countryId] ?? null;
+    }
+    function setPagerIndex(countryId, idx) {
+      if (+countryId === 458) { MY_INDEX = idx; return; }
+      TERMINAL_PAGER_INDEX[+countryId] = idx;
+    }
 
     const MY_REGIONS = [
       { key: 'Semenanjung', label: 'Semenanjung' },
@@ -1234,17 +1413,56 @@
       if (!isFinite(n)) return '—';
       return `${sym} ${n.toFixed(decimals)}/L`;
     }
+    /* Matches app.js / country pages — synced via localStorage key "currency" */
+    const TERMINAL_USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061 };
+    function isTerminalUsd() {
+      return (localStorage.getItem('currency') || 'local') === 'usd';
+    }
+    function fmtTerminalPerL(localSym, n, decimals = 2) {
+      if (!isFinite(n)) return '—';
+      const rate = TERMINAL_USD_RATES[localSym];
+      if (isTerminalUsd() && rate != null) {
+        return `USD ${(n * rate).toFixed(3)}/L`;
+      }
+      return fmtPerL(localSym, n, decimals);
+    }
+    function fmtIDR(v) {
+      if (!isFinite(v)) return '—';
+      if (isTerminalUsd()) {
+        return `USD ${(v * TERMINAL_USD_RATES.IDR).toFixed(4)}/L`;
+      }
+      return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
+    }
+    function fmtIdrAmountPlain(v) {
+      if (!isFinite(v)) return '—';
+      if (isTerminalUsd()) return (v * TERMINAL_USD_RATES.IDR).toFixed(4);
+      return Math.round(v).toLocaleString('en-US');
+    }
+    function fmtIdrSpreadLine(spread) {
+      if (!isFinite(spread)) return '—';
+      if (isTerminalUsd()) return `${(spread * TERMINAL_USD_RATES.IDR).toFixed(4)} USD`;
+      return `${Math.round(spread).toLocaleString('en-US')} IDR`;
+    }
     function fmtDate(d) {
       if (!d) return '—';
       const dt = new Date(d);
       if (isNaN(dt.getTime())) return String(d);
       return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
     }
-    function deltaStr(cur, prev, sym) {
+    function deltaStr(cur, prev, currencyKey) {
       if (!isFinite(cur) || !isFinite(prev)) return '—';
       const diff = cur - prev;
       const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
-      return `${arrow} ${sym} ${Math.abs(diff).toFixed(2)}`;
+      const rate = TERMINAL_USD_RATES[currencyKey];
+      if (isTerminalUsd() && rate != null) {
+        const d = diff * rate;
+        const dec = currencyKey === 'IDR' ? 4 : 3;
+        return `${arrow} USD ${Math.abs(d).toFixed(dec)}`;
+      }
+      if (currencyKey === 'IDR') {
+        return `${arrow} IDR ${Math.round(Math.abs(diff)).toLocaleString('en-US')}`;
+      }
+      return `${arrow} ${currencyKey} ${Math.abs(diff).toFixed(2)}`;
     }
 
     function setRightPanel({ kicker, titleA, titleB, subtag, infoTitle, infoSub, infoLines }) {
@@ -1414,9 +1632,18 @@
         return grad;
       };
 
+      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND' };
+      const ccyKey = CHART_CCY[countryId];
+      const usdMult =
+        isTerminalUsd() && ccyKey && TERMINAL_USD_RATES[ccyKey] != null
+          ? TERMINAL_USD_RATES[ccyKey]
+          : 1;
+
       const nextDs = (datasets || []).map(ds => ({
         label: ds.label,
-        data: ds.data,
+        data: (ds.data || []).map(v =>
+          v == null || !Number.isFinite(v) ? v : v * usdMult
+        ),
         borderColor: ds.color,
         backgroundColor: mkFill(ds.color),
         borderWidth: 2,
@@ -1502,10 +1729,6 @@
       if (!meta) return;
       await waitForChartJs();
 
-      // Hide "Data sources" for Malaysia history panel
-      const dataSourcesEl = document.querySelector('.dropdown');
-      if (dataSourcesEl) dataSourcesEl.style.display = (countryId === 458) ? 'none' : '';
-      const ORANGE = 'rgba(255,106,0,1)';
       const COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
       const takeLast = (arr, n) => arr.slice(Math.max(0, arr.length - n));
       const asNum = (v) => {
@@ -1553,13 +1776,13 @@
           kicker: 'Indonesia Petrol Prices History',
           titleA: 'Indonesia',
           titleB: 'Overview',
-          subtag: 'City-based',
+          subtag: legendHtml(datasets),
           infoTitle: city,
           infoSub: `${activeFuelLabel} · latest by city`,
           infoLines: [
-            ['Cheapest city', extremes ? `${extremes.cheapest.city} (${Math.round(extremes.cheapest.val).toLocaleString('en-US')})` : '—'],
-            ['Most expensive', extremes ? `${extremes.expensive.city} (${Math.round(extremes.expensive.val).toLocaleString('en-US')})` : '—'],
-            ['Spread', extremes ? `${Math.round(extremes.spread).toLocaleString('en-US')} IDR` : '—'],
+            ['Cheapest city', extremes ? `${extremes.cheapest.city} (${fmtIdrAmountPlain(extremes.cheapest.val)})` : '—'],
+            ['Most expensive', extremes ? `${extremes.expensive.city} (${fmtIdrAmountPlain(extremes.expensive.val)})` : '—'],
+            ['Spread', extremes ? fmtIdrSpreadLine(extremes.spread) : '—'],
             ['Updated', fmtDate(lastRow?.date)],
             ['Change', (cur != null && prevV != null) ? deltaStr(cur, prevV, 'IDR') : '—'],
           ],
@@ -1611,14 +1834,15 @@
           infoTitle: `${(MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION}`,
           infoSub: `As of ${fmtDate(rSel.date)} · ${isEast ? 'East Malaysia' : 'Peninsular'}`,
           infoLines: [
-            ['BUDI95', fmtPerL('MYR', parseFloat(rSel.ron95_budi95), 2)],
-            ['RON95', fmtPerL('MYR', parseFloat(rSel.ron95), 2)],
-            ['RON97', fmtPerL('MYR', parseFloat(rSel.ron97), 2)],
-            [dieselLabel, fmtPerL('MYR', parseFloat(rSel[dieselKey]), 2)],
+            ['BUDI95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95_budi95), 2)],
+            ['RON95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95), 2)],
+            ['RON97', fmtTerminalPerL('MYR', parseFloat(rSel.ron97), 2)],
+            [dieselLabel, fmtTerminalPerL('MYR', parseFloat(rSel[dieselKey]), 2)],
           ],
         });
-        // Don't re-render the chart on pager clicks; keep it visually still.
-        if (RIGHT_CHART_COUNTRY !== 458 || RIGHT_CHART_MY_DIESEL_KEY !== dieselKey) {
+        // Don't re-render the chart on pager clicks; keep it visually still (still refresh on currency / diesel key).
+        const chartMode = isTerminalUsd() ? 'usd' : 'local';
+        if (RIGHT_CHART_COUNTRY !== 458 || RIGHT_CHART_MY_DIESEL_KEY !== dieselKey || window.__terminalMalaysiaChartMode !== chartMode) {
           renderRightChart({
             labels,
             datasets,
@@ -1626,6 +1850,7 @@
             animate: true,
           });
           RIGHT_CHART_MY_DIESEL_KEY = dieselKey;
+          window.__terminalMalaysiaChartMode = chartMode;
         }
         // Ensure pager buttons become clickable once data is ready
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
@@ -1635,8 +1860,18 @@
       // Singapore
       if (countryId === 702) {
         const rows = await ensureSingaporeRows();
-        const last = rows[rows.length - 1] || {};
-        const slice = takeLast(rows, 13);
+        const seriesAsc = (rows || [])
+          .slice()
+          .filter(r => r?.date)
+          .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+        let idx = getPagerIndex(702);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(702, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const slice = takeLast(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
@@ -1646,33 +1881,46 @@
           { key: 'premium', label: 'Premium' },
           { key: 'diesel', label: 'Diesel' },
         ];
+        const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 });
         setRightPanel({
           kicker: 'Singapore Petrol Prices History',
           titleA: 'Singapore',
           titleB: 'Overview',
-          subtag: 'Sheets',
+          subtag: legendHtml(datasets),
           infoTitle: 'Singapore',
-          infoSub: `Latest prices · ${fmtDate(last.date)}`,
+          infoSub: `As of ${fmtDate(rSel.date)} · National`,
           infoLines: [
-            ['RON95', fmtPerL('SGD', parseFloat(last.ron95), 2)],
-            ['RON98', fmtPerL('SGD', parseFloat(last.ron98), 2)],
-            ['Diesel', fmtPerL('SGD', parseFloat(last.diesel), 2)],
-            ['Updated', fmtDate(last.date)],
+            ['RON92', fmtTerminalPerL('SGD', parseFloat(rSel.ron92), 2)],
+            ['RON95', fmtTerminalPerL('SGD', parseFloat(rSel.ron95), 2)],
+            ['RON98', fmtTerminalPerL('SGD', parseFloat(rSel.ron98), 2)],
+            ['Premium', fmtTerminalPerL('SGD', parseFloat(rSel.premium), 2)],
+            ['Diesel', fmtTerminalPerL('SGD', parseFloat(rSel.diesel), 2)],
           ],
         });
         renderRightChart({
           labels,
-          datasets: buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 }),
+          datasets,
           countryId: 702,
         });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
 
       // Brunei
       if (countryId === 96) {
         const rows = await ensureBruneiRows();
-        const last = rows[rows.length - 1] || {};
-        const slice = takeLast(rows, 13);
+        const seriesAsc = (rows || [])
+          .slice()
+          .filter(r => r?.date)
+          .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+        let idx = getPagerIndex(96);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(96, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const slice = takeLast(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
@@ -1681,36 +1929,33 @@
           { key: 'vpower_gasoline', label: 'V-Power Gasoline' },
           { key: 'vpower_diesel', label: 'V-Power Diesel' },
         ];
+        const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 });
         setRightPanel({
           kicker: 'Brunei Petrol Prices History',
           titleA: 'Brunei',
           titleB: 'Overview',
-          subtag: 'Sheets',
+          subtag: legendHtml(datasets),
           infoTitle: 'Brunei',
-          infoSub: `Latest prices · ${fmtDate(last.date)}`,
+          infoSub: `As of ${fmtDate(rSel.date)} · National`,
           infoLines: [
-            ['Gasoline', fmtPerL('BND', parseFloat(last.gasoline), 2)],
-            ['Diesel', fmtPerL('BND', parseFloat(last.diesel), 2)],
-            ['V-Power', fmtPerL('BND', parseFloat(last.vpower_gasoline), 2)],
-            ['Updated', fmtDate(last.date)],
+            ['Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2)],
+            ['Diesel', fmtTerminalPerL('BND', parseFloat(rSel.diesel), 2)],
+            ['V-Power Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.vpower_gasoline), 2)],
+            ['V-Power Diesel', fmtTerminalPerL('BND', parseFloat(rSel.vpower_diesel), 2)],
           ],
         });
         renderRightChart({
           labels,
-          datasets: buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 }),
+          datasets,
           countryId: 96,
         });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
     }
 
     function uniq(arr) {
       return [...new Set(arr.filter(Boolean))];
-    }
-
-    function fmtIDR(v) {
-      if (!isFinite(v)) return '—';
-      return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
     }
 
     function getLatestTwoCityPrices(rows, city, fuelKey) {
@@ -1808,14 +2053,17 @@
         } else {
           const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
           const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
-          kChg.textContent = `${arrow} ${fmtIDR(Math.abs(diff)).replace('IDR ', '').replace('/L','')}`;
+          const diffTxt = isTerminalUsd()
+            ? (Math.abs(diff) * TERMINAL_USD_RATES.IDR).toFixed(4)
+            : Math.round(Math.abs(diff)).toLocaleString('en-US');
+          kChg.textContent = `${arrow} ${isTerminalUsd() ? 'USD ' : ''}${diffTxt}`;
           kChg.className = `v delta ${cls}`;
         }
       }
 
       if (kMin) kMin.textContent = extremes ? `${extremes.cheapest.city} · ${fmtIDR(extremes.cheapest.val)}` : '—';
       if (kMax) kMax.textContent = extremes ? `${extremes.expensive.city} · ${fmtIDR(extremes.expensive.val)}` : '—';
-      if (kSpr) kSpr.textContent = extremes ? `${fmtIDR(extremes.spread).replace('IDR ', 'IDR ').replace('/L','')} spread` : '—';
+      if (kSpr) kSpr.textContent = extremes ? `${fmtIdrSpreadLine(extremes.spread)} spread` : '—';
 
       // Keep the right panel in sync when Indonesia is selected
       if (window.__terminalSelectedCountryId === 360) {
@@ -1832,14 +2080,8 @@
       const subEl   = document.getElementById('left-subtitle');
       const cardEl  = document.getElementById('left-card-title');
       const oilEl   = document.getElementById('left-oil-context');
+      const metricsEl = document.getElementById('left-overview-metrics');
       const hiTitle = document.getElementById('info-title');
-
-      const OIL_CONTEXT = {
-        458: 'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-        702: 'No meaningful upstream production; a major refining and trading hub that imports crude/feedstocks and exports refined products and petrochemicals across the region.',
-        96:  'Small but highly oil & gas–dependent exporter; government revenue and external balances are closely tied to energy prices and production levels.',
-        360: 'Large energy consumer and major producer, but generally a net importer of crude and fuels; prices are often managed via subsidies/controls, with refining capacity expansion a recurring policy focus.',
-      };
 
       if (titleEl) titleEl.innerHTML = `${meta.name}<br/>Overview`;
       if (subEl) {
@@ -1848,7 +2090,17 @@
         subEl.style.display = txt ? '' : 'none';
       }
       if (cardEl)  cardEl.innerHTML  = `${meta.defaultCardTitle}`;
-      if (oilEl)   oilEl.textContent = OIL_CONTEXT[countryId] || '—';
+      const ov = COUNTRY_OVERVIEW[countryId];
+      if (oilEl) oilEl.textContent = ov?.oilContext || '—';
+      if (metricsEl) {
+        const rows = ov?.metrics;
+        metricsEl.innerHTML = Array.isArray(rows) && rows.length
+          ? rows.map(([k, v]) => {
+              const fullWidth = k === 'Status';
+              return `<div class="metric"${fullWidth ? ' style="grid-column:1 / -1;"' : ''}><div class="k">${k}</div><div class="v">${v}</div></div>`;
+            }).join('')
+          : '';
+      }
       if (hiTitle) {
         const isMY = countryId === 458;
         hiTitle.classList.toggle('switchable', isMY);
@@ -2445,53 +2697,75 @@
       setLeftOverview(cid);
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(cid, false);
     })();
-    // Orange-panel pager (Malaysia weekly dates)
+    // Orange-panel pager (highlights timeline)
     (function initPager() {
       const prevBtn = document.getElementById('pager-prev');
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
+      const PAGER_COUNTRIES = new Set([458, 702, 96]); // MY + SG + BN
+      const ensureRowsFor = async (cid) => {
+        if (cid === 458) return await ensureMalaysiaRows();
+        if (cid === 702) return await ensureSingaporeRows();
+        if (cid === 96) return await ensureBruneiRows();
+        return null;
+      };
+
       function syncPager() {
-        const isMY = window.__terminalSelectedCountryId === 458;
-        prevBtn.style.display = isMY ? '' : 'none';
-        nextBtn.style.display = isMY ? '' : 'none';
-        if (!isMY) return;
+        const cid = +window.__terminalSelectedCountryId;
+        const show = PAGER_COUNTRIES.has(cid);
+        prevBtn.style.display = show ? '' : 'none';
+        nextBtn.style.display = show ? '' : 'none';
+        if (!show) return;
+
         // While data is still loading, keep buttons clickable so the first click can fetch.
-        const hasRows = Array.isArray(MY_ROWS) && MY_ROWS.length > 0;
-        if (!hasRows || MY_INDEX == null) {
+        const rows =
+          cid === 458 ? MY_ROWS :
+          cid === 702 ? SG_ROWS :
+          cid === 96 ? BN_ROWS :
+          null;
+        const idx = (typeof getPagerIndex === 'function') ? getPagerIndex(cid) : null;
+        const hasRows = Array.isArray(rows) && rows.length > 0;
+        if (!hasRows || idx == null) {
           prevBtn.disabled = false;
           nextBtn.disabled = false;
           return;
         }
 
-        const seriesLen = MY_ROWS.filter(r => r?.date).length || MY_ROWS.length;
-        prevBtn.disabled = MY_INDEX <= 0;
+        const seriesLen = rows.filter(r => r?.date).length || rows.length;
+        prevBtn.disabled = idx <= 0;
         // next = newer (towards latest)
-        nextBtn.disabled = MY_INDEX >= (seriesLen - 1);
+        nextBtn.disabled = idx >= (seriesLen - 1);
       }
 
       // Expose so data render can re-sync after async fetch
       window.__terminalSyncPager = syncPager;
 
       prevBtn.addEventListener('click', async () => {
-        if (window.__terminalSelectedCountryId !== 458) return;
-        await ensureMalaysiaRows();
-        const seriesLen = (MY_ROWS || []).filter(r => r?.date).length;
+        const cid = +window.__terminalSelectedCountryId;
+        if (!PAGER_COUNTRIES.has(cid)) return;
+        const rows = await ensureRowsFor(cid);
+        const seriesLen = (rows || []).filter(r => r?.date).length || (rows || []).length;
         if (!seriesLen) return;
-        if (MY_INDEX == null) MY_INDEX = seriesLen - 1;
-        MY_INDEX = Math.max(0, MY_INDEX - 1); // older week
-        await updateRightPanelForCountry(458);
+        let idx = getPagerIndex(cid);
+        if (idx == null) idx = seriesLen - 1;
+        idx = Math.max(0, idx - 1); // older
+        setPagerIndex(cid, idx);
+        await updateRightPanelForCountry(cid);
         syncPager();
       });
 
       nextBtn.addEventListener('click', async () => {
-        if (window.__terminalSelectedCountryId !== 458) return;
-        await ensureMalaysiaRows();
-        const seriesLen = (MY_ROWS || []).filter(r => r?.date).length;
+        const cid = +window.__terminalSelectedCountryId;
+        if (!PAGER_COUNTRIES.has(cid)) return;
+        const rows = await ensureRowsFor(cid);
+        const seriesLen = (rows || []).filter(r => r?.date).length || (rows || []).length;
         if (!seriesLen) return;
-        if (MY_INDEX == null) MY_INDEX = seriesLen - 1;
-        MY_INDEX = Math.min(seriesLen - 1, MY_INDEX + 1); // newer week
-        await updateRightPanelForCountry(458);
+        let idx = getPagerIndex(cid);
+        if (idx == null) idx = seriesLen - 1;
+        idx = Math.min(seriesLen - 1, idx + 1); // newer
+        setPagerIndex(cid, idx);
+        await updateRightPanelForCountry(cid);
         syncPager();
       });
 
@@ -2506,6 +2780,79 @@
       // Initial state
       syncPager();
     })();
+
+    // Keyboard: ↑/↓ = zoom in/out (same as +/−), ←/→ = Malaysia weekly pager (< />)
+    (function initTerminalKeyboardShortcuts() {
+      function isTypingTarget(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.isContentEditable) return true;
+        const tag = (el.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+        return !!el.closest?.('[contenteditable="true"]');
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.defaultPrevented) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (isTypingTarget(e.target)) return;
+
+        if (e.key === 'ArrowUp') {
+          const z = document.getElementById('zoom-in');
+          if (!z || typeof z.onclick !== 'function') return;
+          e.preventDefault();
+          z.click();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          const z = document.getElementById('zoom-out');
+          if (!z || typeof z.onclick !== 'function') return;
+          e.preventDefault();
+          z.click();
+          return;
+        }
+        if (e.key === 'ArrowLeft') {
+          const prev = document.getElementById('pager-prev');
+          if (!prev || prev.style.display === 'none' || prev.disabled) return;
+          e.preventDefault();
+          prev.click();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          const next = document.getElementById('pager-next');
+          if (!next || next.style.display === 'none' || next.disabled) return;
+          e.preventDefault();
+          next.click();
+          return;
+        }
+      });
+    })();
+
+    (function initTerminalCurrencyRail() {
+      const localBtn = document.getElementById('terminal-curr-local');
+      const usdBtn = document.getElementById('terminal-curr-usd');
+      function sync() {
+        const usd = isTerminalUsd();
+        if (localBtn) {
+          localBtn.classList.toggle('is-active', !usd);
+          localBtn.setAttribute('aria-pressed', (!usd).toString());
+        }
+        if (usdBtn) {
+          usdBtn.classList.toggle('is-active', usd);
+          usdBtn.setAttribute('aria-pressed', String(usd));
+        }
+      }
+      function apply(mode) {
+        localStorage.setItem('currency', mode);
+        sync();
+        const id = window.__terminalSelectedCountryId;
+        if (id) updateRightPanelForCountry(id).catch(() => {});
+        renderIndonesiaCityCard({}).catch(() => {});
+      }
+      localBtn?.addEventListener('click', () => apply('local'));
+      usdBtn?.addEventListener('click', () => apply('usd'));
+      sync();
+    })();
+
     window.addEventListener('resize', () => {
       // cheap debounce
       clearTimeout(window.__termMapT);
@@ -2674,7 +3021,8 @@
           const top = mapTopbar
             ? Math.round(mapTopbar.getBoundingClientRect().top + 140) /* below search */
             : fallback;
-          btnBorder.style.left = '12px';
+          const railW = getComputedStyle(document.documentElement).getPropertyValue('--railW').trim() || '0px';
+          btnBorder.style.left = `calc(${railW} + 12px)`;
           btnBorder.style.top = `${clampY(top)}px`;
           btnBorder.style.transform = 'translate(0, -50%)';
           return;

@@ -6,7 +6,7 @@
   <title>PetrolPrice — App</title>
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -37,10 +37,11 @@
       width: 100%;
     }
 
-    /* Map layer */
+    /* Map layer — full viewport behind UI */
     .map{
       position: absolute;
       inset: 0;
+      z-index: 0;
       background:
         radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
         radial-gradient(1200px 680px at 44% 56%, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.00) 62%),
@@ -48,6 +49,7 @@
         #d7d7d7;
       overflow: hidden;
     }
+
     .map::before{
       content:'';
       position:absolute;
@@ -79,38 +81,60 @@
     }
     .search{
       flex: 1;
-      height: 40px;
+      height: 36px;
       display:flex;
       align-items:center;
       gap: 8px;
-      padding: 0 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.72);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.38);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.72) inset,
+        0 0 0 0.5px rgba(0, 0, 0, 0.04),
+        0 8px 28px rgba(0, 0, 0, 0.07),
+        0 2px 8px rgba(0, 0, 0, 0.04);
     }
-    .search svg{ width: 16px; height: 16px; opacity: 0.7; }
+    .search svg{
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      opacity: 0.42;
+      color: rgba(0, 0, 0, 0.45);
+    }
     .search input{
       flex: 1;
+      min-width: 0;
       border: none;
       outline: none;
       background: transparent;
-      font: inherit;
-      font-weight: 650;
-      color: rgba(0,0,0,0.78);
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      color: rgba(0, 0, 0, 0.72);
+    }
+    .search input::placeholder{
+      color: rgba(0, 0, 0, 0.36);
+      font-weight: 300;
     }
     .search-menu{
       position: absolute;
-      top: calc(12px + 40px + 8px);
+      top: calc(12px + 36px + 8px);
       left: 12px;
       right: 12px;
       z-index: 11;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.96);
-      border-radius: 16px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.52);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-radius: 18px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.65) inset,
+        0 12px 40px rgba(0, 0, 0, 0.1),
+        0 2px 10px rgba(0, 0, 0, 0.05);
       padding: 6px;
       display:none;
       max-height: min(320px, calc(100dvh - 180px));
@@ -125,36 +149,36 @@
       display:flex;
       justify-content: space-between;
       gap: 12px;
-      font-weight: 750;
+      font-weight: 400;
+      letter-spacing: 0.02em;
     }
     .search-item:hover{ background: rgba(0,0,0,0.04); }
 
-    /* Bottom sheet */
+    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll only when mostly expanded */
     .sheet{
       position: absolute;
       left: 10px;
       right: 10px;
       bottom: 10px;
       z-index: 20;
-      height: var(--sheetH, 40vh);
-      display:flex;
+      height: var(--sheetH, 50vh);
+      max-height: calc(100dvh - 72px);
+      display: flex;
       flex-direction: column;
       border-radius: 22px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: var(--panel);
+      border: none;
+      background: #fff;
       box-shadow: var(--shadow);
       overflow: hidden;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
-
-    /* Make sure the map is visible behind the sheet */
-    .map{ padding-bottom: calc(var(--sheetH, 40vh) + 18px); }
     .grab{
-      padding: 10px 0 6px;
+      flex-shrink: 0;
+      padding: 10px 0 8px;
       background: transparent;
       touch-action: none;
+      cursor: grab;
     }
+    .grab:active{ cursor: grabbing; }
     .grab::before{
       content:'';
       display:block;
@@ -167,17 +191,34 @@
     .sheet-scroll{
       flex: 1;
       min-height: 0;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 10px 10px 14px;
+      overflow-y: hidden;
+      overscroll-behavior-y: none;
+      padding: 8px 14px 20px;
       display: grid;
-      gap: 10px;
+      gap: 22px;
+      /* Soft fade at all clip edges (premium scroll / peek) */
+      -webkit-mask-image:
+        linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+        linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+      mask-image:
+        linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+        linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
+      mask-repeat: no-repeat;
+      mask-size: 100% 100%;
+      -webkit-mask-size: 100% 100%;
+    }
+    .sheet.sheet-expanded .sheet-scroll{
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
     .card{
-      border-radius: 18px;
-      border: 1px solid rgba(0,0,0,0.10);
-      overflow:hidden;
-      background: rgba(255,255,255,0.70);
+      border-radius: 0;
+      border: none;
+      overflow: visible;
+      background: transparent;
     }
     .card .pad{ padding: 14px; }
     .kicker{
@@ -208,11 +249,65 @@
       font-family: var(--font);
       font-size: 0.78rem;
     }
+    .lines.hi-lines{
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 14px;
+    }
+    .hi-row{
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 14px;
+      padding: 11px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      font-family: var(--font);
+      font-size: 0.84rem;
+    }
+    .hi-row:last-child{ border-bottom: none; padding-bottom: 2px; }
+    .hi-k{
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(0,0,0,0.72);
+    }
+    .hi-v{
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      color: rgba(0,0,0,0.88);
+      text-align: right;
+    }
     .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
     .chart-wrap{ height: 210px; padding: 12px; }
     .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
     .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: rgba(0,0,0,0.78); }
+    .overview-metrics{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .overview-metrics .metric{
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding-top: 10px;
+    }
+    .overview-metrics .metric .k{
+      font-family: var(--font);
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.52);
+    }
+    .overview-metrics .metric .v{
+      margin-top: 6px;
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(0,0,0,0.88);
+    }
 
     @media (min-width: 900px){
       /* "App" can still run on desktop, but keep it phone-ish */
@@ -227,24 +322,24 @@
 
     <div class="topbar">
       <div class="search" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7.5"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
         </svg>
-        <input id="country-search" type="search" placeholder="Search (Cmd+F)" autocomplete="off" spellcheck="false" />
+        <input id="country-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
       </div>
     </div>
     <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
 
     <div class="sheet" id="sheet" aria-label="Details sheet">
-      <div class="grab" id="grab" aria-hidden="true"></div>
+      <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
       <div class="sheet-scroll" id="sheet-scroll">
         <div class="card" id="card-highlights">
           <div class="pad">
             <div class="kicker">Highlights</div>
             <div class="title" id="hi-title">Semenanjung</div>
             <div class="sub" id="hi-sub">—</div>
-            <div class="lines" id="hi-lines"></div>
+            <div class="lines hi-lines" id="hi-lines"></div>
           </div>
         </div>
 
@@ -261,6 +356,7 @@
           <div class="pad">
             <div class="kicker" id="ov-kicker">Malaysia overview</div>
             <div class="oil" id="overview-text">—</div>
+            <div class="overview-metrics" id="overview-metrics" aria-label="Key metrics"></div>
           </div>
         </div>
       </div>
@@ -276,29 +372,522 @@
     };
     const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = { 458: true, 702: true, 96: true, 360: true };
-    const OIL_CONTEXT = {
-      458: 'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-      702: 'No meaningful upstream production; a major refining and trading hub that imports crude/feedstocks and exports refined products and petrochemicals across the region.',
-      96:  'Small but highly oil & gas–dependent exporter; government revenue and external balances are closely tied to energy prices and production levels.',
-      360: 'Large energy consumer and major producer, but generally a net importer of crude and fuels; prices are often managed via subsidies/controls, with refining capacity expansion a recurring policy focus.',
+    /** Same oil context + metrics as terminal.html left overview */
+    const APP_COUNTRY_OVERVIEW = {
+      458: {
+        oilContext:
+          'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
+        metrics: [
+          ['BOPD', '570,000'],
+          ['1P Reserves', '2.7B Barrels'],
+          ['Refinery Intake', '747,000'],
+          ['Export Value', 'RM6.2bil'],
+          ['Import Value', 'RM13.6bil'],
+          ['Status', 'Net Importer'],
+        ],
+      },
+      96: {
+        oilContext:
+          'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
+        metrics: [
+          ['BOPD', '102,677'],
+          ['1P Reserves', '1.1B Barrels'],
+          ['Refinery Intake', '16,338'],
+          ['Export Value', 'BND 13.45bil'],
+          ['Import Value', 'BND 8.62bil'],
+          ['Status', 'Net Exporter'],
+        ],
+      },
+      360: {
+        oilContext:
+          "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
+        metrics: [
+          ['BOPD', '608,100'],
+          ['1P Reserves', '2.41B Barrels'],
+          ['Refinery Intake', '1,626,878'],
+          ['Export Value', 'US$13.07bil'],
+          ['Import Value', 'US$32.77bil'],
+          ['Status', 'Net Importer'],
+        ],
+      },
+      702: {
+        oilContext:
+          'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
+        metrics: [
+          ['BOPD', '0'],
+          ['1P Reserves', '0 Barrels'],
+          ['Refinery Intake', '~1,100,000'],
+          ['Export Value', 'Not specified in available data'],
+          ['Import Value', 'Not specified in available data'],
+          ['Status', 'Net Importer (refining hub)'],
+        ],
+      },
     };
 
     let selected = 458;
     let RIGHT_CHART = null;
     let APP_ZOOM_TO = null;
 
+    const APP_SHEET_ID = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
+    const APP_MY_API = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=30';
+    const APP_SG_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
+    const APP_BN_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
+    const APP_ID_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
+
+    const APP_ID_FUELS = [
+      { key: 'pertalite', label: 'Pertalite' },
+      { key: 'pertamax', label: 'Pertamax' },
+      { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
+      { key: 'dexlite', label: 'Dexlite' },
+      { key: 'pertamina_dex', label: 'Pertamina Dex' },
+    ];
+
+    let _appMyRows = null;
+    let _appSgRows = null;
+    let _appBnRows = null;
+    let _appIdRows = null;
+
+    function parseAppCSV(text) {
+      const rows = text.trim().split('\n').map(r =>
+        r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
+      );
+      const headers = rows[0];
+      return rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = r[i]; });
+        return obj;
+      });
+    }
+
+    function fmtAppDate(d) {
+      if (!d) return '—';
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return String(d);
+      return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function fmtAppPerL(sym, n, decimals = 2) {
+      const x = parseFloat(n);
+      if (!Number.isFinite(x)) return '—';
+      return `${sym} ${x.toFixed(decimals)}/L`;
+    }
+
+    function fmtAppIdrPerL(n) {
+      const x = parseFloat(n);
+      if (!Number.isFinite(x)) return '—';
+      return `IDR ${Math.round(x).toLocaleString('en-US')}/L`;
+    }
+
+    function appMalaysiaRegionKey() {
+      try {
+        const k = localStorage.getItem('terminal_my_region') || 'Semenanjung';
+        return k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
+      } catch (_) {
+        return 'Semenanjung';
+      }
+    }
+
+    /** Rough boxes: peninsular vs Borneo (Sabah/Sarawak/Labuan). Matches map clicks, not maritime claims. */
+    function appMalaysiaRegionFromLngLat(lon, lat) {
+      const PEN = { minLon: 99.5, maxLon: 104.95, minLat: 0.75, maxLat: 6.95 };
+      const EAST = { minLon: 108.8, maxLon: 119.6, minLat: 0.45, maxLat: 7.55 };
+      const inPen = lon >= PEN.minLon && lon <= PEN.maxLon && lat >= PEN.minLat && lat <= PEN.maxLat;
+      const inEast = lon >= EAST.minLon && lon <= EAST.maxLon && lat >= EAST.minLat && lat <= EAST.maxLat;
+      if (inEast && !inPen) return 'SabahSarawak';
+      if (inPen && !inEast) return 'Semenanjung';
+      if (inEast && inPen) return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
+      if (inEast) return 'SabahSarawak';
+      if (inPen) return 'Semenanjung';
+      return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
+    }
+
+    function appApplyMalaysiaClickRegion(event, svgNode, projection) {
+      const inv = projection.invert(d3.pointer(event, svgNode));
+      if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
+      const next = appMalaysiaRegionFromLngLat(inv[0], inv[1]);
+      try {
+        localStorage.setItem('terminal_my_region', next);
+      } catch (_) {}
+    }
+
+    function appIndonesiaCity() {
+      try {
+        return localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
+      } catch (_) {
+        return 'Jakarta Pusat';
+      }
+    }
+
+    async function ensureAppMalaysiaRows() {
+      if (_appMyRows) return _appMyRows;
+      const res = await fetch(APP_MY_API);
+      if (!res.ok) throw new Error('MY');
+      const json = await res.json();
+      _appMyRows = (json || []).filter(r => r.series_type === 'level');
+      return _appMyRows;
+    }
+
+    async function ensureAppSheetRows(url, cacheRef) {
+      if (cacheRef.val) return cacheRef.val;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('sheet');
+      const text = await res.text();
+      cacheRef.val = parseAppCSV(text);
+      return cacheRef.val;
+    }
+
+    const _sgCache = { val: null };
+    const _bnCache = { val: null };
+    const _idCache = { val: null };
+
+    const APP_CHART_POINTS = 30;
+    const APP_CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#111827', '#0ea5e9', '#ef4444'];
+
+    function takeLastApp(arr, n) {
+      return arr.slice(Math.max(0, arr.length - n));
+    }
+
+    function appAsNum(v) {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function buildAppChartSeries(rows, keys, labels) {
+      return keys.map((k, i) => ({
+        label: k.label,
+        color: k.color || APP_CHART_COLORS[i % APP_CHART_COLORS.length],
+        data: labels.map((lab) => {
+          const r = rows.find((x) => x.__label === lab);
+          return r ? appAsNum(r[k.key]) : null;
+        }),
+      }));
+    }
+
+    function appChartOptions(countryId) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 420, easing: 'easeOutCubic' },
+        // App / touch: no hover tooltips or active-point styling
+        events: [],
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              usePointStyle: false,
+              boxWidth: 11,
+              boxHeight: 2,
+              borderRadius: 1,
+              padding: 10,
+              boxPadding: 4,
+              font: {
+                family: 'Inter, system-ui, sans-serif',
+                size: 8,
+                weight: '400',
+              },
+              color: 'rgba(0,0,0,0.48)',
+              generateLabels(chart) {
+                const ds = chart.data.datasets || [];
+                return ds.map((d, i) => ({
+                  text: d.label,
+                  fillStyle: d.borderColor,
+                  strokeStyle: d.borderColor,
+                  lineWidth: 0,
+                  hidden: !chart.isDatasetVisible(i),
+                  index: i,
+                  datasetIndex: i,
+                }));
+              },
+            },
+          },
+          tooltip: { enabled: false },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: 'rgba(0,0,0,0.45)', font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.06)' },
+            ticks: {
+              color: 'rgba(0,0,0,0.45)',
+              font: { size: 10 },
+              callback(v) {
+                if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
+                return v;
+              },
+            },
+          },
+        },
+      };
+    }
+
+    function updateAppChart({ labels, datasets, countryId }) {
+      const cv = document.getElementById('chart');
+      if (!cv || !window.Chart) return;
+      const ctx = cv.getContext('2d');
+
+      function withAlpha(c, a) {
+        if (!c) return c;
+        const s = String(c).trim();
+        if (/^rgba\(/i.test(s)) {
+          return s.replace(/rgba\(([^)]+)\)/i, (m, inner) => {
+            const parts = inner.split(',').map((p) => p.trim());
+            if (parts.length < 3) return s;
+            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
+          });
+        }
+        if (/^rgb\(/i.test(s)) {
+          return s.replace(/rgb\(([^)]+)\)/i, (m, inner) => {
+            const parts = inner.split(',').map((p) => p.trim());
+            if (parts.length < 3) return s;
+            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
+          });
+        }
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
+          const hex = s.slice(1);
+          const full = hex.length === 3 ? hex.split('').map((ch) => ch + ch).join('') : hex;
+          const r = parseInt(full.slice(0, 2), 16);
+          const g = parseInt(full.slice(2, 4), 16);
+          const b = parseInt(full.slice(4, 6), 16);
+          return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        return s;
+      }
+
+      function mkFill(stroke) {
+        const grad = ctx.createLinearGradient(0, 0, 0, cv.height || 210);
+        grad.addColorStop(0, withAlpha(stroke, 0.16));
+        grad.addColorStop(1, withAlpha(stroke, 0));
+        return grad;
+      }
+
+      const nextDs = (datasets || []).map((ds) => ({
+        label: ds.label,
+        data: ds.data || [],
+        borderColor: ds.color,
+        backgroundColor: mkFill(ds.color),
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        tension: 0.35,
+        fill: true,
+        spanGaps: true,
+      }));
+
+      if (RIGHT_CHART) {
+        RIGHT_CHART.destroy();
+        RIGHT_CHART = null;
+      }
+
+      RIGHT_CHART = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels || [], datasets: nextDs },
+        options: appChartOptions(countryId),
+      });
+    }
+
+    function renderHiRows(pairs) {
+      const el = document.getElementById('hi-lines');
+      el.innerHTML = pairs.map(([k, v]) =>
+        `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v">${v}</span></div>`
+      ).join('');
+    }
+
+    function setHiLoading() {
+      renderHiRows([['Prices', 'Loading…']]);
+    }
+
+    async function refreshHighlights(cid) {
+      const titleEl = document.getElementById('hi-title');
+      const subEl = document.getElementById('hi-sub');
+      const chartKicker = document.getElementById('chart-kicker');
+      const cname = COUNTRIES[cid]?.name || '—';
+      setHiLoading();
+
+      function emptyChart() {
+        updateAppChart({
+          labels: ['—'],
+          datasets: [{ label: 'No data', data: [null], color: '#d4d4d4' }],
+          countryId: null,
+        });
+      }
+
+      try {
+        if (cid === 458) {
+          const rows = await ensureAppMalaysiaRows();
+          const seriesAsc = rows
+            .slice()
+            .filter(r => r?.date)
+            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const rSel = seriesAsc[seriesAsc.length - 1] || {};
+          const regionKey = appMalaysiaRegionKey();
+          const isEast = regionKey === 'SabahSarawak';
+          const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
+          const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
+          titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${isEast ? 'East Malaysia' : 'Peninsular'}`;
+          renderHiRows([
+            ['BUDI95', fmtAppPerL('MYR', rSel.ron95_budi95, 2)],
+            ['RON95', fmtAppPerL('MYR', rSel.ron95, 2)],
+            ['RON97', fmtAppPerL('MYR', rSel.ron97, 2)],
+            [dieselLabel, fmtAppPerL('MYR', rSel[dieselKey], 2)],
+          ]);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = [
+            { key: 'ron95_budi95', label: 'BUDI95', color: '#9333ea' },
+            { key: 'ron95', label: 'RON95', color: '#fbbf24' },
+            { key: 'ron97', label: 'RON97', color: '#16a34a' },
+            { key: dieselKey, label: dieselLabel, color: '#111827' },
+          ];
+          if (labels.length) {
+            updateAppChart({
+              labels,
+              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              countryId: 458,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 702) {
+          const rows = await ensureAppSheetRows(APP_SG_URL, _sgCache);
+          const seriesAsc = rows
+            .slice()
+            .filter(r => r?.date)
+            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const rSel = seriesAsc[seriesAsc.length - 1] || {};
+          titleEl.textContent = 'Singapore';
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · National`;
+          renderHiRows([
+            ['RON92', fmtAppPerL('SGD', rSel.ron92, 2)],
+            ['RON95', fmtAppPerL('SGD', rSel.ron95, 2)],
+            ['RON98', fmtAppPerL('SGD', rSel.ron98, 2)],
+            ['Premium', fmtAppPerL('SGD', rSel.premium, 2)],
+            ['Diesel', fmtAppPerL('SGD', rSel.diesel, 2)],
+          ]);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = [
+            { key: 'ron92', label: 'RON92' },
+            { key: 'ron95', label: 'RON95' },
+            { key: 'ron98', label: 'RON98' },
+            { key: 'premium', label: 'Premium' },
+            { key: 'diesel', label: 'Diesel' },
+          ];
+          if (labels.length) {
+            updateAppChart({
+              labels,
+              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              countryId: 702,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 96) {
+          const rows = await ensureAppSheetRows(APP_BN_URL, _bnCache);
+          const seriesAsc = rows
+            .slice()
+            .filter(r => r?.date)
+            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const rSel = seriesAsc[seriesAsc.length - 1] || {};
+          titleEl.textContent = 'Brunei';
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · National`;
+          renderHiRows([
+            ['Gasoline', fmtAppPerL('BND', rSel.gasoline, 2)],
+            ['Diesel', fmtAppPerL('BND', rSel.diesel, 2)],
+            ['V-Power Gasoline', fmtAppPerL('BND', rSel.vpower_gasoline, 2)],
+            ['V-Power Diesel', fmtAppPerL('BND', rSel.vpower_diesel, 2)],
+          ]);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = [
+            { key: 'gasoline', label: 'Gasoline' },
+            { key: 'diesel', label: 'Diesel' },
+            { key: 'vpower_gasoline', label: 'V-Power Gasoline' },
+            { key: 'vpower_diesel', label: 'V-Power Diesel' },
+          ];
+          if (labels.length) {
+            updateAppChart({
+              labels,
+              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              countryId: 96,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 360) {
+          const rows = await ensureAppSheetRows(APP_ID_URL, _idCache);
+          const city = appIndonesiaCity();
+          const cityRows = rows
+            .filter(r => r.city === city)
+            .filter(r => r?.date)
+            .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+          const rSel = cityRows[cityRows.length - 1] || {};
+          titleEl.textContent = city;
+          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · Latest in sheet`;
+          const pairs = APP_ID_FUELS.map(f => [f.label, fmtAppIdrPerL(rSel[f.key])]);
+          renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = takeLastApp(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = APP_ID_FUELS.map(f => ({ key: f.key, label: f.label }));
+          if (labels.length) {
+            updateAppChart({
+              labels,
+              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              countryId: 360,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        titleEl.textContent = cname;
+        subEl.textContent = 'No live price feed for this view';
+        renderHiRows([['Source', '—']]);
+        emptyChart();
+      } catch (_) {
+        titleEl.textContent = cname;
+        subEl.textContent = 'Could not load live prices';
+        renderHiRows([['Status', 'Check connection']]);
+        emptyChart();
+      }
+    }
+
+    function renderCountryOverview(cid) {
+      const ov = APP_COUNTRY_OVERVIEW[cid];
+      const oilEl = document.getElementById('overview-text');
+      const metricsEl = document.getElementById('overview-metrics');
+      if (oilEl) oilEl.textContent = ov?.oilContext || '—';
+      if (metricsEl) {
+        const rows = ov?.metrics;
+        metricsEl.innerHTML = Array.isArray(rows) && rows.length
+          ? rows.map(([k, v]) => {
+              const fullWidth = k === 'Status';
+              return `<div class="metric"${fullWidth ? ' style="grid-column:1 / -1;"' : ''}><div class="k">${k}</div><div class="v">${v}</div></div>`;
+            }).join('')
+          : '';
+      }
+    }
+
     function setSelected(cid){
       selected = cid;
-      document.getElementById('overview-text').textContent = OIL_CONTEXT[cid] || '—';
       document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
-      // Placeholder highlights; we'll wire real data next.
-      document.getElementById('hi-title').textContent = COUNTRIES[cid]?.name || '—';
-      document.getElementById('hi-sub').textContent = 'Tap a country to view';
-      document.getElementById('hi-lines').innerHTML = `
-        <div class="kv"><div class="k">Status</div><div class="v">Live</div></div>
-        <div class="kv"><div class="k">Country ID</div><div class="v">${cid}</div></div>
-      `;
-      if (RIGHT_CHART) RIGHT_CHART.update();
+      renderCountryOverview(cid);
+      refreshHighlights(cid);
       if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(cid, true);
     }
 
@@ -306,69 +895,83 @@
       const sheet = document.getElementById('sheet');
       const grab = document.getElementById('grab');
       const scroller = document.getElementById('sheet-scroll');
-      const cardHighlights = document.getElementById('card-highlights');
-      const cardHistory = document.getElementById('card-history');
-      const cardOverview = document.getElementById('card-overview');
-      let snap = 0;
       let dragging = false, startY = 0, startH = 0;
+      let snap = 1;
       const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-      const snaps = () => {
+      const heights = () => {
         const vh = window.innerHeight;
-        // Snap 0: highlights. Snap 1: history. Snap 2: overview.
-        // Keep the default state feeling "normal" (not compact) while
-        // still leaving map visible.
-        return [Math.round(vh * 0.52), Math.round(vh * 0.74), Math.round(vh * 0.90)];
+        const quarter = Math.round(vh * 0.25);
+        const half = Math.round(vh * 0.5);
+        const expandedTop = Math.round(Math.min(vh - 72, vh * 0.94));
+        const expanded = Math.max(half + 100, expandedTop);
+        return { quarter, half, expanded };
       };
-      const apply = (h) => document.documentElement.style.setProperty('--sheetH', `${h}px`);
-      const nearest = (h) => {
-        const s = snaps();
-        let best = 0, d = Infinity;
-        s.forEach((x,i)=>{ const dd=Math.abs(x-h); if(dd<d){d=dd;best=i;}});
+      const apply = (h) => {
+        const px = Math.round(h);
+        document.documentElement.style.setProperty('--sheetH', `${px}px`);
+        const { half, expanded } = heights();
+        const scrollThreshold = half + (expanded - half) * 0.55;
+        const isExpanded = px >= scrollThreshold;
+        sheet.classList.toggle('sheet-expanded', isExpanded);
+        if (!isExpanded && scroller) scroller.scrollTop = 0;
+      };
+      const nearestSnapIndex = (h) => {
+        const { quarter, half, expanded } = heights();
+        const snaps = [quarter, half, expanded];
+        let best = 0;
+        let d = Infinity;
+        snaps.forEach((x, i) => {
+          const dd = Math.abs(h - x);
+          if (dd < d) {
+            d = dd;
+            best = i;
+          }
+        });
         return best;
       };
       function setSnap(i){
-        snap = clamp(i,0,2);
-        apply(snaps()[snap]);
-        // Keep the default view "normal": don't auto-scroll away from highlights.
-        if (!scroller) return;
-        if (snap === 0) {
-          scroller.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-        }
-        // For deeper snaps, align the requested section to the top.
-        const target = snap === 1 ? cardHistory : cardOverview;
-        if (target) requestAnimationFrame(() => scroller.scrollTo({ top: target.offsetTop, behavior: 'smooth' }));
+        snap = clamp(i, 0, 2);
+        const { quarter, half, expanded } = heights();
+        const h = snap === 0 ? quarter : snap === 1 ? half : expanded;
+        apply(h);
+        if (RIGHT_CHART) setTimeout(() => RIGHT_CHART.resize(), 60);
       }
       function onDown(e){
         dragging = true;
-        startY = (e.touches?e.touches[0].clientY:e.clientY);
+        startY = (e.touches ? e.touches[0].clientY : e.clientY);
         startH = sheet.getBoundingClientRect().height;
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
-        window.addEventListener('touchmove', onMove, { passive:false });
+        window.addEventListener('touchmove', onMove, { passive: false });
         window.addEventListener('touchend', onUp);
       }
       function onMove(e){
-        if(!dragging) return;
-        if(e.cancelable) e.preventDefault();
-        const y = (e.touches?e.touches[0].clientY:e.clientY);
+        if (!dragging) return;
+        if (e.cancelable) e.preventDefault();
+        const y = (e.touches ? e.touches[0].clientY : e.clientY);
         const dy = startY - y;
-        const s = snaps();
-        apply(clamp(startH + dy, s[0], s[2]));
+        const { quarter, expanded } = heights();
+        apply(clamp(startH + dy, quarter, expanded));
       }
       function onUp(){
-        if(!dragging) return;
+        if (!dragging) return;
         dragging = false;
         window.removeEventListener('mousemove', onMove);
         window.removeEventListener('mouseup', onUp);
         window.removeEventListener('touchmove', onMove);
         window.removeEventListener('touchend', onUp);
-        setSnap(nearest(sheet.getBoundingClientRect().height));
-        if (RIGHT_CHART) setTimeout(() => RIGHT_CHART.resize(), 60);
+        const h = sheet.getBoundingClientRect().height;
+        setSnap(nearestSnapIndex(h));
       }
       grab.addEventListener('mousedown', onDown);
-      grab.addEventListener('touchstart', onDown, { passive:true });
-      setSnap(0);
+      grab.addEventListener('touchstart', onDown, { passive: true });
+      grab.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setSnap((snap + 1) % 3);
+        }
+      });
+      setSnap(1);
       window.addEventListener('resize', () => setSnap(snap));
     }
 
@@ -417,30 +1020,11 @@
 
     function initChart(){
       const cv = document.getElementById('chart');
-      const ctx = cv.getContext('2d');
-      RIGHT_CHART = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr'],
-          datasets: [{
-            label: 'RON95',
-            data: [2.05, 2.05, 2.10, 2.15],
-            borderColor: '#111827',
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.35,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 600, easing: 'easeOutCubic' },
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: 'rgba(0,0,0,0.45)' } },
-            y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: 'rgba(0,0,0,0.45)' } }
-          }
-        }
+      if (!cv || !window.Chart) return;
+      updateAppChart({
+        labels: [''],
+        datasets: [{ label: 'Loading…', data: [null], color: '#d4d4d4' }],
+        countryId: 458,
       });
     }
 
@@ -448,16 +1032,17 @@
       const root = document.getElementById('map');
       const rect = root.getBoundingClientRect();
       const W = Math.max(320, Math.floor(rect.width));
-      // Keep map content a bit higher so it's visible above the bottom sheet.
-      const sheetH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheetH')) || (window.innerHeight * 0.52);
       const H = Math.max(320, Math.floor(rect.height));
       const svg = d3.select(root).append('svg')
         .attr('viewBox', `0 0 ${W} ${H}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
 
       const baseScale = (Math.min(W, H) * 1.55) / 2;
+      // Center the globe slightly above geometric middle so the focused
+      // country clears the pull-up panel (default ~half screen).
+      const mapCenterY = H * 0.34;
       const projection = d3.geoOrthographic()
-        .translate([W/2, Math.max(0, (H - sheetH) / 2)])
+        .translate([W / 2, mapCenterY])
         .scale(baseScale)
         .clipAngle(90)
         .precision(0.3);
@@ -480,7 +1065,16 @@
           .data(countries.features.filter(d => LIVE[+d.id]))
           .enter().append('path').attr('class', 'country live').attr('d', path)
           .on('click', (e, d) => {
-            setSelected(+d.id);
+            const id = +d.id;
+            if (id === 458) {
+              appApplyMalaysiaClickRegion(e, svg.node(), projection);
+              if (+selected === 458) {
+                refreshHighlights(458);
+                applySel();
+                return;
+              }
+            }
+            setSelected(id);
             applySel();
           });
 
