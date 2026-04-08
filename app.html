@@ -16,9 +16,12 @@
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/utils.js"></script>
   <style>
     :root{
       color-scheme: light dark;
@@ -29,7 +32,6 @@
       --line: rgba(0,0,0,0.10);
       --shadow: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
-      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --surface: #ffffff;
       --sticky-bg: #ffffff;
       --glass-stroke: rgba(255, 255, 255, 0.55);
@@ -821,7 +823,6 @@
       96:  { name: 'Brunei' },
       360: { name: 'Indonesia' },
     };
-    const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
     const LIVE = { 458: true, 702: true, 96: true, 360: true };
     /** Same oil context as terminal.html; metricRows = 2-col layout per row */
     const APP_COUNTRY_OVERVIEW = {
@@ -871,19 +872,6 @@
     let RIGHT_CHART = null;
     let APP_ZOOM_TO = null;
 
-    const APP_SHEET_ID = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
-    const APP_MY_API = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=30';
-    const APP_SG_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
-    const APP_BN_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
-    const APP_ID_URL = `https://docs.google.com/spreadsheets/d/${APP_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
-
-    const APP_ID_FUELS = [
-      { key: 'pertalite', label: 'Pertalite' },
-      { key: 'pertamax', label: 'Pertamax' },
-      { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
-      { key: 'dexlite', label: 'Dexlite' },
-      { key: 'pertamina_dex', label: 'Pertamina Dex' },
-    ];
 
     /** [lon, lat] centroids — keys must match `city` in the Indonesia Google Sheet (see indonesia.html). */
     const APP_ID_CITY_LONLAT = {
@@ -929,61 +917,6 @@
     let _appBnRows = null;
     let _appIdRows = null;
 
-    function parseAppCSV(text) {
-      const rows = text.trim().split('\n').map(r =>
-        r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
-      );
-      const headers = rows[0];
-      return rows.slice(1).map(r => {
-        const obj = {};
-        headers.forEach((h, i) => { obj[h] = r[i]; });
-        return obj;
-      });
-    }
-
-    /** Milliseconds for sorting; ISO YYYY-MM-DD, then D/M/Y (Singapore sheet CSV), else Date.parse. */
-    function appRowDateMs(v) {
-      if (v == null || v === '') return NaN;
-      const s = String(v).trim();
-      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (iso) return Date.UTC(+iso[1], +iso[2] - 1, +iso[3]);
-      const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:\s|$)/);
-      if (dmy) {
-        const d = +dmy[1];
-        const m = +dmy[2];
-        const y = +dmy[3];
-        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return Date.UTC(y, m - 1, d);
-      }
-      const t = new Date(s).getTime();
-      return Number.isFinite(t) ? t : NaN;
-    }
-
-    function appSortRowsByDate(rows) {
-      return (rows || [])
-        .slice()
-        .filter((r) => r?.date)
-        .sort((a, b) => {
-          const ta = appRowDateMs(a.date);
-          const tb = appRowDateMs(b.date);
-          if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
-          if (Number.isFinite(ta)) return -1;
-          if (Number.isFinite(tb)) return 1;
-          return String(a.date).localeCompare(String(b.date));
-        });
-    }
-
-    function fmtAppDate(d) {
-      if (!d) return '—';
-      const dt = new Date(d);
-      if (isNaN(dt.getTime())) return String(d);
-      return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-
-    function fmtAppPerL(sym, n, decimals = 2) {
-      const x = parseFloat(n);
-      if (!Number.isFinite(x)) return '—';
-      return `${sym} ${x.toFixed(decimals)}/L`;
-    }
 
     function fmtAppIdrPerL(n) {
       const x = parseFloat(n);
@@ -1065,7 +998,7 @@
 
     async function ensureAppMalaysiaRows() {
       if (_appMyRows) return _appMyRows;
-      const res = await fetch(APP_MY_API);
+      const res = await fetch(MY_API_URL);
       if (!res.ok) throw new Error('MY');
       const json = await res.json();
       _appMyRows = (json || []).filter(r => r.series_type === 'level');
@@ -1077,7 +1010,7 @@
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error('sheet');
       const text = await res.text();
-      cacheRef.val = parseAppCSV(text);
+      cacheRef.val = parseCSV(text);
       return cacheRef.val;
     }
 
@@ -1277,23 +1210,23 @@
       try {
         if (cid === 458) {
           const rows = await ensureAppMalaysiaRows();
-          const seriesAsc = appSortRowsByDate(rows);
+          const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           const regionKey = appMalaysiaRegionKey();
           const isEast = regionKey === 'SabahSarawak';
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
           const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
           titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['BUDI95', fmtAppPerL('MYR', rSel.ron95_budi95, 2)],
-            ['RON95', fmtAppPerL('MYR', rSel.ron95, 2)],
-            ['RON97', fmtAppPerL('MYR', rSel.ron97, 2)],
-            [dieselLabel, fmtAppPerL('MYR', rSel[dieselKey], 2)],
+            ['BUDI95', fmtPerL('MYR', rSel.ron95_budi95, 2)],
+            ['RON95', fmtPerL('MYR', rSel.ron95, 2)],
+            ['RON97', fmtPerL('MYR', rSel.ron97, 2)],
+            [dieselLabel, fmtPerL('MYR', rSel[dieselKey], 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron95_budi95', label: 'BUDI95', color: '#9333ea' },
@@ -1312,21 +1245,21 @@
         }
 
         if (cid === 702) {
-          const rows = await ensureAppSheetRows(APP_SG_URL, _sgCache);
-          const seriesAsc = appSortRowsByDate(rows);
+          const rows = await ensureAppSheetRows(SG_SHEET_URL, _sgCache);
+          const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Singapore';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['RON92', fmtAppPerL('SGD', rSel.ron92, 2)],
-            ['RON95', fmtAppPerL('SGD', rSel.ron95, 2)],
-            ['RON98', fmtAppPerL('SGD', rSel.ron98, 2)],
-            ['Premium', fmtAppPerL('SGD', rSel.premium, 2)],
-            ['Diesel', fmtAppPerL('SGD', rSel.diesel, 2)],
+            ['RON92', fmtPerL('SGD', rSel.ron92, 2)],
+            ['RON95', fmtPerL('SGD', rSel.ron95, 2)],
+            ['RON98', fmtPerL('SGD', rSel.ron98, 2)],
+            ['Premium', fmtPerL('SGD', rSel.premium, 2)],
+            ['Diesel', fmtPerL('SGD', rSel.diesel, 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron92', label: 'RON92' },
@@ -1346,20 +1279,20 @@
         }
 
         if (cid === 96) {
-          const rows = await ensureAppSheetRows(APP_BN_URL, _bnCache);
-          const seriesAsc = appSortRowsByDate(rows);
+          const rows = await ensureAppSheetRows(BN_SHEET_URL, _bnCache);
+          const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'Brunei';
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['Gasoline', fmtAppPerL('BND', rSel.gasoline, 2)],
-            ['Diesel', fmtAppPerL('BND', rSel.diesel, 2)],
-            ['V-Power Gasoline', fmtAppPerL('BND', rSel.vpower_gasoline, 2)],
-            ['V-Power Diesel', fmtAppPerL('BND', rSel.vpower_diesel, 2)],
+            ['Gasoline', fmtPerL('BND', rSel.gasoline, 2)],
+            ['Diesel', fmtPerL('BND', rSel.diesel, 2)],
+            ['V-Power Gasoline', fmtPerL('BND', rSel.vpower_gasoline, 2)],
+            ['V-Power Diesel', fmtPerL('BND', rSel.vpower_diesel, 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'gasoline', label: 'Gasoline' },
@@ -1378,19 +1311,19 @@
         }
 
         if (cid === 360) {
-          const rows = await ensureAppSheetRows(APP_ID_URL, _idCache);
+          const rows = await ensureAppSheetRows(ID_SHEET_URL, _idCache);
           const city = appIndonesiaCity();
-          const cityRows = appSortRowsByDate(rows.filter((r) => r.city === city));
+          const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
           const rSel = cityRows[cityRows.length - 1] || {};
           titleEl.textContent = city;
-          subEl.textContent = `As of ${fmtAppDate(rSel.date)} · ${cname}`;
-          const pairs = APP_ID_FUELS.map(f => [f.label, fmtAppIdrPerL(rSel[f.key])]);
+          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
+          const pairs = ID_FUELS.map(f => [f.label, fmtAppIdrPerL(rSel[f.key])]);
           renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtAppDate(r.date) }));
+          const sliceRows = takeLastApp(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
-          const chartKeys = APP_ID_FUELS.map(f => ({ key: f.key, label: f.label }));
+          const chartKeys = ID_FUELS.map(f => ({ key: f.key, label: f.label }));
           if (labels.length) {
             updateAppChart({
               labels,

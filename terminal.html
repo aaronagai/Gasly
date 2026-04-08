@@ -6,9 +6,12 @@
   <title>PetrolPrice — Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/shared.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/utils.js"></script>
   <style>
     :root{
       --bg: #f1f1f0;
@@ -21,8 +24,6 @@
       --shadow-2: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
       --orange-2: #ff4d00;
-      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --mono: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
       /* Resizable layout + fixed left sidebar */
       --railW: 64px;
@@ -1313,59 +1314,7 @@
     };
 
     // Indonesia city-based pricing (from existing Google Sheet)
-    const SHEET_ID = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
-    const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
     let ID_ROWS = null;
-
-    const ID_FUELS = [
-      { key: 'pertalite',      label: 'Pertalite' },
-      { key: 'pertamax',       label: 'Pertamax' },
-      { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
-      { key: 'dexlite',        label: 'Dexlite' },
-      { key: 'pertamina_dex',  label: 'Pertamina Dex' },
-    ];
-
-    function parseCSV(text) {
-      const rows = text.trim().split('\n').map(r =>
-        r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
-      );
-      const headers = rows[0];
-      return rows.slice(1).map(r => {
-        const obj = {};
-        headers.forEach((h, i) => { obj[h] = r[i]; });
-        return obj;
-      });
-    }
-
-    function terminalSheetRowDateMs(v) {
-      if (v == null || v === '') return NaN;
-      const s = String(v).trim();
-      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (iso) return Date.UTC(+iso[1], +iso[2] - 1, +iso[3]);
-      const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:\s|$)/);
-      if (dmy) {
-        const d = +dmy[1];
-        const m = +dmy[2];
-        const y = +dmy[3];
-        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return Date.UTC(y, m - 1, d);
-      }
-      const t = new Date(s).getTime();
-      return Number.isFinite(t) ? t : NaN;
-    }
-
-    function terminalSortRowsByDate(rows) {
-      return (rows || [])
-        .slice()
-        .filter((r) => r?.date)
-        .sort((a, b) => {
-          const ta = terminalSheetRowDateMs(a.date);
-          const tb = terminalSheetRowDateMs(b.date);
-          if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
-          if (Number.isFinite(ta)) return -1;
-          if (Number.isFinite(tb)) return 1;
-          return String(a.date).localeCompare(String(b.date));
-        });
-    }
 
     async function ensureIndonesiaRows() {
       if (ID_ROWS) return ID_ROWS;
@@ -1375,10 +1324,7 @@
       return ID_ROWS;
     }
 
-    // Country-wide data fetch helpers (reuse your existing sources)
-    const MY_API_URL = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=30';
-    const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
-    const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
+    // Country-wide data fetch helpers
 
     let MY_ROWS = null;
     let SG_ROWS = null;
@@ -1439,18 +1385,13 @@
       return BN_ROWS;
     }
 
-    function fmtPerL(sym, n, decimals = 2) {
-      if (!isFinite(n)) return '—';
-      return `${sym} ${n.toFixed(decimals)}/L`;
-    }
     /* Matches app.js / country pages — synced via localStorage key "currency" */
-    const TERMINAL_USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061 };
     function isTerminalUsd() {
       return (localStorage.getItem('currency') || 'local') === 'usd';
     }
     function fmtTerminalPerL(localSym, n, decimals = 2) {
       if (!isFinite(n)) return '—';
-      const rate = TERMINAL_USD_RATES[localSym];
+      const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
         return `USD ${(n * rate).toFixed(3)}/L`;
       }
@@ -1459,31 +1400,25 @@
     function fmtIDR(v) {
       if (!isFinite(v)) return '—';
       if (isTerminalUsd()) {
-        return `USD ${(v * TERMINAL_USD_RATES.IDR).toFixed(4)}/L`;
+        return `USD ${(v * USD_RATES.IDR).toFixed(4)}/L`;
       }
       return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
     }
     function fmtIdrAmountPlain(v) {
       if (!isFinite(v)) return '—';
-      if (isTerminalUsd()) return (v * TERMINAL_USD_RATES.IDR).toFixed(4);
+      if (isTerminalUsd()) return (v * USD_RATES.IDR).toFixed(4);
       return Math.round(v).toLocaleString('en-US');
     }
     function fmtIdrSpreadLine(spread) {
       if (!isFinite(spread)) return '—';
-      if (isTerminalUsd()) return `${(spread * TERMINAL_USD_RATES.IDR).toFixed(4)} USD`;
+      if (isTerminalUsd()) return `${(spread * USD_RATES.IDR).toFixed(4)} USD`;
       return `${Math.round(spread).toLocaleString('en-US')} IDR`;
-    }
-    function fmtDate(d) {
-      if (!d) return '—';
-      const dt = new Date(d);
-      if (isNaN(dt.getTime())) return String(d);
-      return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
     }
     function deltaStr(cur, prev, currencyKey) {
       if (!isFinite(cur) || !isFinite(prev)) return '—';
       const diff = cur - prev;
       const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
-      const rate = TERMINAL_USD_RATES[currencyKey];
+      const rate = USD_RATES[currencyKey];
       if (isTerminalUsd() && rate != null) {
         const d = diff * rate;
         const dec = currencyKey === 'IDR' ? 4 : 3;
@@ -1665,8 +1600,8 @@
       const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND' };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
-        isTerminalUsd() && ccyKey && TERMINAL_USD_RATES[ccyKey] != null
-          ? TERMINAL_USD_RATES[ccyKey]
+        isTerminalUsd() && ccyKey && USD_RATES[ccyKey] != null
+          ? USD_RATES[ccyKey]
           : 1;
 
       const nextDs = (datasets || []).map(ds => ({
@@ -1759,7 +1694,6 @@
       if (!meta) return;
       await waitForChartJs();
 
-      const COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
       const takeLast = (arr, n) => arr.slice(Math.max(0, arr.length - n));
       const asNum = (v) => {
         const n = parseFloat(v);
@@ -1776,7 +1710,7 @@
       const buildSeries = ({ rows, keys, labels, colorOffset = 0 }) => {
         return keys.map((k, i) => ({
           label: k.label,
-          color: COLORS[(colorOffset + i) % COLORS.length],
+          color: CHART_COLORS[(colorOffset + i) % CHART_COLORS.length],
           data: labels.map(d => {
             const r = rows.find(x => x.__label === d);
             return r ? asNum(r[k.key]) : null;
@@ -1788,7 +1722,7 @@
       if (countryId === 360) {
         const rows = await ensureIndonesiaRows();
         const city = document.getElementById('city-select')?.value || localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-        const cityRows = terminalSortRowsByDate(rows.filter((r) => r.city === city));
+        const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
         const sliceRows = takeLast(cityRows, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const datasets = buildSeries({ rows: sliceRows, keys: ID_FUELS, labels });
@@ -1825,7 +1759,7 @@
       // Malaysia
       if (countryId === 458) {
         const rows = await ensureMalaysiaRows();
-        const seriesAsc = terminalSortRowsByDate(rows || []);
+        const seriesAsc = sortRowsByDate(rows || []);
 
         if (MY_INDEX == null) MY_INDEX = Math.max(0, seriesAsc.length - 1); // default: latest
         MY_INDEX = Math.max(0, Math.min(seriesAsc.length - 1, MY_INDEX));
@@ -1884,7 +1818,7 @@
       // Singapore
       if (countryId === 702) {
         const rows = await ensureSingaporeRows();
-        const seriesAsc = terminalSortRowsByDate(rows || []);
+        const seriesAsc = sortRowsByDate(rows || []);
 
         let idx = getPagerIndex(702);
         if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
@@ -1930,7 +1864,7 @@
       // Brunei
       if (countryId === 96) {
         const rows = await ensureBruneiRows();
-        const seriesAsc = terminalSortRowsByDate(rows || []);
+        const seriesAsc = sortRowsByDate(rows || []);
 
         let idx = getPagerIndex(96);
         if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
@@ -1977,7 +1911,7 @@
     }
 
     function getLatestTwoCityPrices(rows, city, fuelKey) {
-      const cityRows = terminalSortRowsByDate(rows.filter((r) => r.city === city));
+      const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
 
       const vals = cityRows
         .map(r => ({ date: r.date, val: parseFloat(r[fuelKey]) }))
@@ -2069,7 +2003,7 @@
           const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
           const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '─';
           const diffTxt = isTerminalUsd()
-            ? (Math.abs(diff) * TERMINAL_USD_RATES.IDR).toFixed(4)
+            ? (Math.abs(diff) * USD_RATES.IDR).toFixed(4)
             : Math.round(Math.abs(diff)).toLocaleString('en-US');
           kChg.textContent = `${arrow} ${isTerminalUsd() ? 'USD ' : ''}${diffTxt}`;
           kChg.className = `v delta ${cls}`;
@@ -2364,8 +2298,7 @@
       }, true);
     })();
 
-    // Map (adapted from index.html)
-    const SEA  = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
+    // Map
     const LIVE = {
       458: { name: 'Malaysia',  url: './malaysia.html'   },
       702: { name: 'Singapore', url: './singapore.html'  },
