@@ -1618,6 +1618,7 @@
               if (+selected === 458) {
                 refreshHighlights(458);
                 applySel();
+                if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(458, true);
                 return;
               }
             }
@@ -1626,6 +1627,7 @@
               if (+selected === 360) {
                 refreshHighlights(360);
                 applySel();
+                if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(360, true);
                 return;
               }
             }
@@ -1774,6 +1776,14 @@
             } else {
               [lon, lat] = d3.geoCentroid(f);
             }
+          } else if (+countryId === 458) {
+            const region = appMalaysiaRegionKey();
+            if (region === 'SabahSarawak') {
+              lon = 115; lat = 4;
+            } else {
+              lon = 102; lat = 4;
+            }
+            subFocus = true;
           } else {
             [lon, lat] = d3.geoCentroid(f);
           }
@@ -1782,7 +1792,10 @@
           const padZ = 58;
           const fitS = subFocus ? null : computeFitScale(f, target, padZ);
           let nextScale = fitS ? Math.max(baseScale * 0.90, Math.min(baseScale * 4.8, fitS)) : projection.scale();
-          if (subFocus) nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, baseScale * 2.15));
+          if (subFocus) {
+            const floor = +countryId === 458 ? baseScale * 2.12 : baseScale * 2.15;
+            nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
+          }
 
           if (!animate) {
             projection.rotate(target);
@@ -1794,7 +1807,11 @@
 
           const r0 = projection.rotate();
           const s0 = projection.scale();
-          const interpR = d3.interpolate(r0, target);
+          // Shortest-arc longitude interpolation prevents globe spinning the long way round
+          let dLon = target[0] - r0[0];
+          while (dLon > 180) dLon -= 360;
+          while (dLon < -180) dLon += 360;
+          const interpR = t => [r0[0] + t * dLon, r0[1] + t * (target[1] - r0[1]), 0];
           const interpS = d3.interpolateNumber(s0, nextScale);
           svg.interrupt();
           svg.transition().duration(420).tween('appFocus', () => (t) => {
