@@ -173,9 +173,15 @@
     }
     .grab{
       flex-shrink: 0;
-      padding: 10px 0 8px;
+      /* ≥44px touch target for phones */
+      min-height: 44px;
+      padding: 14px 0 12px;
+      margin: 0;
       background: transparent;
       touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
       cursor: grab;
     }
     .grab:active{ cursor: grabbing; }
@@ -196,23 +202,29 @@
       padding: 8px 14px 20px;
       display: grid;
       gap: 22px;
-      /* Soft fade at all clip edges (premium scroll / peek) */
-      -webkit-mask-image:
-        linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
-        linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
-      mask-image:
-        linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
-        linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
-      -webkit-mask-composite: source-in;
-      mask-composite: intersect;
-      mask-repeat: no-repeat;
-      mask-size: 100% 100%;
-      -webkit-mask-size: 100% 100%;
+    }
+    /* Masks on scrollers break iOS touch scrolling — keep fade on fine pointers only */
+    @media (hover: hover) and (pointer: fine){
+      .sheet-scroll{
+        -webkit-mask-image:
+          linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+          linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+        mask-image:
+          linear-gradient(to bottom, transparent 0%, #000 7%, #000 93%, transparent 100%),
+          linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+        -webkit-mask-size: 100% 100%;
+      }
     }
     .sheet.sheet-expanded .sheet-scroll{
       overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
+      touch-action: pan-y;
     }
     .card{
       border-radius: 0;
@@ -281,6 +293,9 @@
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
     .chart-wrap{ height: 210px; padding: 12px; }
     .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
+    .sheet.sheet-expanded .chart-wrap{
+      touch-action: pan-y;
+    }
     .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: rgba(0,0,0,0.78); }
     .overview-metrics{
       display: grid;
@@ -899,7 +914,7 @@
       let snap = 1;
       const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
       const heights = () => {
-        const vh = window.innerHeight;
+        const vh = window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
         const quarter = Math.round(vh * 0.25);
         const half = Math.round(vh * 0.5);
         const expandedTop = Math.round(Math.min(vh - 72, vh * 0.94));
@@ -910,7 +925,7 @@
         const px = Math.round(h);
         document.documentElement.style.setProperty('--sheetH', `${px}px`);
         const { half, expanded } = heights();
-        const scrollThreshold = half + (expanded - half) * 0.55;
+        const scrollThreshold = half + (expanded - half) * 0.48;
         const isExpanded = px >= scrollThreshold;
         sheet.classList.toggle('sheet-expanded', isExpanded);
         if (!isExpanded && scroller) scroller.scrollTop = 0;
@@ -937,13 +952,15 @@
         if (RIGHT_CHART) setTimeout(() => RIGHT_CHART.resize(), 60);
       }
       function onDown(e){
+        if (e.cancelable && e.type === 'touchstart') e.preventDefault();
         dragging = true;
         startY = (e.touches ? e.touches[0].clientY : e.clientY);
         startH = sheet.getBoundingClientRect().height;
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
         window.addEventListener('touchmove', onMove, { passive: false });
-        window.addEventListener('touchend', onUp);
+        window.addEventListener('touchend', onUp, { passive: true });
+        window.addEventListener('touchcancel', onUp, { passive: true });
       }
       function onMove(e){
         if (!dragging) return;
@@ -960,11 +977,12 @@
         window.removeEventListener('mouseup', onUp);
         window.removeEventListener('touchmove', onMove);
         window.removeEventListener('touchend', onUp);
+        window.removeEventListener('touchcancel', onUp);
         const h = sheet.getBoundingClientRect().height;
         setSnap(nearestSnapIndex(h));
       }
       grab.addEventListener('mousedown', onDown);
-      grab.addEventListener('touchstart', onDown, { passive: true });
+      grab.addEventListener('touchstart', onDown, { passive: false });
       grab.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -972,7 +990,9 @@
         }
       });
       setSnap(1);
-      window.addEventListener('resize', () => setSnap(snap));
+      const onViewportResize = () => setSnap(snap);
+      window.addEventListener('resize', onViewportResize);
+      window.visualViewport?.addEventListener('resize', onViewportResize);
     }
 
     function initSearch(){
