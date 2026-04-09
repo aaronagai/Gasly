@@ -3,3 +3,22 @@
   --font:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
 }
+
+/* Wordmark — DM Sans Semibold (600); load DM Sans on each page via Google Fonts */
+.site-wordmark {
+  font-family: 'DM Sans', var(--font);
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.site-wordmark:hover {
+  opacity: 0.88;
+}
+
+a.site-wordmark:active {
+  opacity: 0.78;
+}

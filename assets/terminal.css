@@ -243,7 +243,7 @@
       z-index: 7;
       display: inline-flex;
       align-items: center;
-      gap: 0;
+      gap: 12px;
       padding: 0;
       border-radius: 0;
       border: none;
@@ -254,6 +254,13 @@
       user-select: none;
       height: 36px;
       max-width: min(520px, calc(100% - 24px));
+    }
+
+    .map-topbar-wordmark.site-wordmark {
+      flex-shrink: 0;
+      font-size: 0.8125rem;
+      color: var(--term-fg-strong);
+      line-height: 1;
     }
 
     .panel-toggle{

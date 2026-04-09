@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="assets/icons/applogo.png" />
   <title>PetrolPrice — World Live Fuel Prices</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/index.css" />
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -26,13 +26,7 @@
 <body>
   <header>
     <div class="logo-block">
-      <img src="logo.svg" alt="PetrolPrice logo" class="site-logo" />
-      <div>
-        <h1 class="site-title">
-          <span class="title-regular">Petrol</span><span class="title-bold">Price</span>
-        </h1>
-        <p class="site-subtitle">World Live Fuel Prices</p>
-      </div>
+      <h1 class="site-wordmark">petrolprice.xyz</h1>
     </div>
 
     <div class="header-actions">
@@ -67,19 +61,35 @@
   </div>
 
   <!-- ── Footer ────────────────────────────────────────────────── -->
-  <footer>
-    <div class="footer-brand">PetrolPrice</div>
-    <div class="footer-tagline">Real-time fuel prices across Southeast Asia and beyond.</div>
-    <nav class="footer-nav">
-      <a href="#">About</a>
-      <span class="footer-sep">·</span>
-      <a href="mailto:hello@petrolprice.xyz">Contact</a>
-      <span class="footer-sep">·</span>
-      <a href="https://github.com/aaronagai/PetrolPrice.xyz" target="_blank" rel="noopener">GitHub</a>
-      <span class="footer-sep">·</span>
-      <a href="#">Privacy</a>
-    </nav>
-    <div class="footer-copy">© 2025 PetrolPrice.xyz. Open source under MIT License.</div>
+  <footer class="site-footer">
+    <div class="footer-row footer-row-top">
+      <div class="footer-brand site-wordmark">petrolprice.xyz</div>
+      <nav class="footer-nav-primary" aria-label="Footer">
+        <a href="#">About</a>
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <a href="#">FAQ</a>
+      </nav>
+    </div>
+    <div class="footer-divider" aria-hidden="true"></div>
+    <div class="footer-row footer-row-bottom">
+      <div class="footer-legal">
+        <span class="footer-copyright">© 2026 petrolprice.xyz. All rights reserved.</span>
+        <span class="footer-legal-sep" aria-hidden="true">·</span>
+        <a href="#">Privacy Policy</a>
+        <span class="footer-legal-sep" aria-hidden="true">·</span>
+        <a href="#">Terms of Service</a>
+      </div>
+      <div class="footer-contact">
+        <a href="mailto:hello@petrolprice.xyz">hello@petrolprice.xyz</a>
+        <a href="https://x.com/aaronagai" target="_blank" rel="noopener noreferrer" class="footer-social-x">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span>@aaronagai</span>
+        </a>
+      </div>
+    </div>
   </footer>
 
   <!-- Tooltip -->
