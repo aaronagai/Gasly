@@ -1,5 +1,41 @@
 /* Shared constants — loaded by index.html, terminal.html, app.html */
 
+/**
+ * Apple MapKit JS JWT (see https://developer.apple.com/documentation/mapkitjs/creating-a-maps-token).
+ * Tokens expire (often ~30 minutes). For production, mint JWTs on your server and/or set
+ * window.__MAPKIT_JWT at runtime. Leave empty to use OpenFreeMap (MapLibre) in terminal.html.
+ */
+const MAPKIT_JWT = '';
+
+function getMapKitJwt() {
+  try {
+    if (typeof window !== 'undefined' && window.__MAPKIT_JWT) {
+      const w = String(window.__MAPKIT_JWT).trim();
+      if (w) return w;
+    }
+  } catch (_) {}
+  return typeof MAPKIT_JWT === 'string' ? MAPKIT_JWT.trim() : '';
+}
+
+/** OpenFreeMap style for MapLibre GL (https://openfreemap.org/). Light: Positron. */
+const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron';
+
+/**
+ * Dark / night basemap when `prefers-color-scheme: dark` (terminal, app, index maps).
+ * Fork of OpenFreeMap `dark` with dark water and lighter land (see assets/openfreemap-dark-landwater.json).
+ */
+const OPENFREEMAP_STYLE_URL_DARK = 'assets/openfreemap-dark-landwater.json';
+
+function getOpenFreeMapStyleUrl() {
+  try {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      const d = typeof OPENFREEMAP_STYLE_URL_DARK === 'string' ? OPENFREEMAP_STYLE_URL_DARK.trim() : '';
+      if (d) return d;
+    }
+  } catch (_) {}
+  return typeof OPENFREEMAP_STYLE_URL === 'string' ? OPENFREEMAP_STYLE_URL : 'https://tiles.openfreemap.org/styles/positron';
+}
+
 const SHEET_ID   = '1kvbA3aTL_4VvjSjsx7n0kcOLbjrXvDRnru8NEF1pDCE';
 const MY_API_URL = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-date&limit=30';
 const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;

@@ -10,19 +10,21 @@
   <meta name="theme-color" id="meta-theme-color" content="#ff6a00" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="assets/icons/applogo.png" />
-  <link rel="icon" type="image/png" href="assets/icons/applogo.png" />
+  <link rel="apple-touch-icon" href="assets/appicon.png" />
+  <link rel="icon" type="image/png" href="assets/appicon.png" />
   <title>PetrolPrice — App</title>
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/app.css" />
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
+  <script src="assets/app-map-openfreemap.js"></script>
   <!-- styles: assets/app.css -->
 </head>
 <body>
@@ -122,16 +124,46 @@
     // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, asNum, buildChartSeries — from utils.js
 
+    /** ISO id → name for map hover/hit (same set as terminal). */
+    const MAP_COUNTRY_NAMES = {
+      36:'Australia', 50:'Bangladesh', 96:'Brunei', 104:'Myanmar',
+      116:'Cambodia', 144:'Sri Lanka', 156:'China', 158:'Taiwan',
+      356:'India', 360:'Indonesia', 392:'Japan', 410:'South Korea',
+      418:'Laos', 458:'Malaysia', 598:'Papua New Guinea', 608:'Philippines',
+      626:'Timor-Leste', 702:'Singapore', 704:'Vietnam', 764:'Thailand',
+    };
+
     let selected = 458;
     let RIGHT_CHART = null;
     let APP_ZOOM_TO = null;
 
-    function getSearchRegions() {
+    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, ID cities (matches terminal data model). */
+    async function buildSearchRegionsList() {
       const rows = [];
-      rows.push({ countryId: 458, label: `${COUNTRIES[458].name} - Semenanjung`, myRegion: 'Semenanjung' });
-      rows.push({ countryId: 458, label: `${COUNTRIES[458].name} - East Malaysia`, myRegion: 'SabahSarawak' });
-      rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
-      rows.push({ countryId: 96,  label: `${COUNTRIES[96].name} - National` });
+      MY_REGIONS.forEach((r) => {
+        rows.push({
+          countryId: 458,
+          label: `${COUNTRIES[458].name} - ${r.label}`,
+          myRegion: r.key,
+        });
+      });
+      rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
+
+      let sgRows = [];
+      try {
+        sgRows = await ensureSheetRows(SG_SHEET_URL);
+      } catch (_) {
+        sgRows = [];
+      }
+      const sgProvs = sortedSingaporeProviders(sgRows);
+      if (sgProvs.length) {
+        sgProvs.forEach((p) => {
+          rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - ${p}`, sgProvider: p });
+        });
+      } else {
+        rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
+      }
+
       Object.keys(ID_CITY_LONLAT)
         .sort((a, b) => a.localeCompare(b))
         .forEach((city) => {
@@ -156,12 +188,6 @@
       }
     }
 
-    function applyMalaysiaClickRegion(event, svgNode, projection) {
-      const inv = projection.invert(d3.pointer(event, svgNode));
-      if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
-      try { localStorage.setItem('terminal_my_region', malaysiaRegionFromLngLat(inv[0], inv[1])); } catch (_) {}
-    }
-
     function getIndonesiaCity() {
       try { return localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) { return 'Jakarta Pusat'; }
     }
@@ -170,12 +196,6 @@
       const inp = document.getElementById('country-search');
       if (!inp || document.activeElement === inp) return;
       inp.value = '';
-    }
-
-    function applyIndonesiaClickCity(event, svgNode, projection) {
-      const inv = projection.invert(d3.pointer(event, svgNode));
-      if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
-      try { localStorage.setItem('terminal_id_city', indonesiaCityFromLngLat(inv[0], inv[1])); } catch (_) {}
     }
 
     // Data fetch helpers — ensureMalaysiaRows / ensureSheetRows come from utils.js
@@ -491,6 +511,9 @@
       renderCountryOverview(cid);
       refreshHighlights(cid);
       if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(cid, true);
+      if (typeof window.__appMapApplySelection === 'function') {
+        try { window.__appMapApplySelection(); } catch (_) {}
+      }
     }
 
     function syncHiStickyShadow() {
@@ -609,18 +632,22 @@
       window.visualViewport?.addEventListener('resize', onViewportResize);
     }
 
-    function initSearch(){
+    async function initSearch(){
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
-      const list = getSearchRegions();
+      const list = await buildSearchRegionsList();
       let open = false;
       const openMenu = () => { open=true; menu.classList.add('open'); };
       const closeMenu = () => { open=false; menu.classList.remove('open'); };
+      const escAttr = (s) => String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;');
       const render = (items) => {
         menu.innerHTML = items
           .map(
             (x) =>
-              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${x.myRegion ?? ''}" data-id-city="${x.idCity ?? ''}">${x.label}</div>`
+              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${escAttr(x.myRegion ?? '')}" data-id-city="${escAttr(x.idCity ?? '')}" data-sg-provider="${x.sgProvider != null ? escAttr(x.sgProvider) : ''}">${x.label}</div>`
           )
           .join('');
       };
@@ -642,11 +669,18 @@
         const countryId = +it.getAttribute('data-country-id');
         const mr = it.getAttribute('data-my-region');
         const ic = it.getAttribute('data-id-city');
+        const sgProv = it.getAttribute('data-sg-provider');
         if (mr) {
           try { localStorage.setItem('terminal_my_region', mr); } catch (_) {}
         }
         if (ic) {
           try { localStorage.setItem('terminal_id_city', ic); } catch (_) {}
+        }
+        if (countryId === 702) {
+          try {
+            if (sgProv) localStorage.setItem('terminal_sg_provider', sgProv);
+            else localStorage.removeItem('terminal_sg_provider');
+          } catch (_) {}
         }
         setSelected(countryId);
         input.value = '';
@@ -675,230 +709,32 @@
       });
     }
 
-    function initMap(){
+    function initMap() {
       const root = document.getElementById('map');
-      const rect = root.getBoundingClientRect();
-      const W = Math.max(320, Math.floor(rect.width));
-      const H = Math.max(320, Math.floor(rect.height));
-      const svg = d3.select(root).append('svg')
-        .attr('viewBox', `0 0 ${W} ${H}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet');
-
-      const baseScale = (Math.min(W, H) * 1.55) / 2;
-      // Center the globe slightly above geometric middle so the focused
-      // country clears the pull-up panel (default ~half screen).
-      const mapCenterY = H * 0.34;
-      const projection = d3.geoOrthographic()
-        .translate([W / 2, mapCenterY])
-        .scale(baseScale)
-        .clipAngle(90)
-        .precision(0.3);
-      const path = d3.geoPath(projection);
-      const mapG = svg.append('g');
-
-      Promise.all([
-        d3.json('./assets/countries-110m.json'),
-        d3.json('./assets/singapore-geo.json').catch(() => null),
-      ]).then(([world, sgGeo]) => {
-        const countries = topojson.feature(world, world.objects.countries);
-        const sgFeature = sgGeo && sgGeo.type === 'Feature'
-          ? Object.assign({}, sgGeo, { id: 702 })
-          : null;
-        const DEFAULT_CENTER = [115, 6];
-        projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
-
-        mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
-        mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
-
-        mapG.selectAll('.bg')
-          .data(countries.features.filter(d => !SEA.has(+d.id)))
-          .enter().append('path').attr('class', 'country').attr('d', path);
-
-        mapG.selectAll('.live-c')
-          .data(countries.features.filter(d => !!COUNTRIES[+d.id]))
-          .enter().append('path').attr('class', 'country live').attr('d', path)
-          .on('click', (e, d) => {
-            const id = +d.id;
-            if (id === 458) {
-              applyMalaysiaClickRegion(e, svg.node(), projection);
-              if (+selected === 458) {
-                refreshHighlights(458);
-                applySel();
-                if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(458, true);
-                return;
-              }
-            }
-            if (id === 360) {
-              applyIndonesiaClickCity(e, svg.node(), projection);
-              if (+selected === 360) {
-                refreshHighlights(360);
-                applySel();
-                if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(360, true);
-                return;
-              }
-            }
-            setSelected(id);
-            applySel();
-          });
-
-        const mesh = mapG.append('path')
-          .datum(topojson.mesh(world, world.objects.countries))
-          .attr('class', 'border-mesh')
-          .attr('d', path);
-
-        const liveBorders = mapG.selectAll('.border-live-p')
-          .data(countries.features.filter(d => !!COUNTRIES[+d.id]))
-          .enter().append('path')
-          .attr('class', 'border-live')
-          .attr('d', path);
-
-        if (sgFeature) {
-          mapG.append('path')
-            .datum(sgFeature)
-            .attr('class', 'country live country-sg')
-            .attr('d', path)
-            .on('click', (e) => {
-              e.stopPropagation();
-              if (+selected === 702) {
-                refreshHighlights(702);
-                applySel();
-                return;
-              }
-              setSelected(702);
-              applySel();
-            });
-        }
-
-        function applySel(){
-          mapG.selectAll('.country.live').classed('selected', (d) => d && +d.id === +selected);
-          liveBorders.classed('selected', d => +d.id === selected);
-        }
-        applySel();
-
-        function updateAll(){
-          mapG.selectAll('path').attr('d', path);
-        }
-
-        const minZoomK = 0.90;
-        const maxZoomK = 4.8;
-        let zoom;
-        function syncZoomFromProjection() {
-          svg.call(zoom.transform, d3.zoomIdentity.scale(projection.scale() / baseScale));
-        }
-        zoom = d3.zoom()
-          .scaleExtent([minZoomK, maxZoomK])
-          .filter((event) => {
-            if (event.type === 'wheel') return true;
-            if (event.type === 'mousedown') return false;
-            if (event.type === 'dblclick') return false;
-            if (event.type === 'touchstart' || event.type === 'touchmove') {
-              return event.touches && event.touches.length >= 2;
-            }
-            return false;
-          })
-          .on('zoom', (event) => {
-            projection.scale(baseScale * event.transform.k);
-            updateAll();
-          });
-
-        function computeFitScale(feature, rotateArr, padPx) {
-          const s0 = projection.scale();
-          const r0 = projection.rotate();
-          try {
-            projection.scale(1).rotate(rotateArr);
-            const b = path.bounds(feature);
-            const dx = b[1][0] - b[0][0];
-            const dy = b[1][1] - b[0][1];
-            if (!(dx > 0) || !(dy > 0)) return null;
-            const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
-            if (!isFinite(s) || s <= 0) return null;
-            return s;
-          } finally {
-            projection.scale(s0).rotate(r0);
-          }
-        }
-
-        // Expose: zoom/rotate to a selected country
-        APP_ZOOM_TO = function zoomToCountry(countryId, animate = true) {
-          const f = +countryId === 702 && sgFeature
-            ? sgFeature
-            : countries.features.find(x => +x.id === +countryId);
-          if (!f) return;
-
-          let lon, lat, subFocus = false;
-          if (+countryId === 360) {
-            const city = getIndonesiaCity();
-            const ll = ID_CITY_LONLAT[city];
-            if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
-              [lon, lat] = ll;
-              subFocus = true;
-            } else {
-              [lon, lat] = d3.geoCentroid(f);
-            }
-          } else if (+countryId === 458) {
-            const region = getMalaysiaRegion();
-            if (region === 'SabahSarawak') {
-              lon = 115; lat = 4;
-            } else {
-              lon = 102; lat = 4;
-            }
-            subFocus = true;
-          } else {
-            [lon, lat] = d3.geoCentroid(f);
-          }
-
-          const target = [-lon, -lat, 0];
-          const padZ = 58;
-          const fitS = subFocus ? null : computeFitScale(f, target, padZ);
-          let nextScale = fitS ? Math.max(baseScale * 0.90, Math.min(baseScale * 4.8, fitS)) : projection.scale();
-          if (subFocus) {
-            const floor = +countryId === 458 ? baseScale * 2.12 : baseScale * 2.15;
-            nextScale = Math.max(nextScale, Math.min(baseScale * 4.8, floor));
-          }
-
-          if (!animate) {
-            projection.rotate(target);
-            projection.scale(nextScale);
-            updateAll();
-            syncZoomFromProjection();
-            return;
-          }
-
-          const r0 = projection.rotate();
-          const s0 = projection.scale();
-          // Shortest-arc longitude interpolation prevents globe spinning the long way round
-          let dLon = target[0] - r0[0];
-          while (dLon > 180) dLon -= 360;
-          while (dLon < -180) dLon += 360;
-          const interpR = t => [r0[0] + t * dLon, r0[1] + t * (target[1] - r0[1]), 0];
-          const interpS = d3.interpolateNumber(s0, nextScale);
-          svg.interrupt();
-          svg.transition().duration(420).tween('appFocus', () => (t) => {
-            projection.rotate(interpR(t)).scale(interpS(t));
-            updateAll();
-          }).on('end', syncZoomFromProjection);
-        };
-
-        svg.call(zoom);
-
-        // Initial focus: selected country (syncs pinch/wheel zoom state via APP_ZOOM_TO)
-        APP_ZOOM_TO(selected, false);
-
-        // Drag rotate (lower sensitivity)
-        function rotateBy(dx, dy){
-          const r = projection.rotate();
-          const sens = 0.06;
-          const ddx = Math.abs(dx) < 1.5 ? 0 : dx;
-          const ddy = Math.abs(dy) < 1.5 ? 0 : dy;
-          projection.rotate([ r[0] + ddx * sens, Math.max(-85, Math.min(85, r[1] - ddy * sens)), 0 ]);
-          updateAll();
-        }
-        svg.style('cursor','grab');
-        svg.call(d3.drag()
-          .on('start', () => svg.style('cursor','grabbing'))
-          .on('drag', (ev) => rotateBy(ev.dx, ev.dy))
-          .on('end', () => svg.style('cursor','grab'))
-        );
+      if (!root) return;
+      window.__appMapApplySelection = null;
+      if (window.__appOfmMap) {
+        try {
+          window.__appOfmMap.remove();
+        } catch (_) {}
+        window.__appOfmMap = null;
+      }
+      APP_ZOOM_TO = null;
+      if (typeof window.__renderAppMapOpenFreeMap !== 'function') {
+        console.error('App OpenFreeMap bridge missing');
+        return;
+      }
+      window.__renderAppMapOpenFreeMap({
+        root,
+        COUNTRIES,
+        NAMES: MAP_COUNTRY_NAMES,
+        SEA_IDS: Array.from(SEA),
+        getSelected: () => selected,
+        setSelected,
+        refreshHighlights,
+        ID_CITY_LONLAT,
+        malaysiaRegionFromLngLat,
+        indonesiaCityFromLngLat,
       });
     }
 
@@ -1111,7 +947,7 @@
 
     // Init
     initSheet();
-    initSearch();
+    void initSearch();
     initExportStoryModal();
     initCardExport();
 

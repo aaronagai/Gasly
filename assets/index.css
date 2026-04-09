@@ -122,6 +122,61 @@
       position: absolute; inset: 0; overflow: hidden;
     }
 
+    .index-hero-map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .map-wrap .maplibregl-map,
+    .map-wrap .maplibregl-canvas-container {
+      position: absolute !important;
+      inset: 0;
+    }
+
+    .map-wrap .maplibregl-ctrl-bottom-right {
+      margin-bottom: 8px;
+      margin-right: 8px;
+    }
+
+    .index-map-my-live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .index-map-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 4px rgba(254, 94, 14, 0.55);
+      flex-shrink: 0;
+    }
+
+    .index-map-live-text {
+      font-family: var(--font-mono);
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+
+    .index-map-sg-hit {
+      width: 36px;
+      height: 36px;
+      margin: -18px 0 0 -18px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: transparent;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     .map-wrap svg {
       position: absolute; inset: 0;
       width: 100%; height: 100%; display: block;

@@ -10,14 +10,15 @@
   <meta name="theme-color" content="#ff6a00" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="assets/icons/applogo.png" />
-  <link rel="icon" type="image/png" href="assets/icons/applogo.png" />
+  <link rel="apple-touch-icon" href="assets/appicon.png" />
+  <link rel="icon" type="image/png" href="assets/appicon.png" />
   <title>PetrolPrice — World Live Fuel Prices</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/index.css" />
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
@@ -54,6 +55,7 @@
   <div class="hero">
 
     <div class="map-wrap" id="map-wrap">
+      <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
       <div class="map-vignette"></div>
       <div class="map-hint">Tap the glowing country to view live prices</div>
       <div class="hero-overlay">
@@ -102,7 +104,6 @@
   </div>
 
   <script>
-    // Map
     const LIVE = {
       458: { name: 'Malaysia',  url: './terminal.html?country=458&my_region=peninsular' },
       702: { name: 'Singapore', url: './terminal.html?country=702' },
@@ -118,41 +119,16 @@
       626:'Timor-Leste', 702:'Singapore', 704:'Vietnam', 764:'Thailand',
     };
 
-    const MAP_LABELS = {
-      104:'Myanmar',  116:'Cambodia',    360:'Indonesia',
-      418:'Laos',     608:'Philippines', 764:'Thailand', 704:'Vietnam',
-      156:'China',    356:'India',       36:'Australia', 392:'Japan',
-    };
-    const SEA_LABEL_IDS = new Set([104, 116, 360, 418, 608, 764, 704]);
-
+    const LIVE_IDS = Object.keys(LIVE).map(Number);
+    const LIVE_IDS_UNDER_SG = LIVE_IDS.filter((id) => id !== 702);
+    const SEA_IDS = Array.from(SEA);
     const mobile = window.matchMedia('(max-width: 640px)').matches;
-    const W = mobile ? 480 : 960;
-    const H = mobile ? 820 : 500;
-    const SCALE  = mobile ? 640 : 730;
-    const CENTER = [115, mobile ? 6 : 9];
 
-    const svg = d3.select('#map-wrap')
-      .insert('svg', ':first-child')
-      .attr('viewBox', `0 0 ${W} ${H}`)
-      .attr('preserveAspectRatio', 'xMidYMid meet');
-
-    const projection = d3.geoMercator()
-      .center(CENTER).scale(SCALE).translate([W / 2, H / 2]);
-
-    const path = d3.geoPath().projection(projection);
-
-    /* Map layer */
-    const mapG = svg.append('g');
-
-    mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
-    mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
-
-    /* Tooltip */
     const tooltip   = document.getElementById('tooltip');
     const ttCountry = document.getElementById('tt-country');
     const ttStatus  = document.getElementById('tt-status');
 
-    function showTip(e, id) {
+    function showTip(clientX, clientY, id) {
       const name = NAMES[id];
       if (!name) return;
       const live = !!LIVE[id];
@@ -160,111 +136,244 @@
       ttStatus.textContent  = live ? '● Live data' : '○ Coming soon';
       ttStatus.className    = 'tt-status ' + (live ? 'live' : 'soon');
       tooltip.classList.add('show');
-      moveTip(e.clientX, e.clientY);
+      moveTip(clientX, clientY);
     }
 
     function moveTip(cx, cy) {
       let x = cx + 14, y = cy - 46;
       if (x + 170 > window.innerWidth) x = cx - 170;
-      if (y < 8)                        y = cy + 14;
+      if (y < 8) y = cy + 14;
       tooltip.style.left = x + 'px';
       tooltip.style.top  = y + 'px';
     }
 
     function hideTip() { tooltip.classList.remove('show'); }
 
-    document.addEventListener('touchstart', hideTip, { passive: true });
+    document.addEventListener('touchstart', (e) => {
+      if (e.target.closest('#index-hero-map') || e.target.closest('#tooltip')) return;
+      hideTip();
+    }, { passive: true });
 
-    d3.json('./assets/countries-110m.json')
-      .then(world => {
-        const countries = topojson.feature(world, world.objects.countries);
+    const styleUrl =
+      typeof getOpenFreeMapStyleUrl === 'function'
+        ? getOpenFreeMapStyleUrl()
+        : typeof OPENFREEMAP_STYLE_URL === 'string'
+          ? OPENFREEMAP_STYLE_URL
+          : 'https://tiles.openfreemap.org/styles/positron';
 
-        /* Rest of world */
-        mapG.selectAll('.bg')
-          .data(countries.features.filter(d => !SEA.has(+d.id)))
-          .enter().append('path').attr('class', 'country').attr('d', path)
-          .on('mousemove', (e, d) => showTip(e, +d.id))
-          .on('mouseleave', hideTip)
-          .on('touchstart', (e, d) => {
-            e.stopPropagation();
-            const t = e.touches[0];
-            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
-          }, { passive: true });
+    Promise.all([
+      fetch('./assets/countries-110m.json').then((r) => r.json()),
+      fetch('./assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
+    ]).then(([world, sgFeat]) => {
+      const countries = topojson.feature(world, world.objects.countries);
+      const features = countries.features.map((f) => ({
+        type: 'Feature',
+        id: f.id,
+        properties: { ...(f.properties || {}), nid: +f.id },
+        geometry: f.geometry,
+      }));
+      if (sgFeat && sgFeat.type === 'Feature' && sgFeat.geometry) {
+        features.push({
+          type: 'Feature',
+          properties: { ...(sgFeat.properties || {}), nid: 702 },
+          geometry: sgFeat.geometry,
+        });
+      }
 
-        /* SEA (non-live) */
-        mapG.selectAll('.sea-c')
-          .data(countries.features.filter(d => SEA.has(+d.id) && !LIVE[+d.id]))
-          .enter().append('path').attr('class', 'country sea').attr('d', path)
-          .on('mousemove', (e, d) => showTip(e, +d.id))
-          .on('mouseleave', hideTip)
-          .on('touchstart', (e, d) => {
-            e.stopPropagation();
-            const t = e.touches[0];
-            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
-          }, { passive: true });
-
-        /* Live countries */
-        mapG.selectAll('.live-c')
-          .data(countries.features.filter(d => LIVE[+d.id]))
-          .enter().append('path').attr('class', 'country live').attr('d', path)
-          .on('mousemove', (e, d) => showTip(e, +d.id))
-          .on('mouseleave', hideTip)
-          .on('click', (e, d) => { const c = LIVE[+d.id]; if (c) window.location.href = c.url; })
-          .on('touchend', (e, d) => {
-            e.preventDefault();
-            const c = LIVE[+d.id]; if (c) window.location.href = c.url;
-          });
-
-        /* Border mesh — every shared/coastal edge drawn exactly once */
-        mapG.append('path')
-          .datum(topojson.mesh(world, world.objects.countries))
-          .attr('class', 'border-mesh').attr('d', path);
-
-        /* Live country borders drawn on top in cyan */
-        mapG.selectAll('.border-live-p')
-          .data(countries.features.filter(d => LIVE[+d.id]))
-          .enter().append('path')
-          .attr('class', 'border-live').attr('d', path);
-
-        /* Country labels */
-
-
-        /* Singapore pin */
-        const [sgx, sgy] = projection([103.82, 1.35]);
-        if (sgx > 0 && sgx < W && sgy > 0 && sgy < H) {
-          const ox = mobile ? 18 : 22, oy = mobile ? 18 : 22;
-          const lx = sgx - ox, ly = sgy - oy;
-          const sg = mapG.append('g').attr('class', 'sg-pin');
-
-          sg.append('circle')
-            .attr('cx', sgx).attr('cy', sgy).attr('r', mobile ? 18 : 14)
-            .attr('fill', 'transparent').attr('cursor', 'pointer')
-            .on('mousemove', e => showTip(e, 702)).on('mouseleave', hideTip)
-            .on('click', () => { window.location.href = './terminal.html?country=702'; })
-            .on('touchend', e => { e.preventDefault(); window.location.href = './terminal.html?country=702'; })
-            .on('touchstart', e => {
-              e.stopPropagation();
-              const t = e.touches[0];
-              showTip({ clientX: t.clientX, clientY: t.clientY }, 702);
-            }, { passive: true });
-        }
-
-        /* Malaysia ping + LIVE badge */
-        const MY = countries.features.find(f => +f.id === 458);
-        if (MY) {
-          const [cx, cy] = path.centroid(MY);
-          const ringMax = mobile ? 28 : 32;
-          const dotR    = mobile ? 3.5 : 4;
-          const tagSize = mobile ? 8 : 7;
-          const g = mapG.append('g').attr('pointer-events', 'none');
-
-          g.append('circle').attr('class', 'ping-dot')
-            .attr('cx', cx).attr('cy', cy).attr('r', dotR);
-          g.append('text').attr('class', 'live-tag')
-            .attr('x', cx + dotR + 5).attr('y', cy - 10)
-            .attr('font-size', tagSize).text('LIVE');
-        }
+      const map = new maplibregl.Map({
+        container: 'index-hero-map',
+        style: styleUrl,
+        center: [115, mobile ? 6 : 9],
+        zoom: mobile ? 3.85 : 4.15,
+        minZoom: 2.6,
+        maxZoom: 14,
+        maxPitch: 0,
+        dragRotate: false,
+        pitchWithRotate: false,
+        touchPitch: false,
+        cooperativeGestures: true,
+        attributionControl: true,
       });
+
+      let hoveredNid = null;
+      function clearHover() {
+        if (hoveredNid != null) {
+          try {
+            map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: false });
+          } catch (_) {}
+          hoveredNid = null;
+        }
+      }
+
+      function pickCountryId(e) {
+        if (!map.getLayer('countries-hit')) return null;
+        const feats = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
+        if (!feats.length) return null;
+        const nid = feats[0].properties.nid;
+        return NAMES[nid] != null ? nid : null;
+      }
+
+      map.on('load', () => {
+        map.addSource('countries', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features },
+          promoteId: 'nid',
+        });
+
+        map.addLayer({
+          id: 'countries-hit',
+          type: 'fill',
+          source: 'countries',
+          paint: { 'fill-opacity': 0 },
+        });
+
+        map.addLayer({
+          id: 'countries-hover-nonlive',
+          type: 'fill',
+          source: 'countries',
+          filter: ['!', ['in', ['get', 'nid'], ['literal', LIVE_IDS]]],
+          paint: {
+            'fill-color': '#303030',
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.08, 0],
+          },
+        });
+
+        const indexLiveFillPaint = {
+          'fill-color': 'rgba(254,94,14,1)',
+          'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.32, 0.18],
+        };
+
+        map.addLayer({
+          id: 'countries-live-fill',
+          type: 'fill',
+          source: 'countries',
+          filter: ['in', ['get', 'nid'], ['literal', LIVE_IDS_UNDER_SG]],
+          paint: indexLiveFillPaint,
+        });
+
+        map.addLayer({
+          id: 'countries-live-fill-singapore',
+          type: 'fill',
+          source: 'countries',
+          filter: ['==', ['get', 'nid'], 702],
+          paint: indexLiveFillPaint,
+        });
+
+        map.addLayer({
+          id: 'countries-outline',
+          type: 'line',
+          source: 'countries',
+          filter: ['!=', ['get', 'nid'], 702],
+          paint: {
+            'line-color': [
+              'case',
+              ['in', ['get', 'nid'], ['literal', LIVE_IDS]],
+              'rgba(254,94,14,0.85)',
+              ['in', ['get', 'nid'], ['literal', SEA_IDS]],
+              'rgba(48,48,48,0.24)',
+              'rgba(48,48,48,0.16)',
+            ],
+            'line-width': ['case', ['in', ['get', 'nid'], ['literal', LIVE_IDS]], 1.35, 0.55],
+          },
+        });
+
+        map.addLayer({
+          id: 'countries-outline-singapore',
+          type: 'line',
+          source: 'countries',
+          filter: ['==', ['get', 'nid'], 702],
+          paint: {
+            'line-color': 'rgba(254,94,14,0.85)',
+            'line-width': 1.35,
+          },
+        });
+      });
+
+      map.on('mousemove', (e) => {
+        const nid = pickCountryId(e);
+        const canvas = map.getCanvas();
+        if (nid == null) {
+          clearHover();
+          hideTip();
+          canvas.style.cursor = '';
+          return;
+        }
+        if (hoveredNid !== nid) {
+          clearHover();
+          hoveredNid = nid;
+          try {
+            map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: true });
+          } catch (_) {}
+        }
+        canvas.style.cursor = LIVE[nid] || SEA_IDS.includes(nid) ? 'pointer' : '';
+        showTip(e.originalEvent.clientX, e.originalEvent.clientY, nid);
+      });
+
+      map.on('mouseout', () => {
+        clearHover();
+        hideTip();
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', (e) => {
+        const nid = pickCountryId(e);
+        if (nid == null) return;
+        const c = LIVE[nid];
+        if (c) window.location.href = c.url;
+      });
+
+      map.on('touchstart', (e) => {
+        if (!e.originalEvent.touches || !e.originalEvent.touches.length) return;
+        const nid = pickCountryId(e);
+        if (nid == null) {
+          hideTip();
+          return;
+        }
+        const t = e.originalEvent.touches[0];
+        showTip(t.clientX, t.clientY, nid);
+      });
+
+      const myBadge = document.createElement('div');
+      myBadge.className = 'index-map-my-live-badge';
+      myBadge.innerHTML = '<span class="index-map-live-dot"></span><span class="index-map-live-text">LIVE</span>';
+      new maplibregl.Marker({ element: myBadge, anchor: 'left' })
+        .setLngLat([101.72, 3.42])
+        .addTo(map);
+
+      const sgHit = document.createElement('button');
+      sgHit.type = 'button';
+      sgHit.className = 'index-map-sg-hit';
+      sgHit.setAttribute('aria-label', 'Singapore — live prices');
+      new maplibregl.Marker({ element: sgHit, anchor: 'center' })
+        .setLngLat([103.82, 1.35])
+        .addTo(map);
+
+      sgHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 702));
+      sgHit.addEventListener('mouseleave', hideTip);
+      sgHit.addEventListener('click', () => { window.location.href = LIVE[702].url; });
+      sgHit.addEventListener('touchstart', (ev) => {
+        ev.stopPropagation();
+        const t = ev.touches[0];
+        showTip(t.clientX, t.clientY, 702);
+      }, { passive: true });
+      sgHit.addEventListener('touchend', (ev) => {
+        ev.preventDefault();
+        window.location.href = LIVE[702].url;
+      });
+
+      const wrap = document.getElementById('map-wrap');
+      if (wrap && typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => {
+          try { map.resize(); } catch (_) {}
+        });
+        ro.observe(wrap);
+      }
+      window.addEventListener('resize', () => {
+        try { map.resize(); } catch (_) {}
+      });
+    }).catch((err) => {
+      console.error('Index map failed to load', err);
+    });
 
     const hdr = document.querySelector('header');
     window.addEventListener('scroll', () => {

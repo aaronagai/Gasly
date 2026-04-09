@@ -187,9 +187,27 @@
       pointer-events: auto;
       background: var(--bg);
     }
-    .app-map-backdrop .terminal-map-wrap {
+    .terminal-map-stack {
       position: absolute;
       inset: 0;
+    }
+
+    /* Fades map opacity at the top so the top bar / search read clearly; clicks pass through. */
+    .terminal-map-top-fade {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: min(260px, 44vh);
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--bg) 92%, transparent) 0%,
+        color-mix(in srgb, var(--bg) 55%, transparent) 38%,
+        color-mix(in srgb, var(--bg) 18%, transparent) 72%,
+        transparent 100%
+      );
     }
 
     .left,
@@ -867,6 +885,21 @@
       inset: 0;
       overflow: hidden;
       z-index: 1;
+    }
+    #terminal-map.terminal-mapkit-root,
+    #terminal-map.terminal-map-openfreemap-root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 200px;
+      filter: none;
+    }
+
+    .terminal-map-wrap .maplibregl-map,
+    .terminal-map-wrap .maplibregl-canvas-container {
+      position: absolute !important;
+      inset: 0;
     }
     .terminal-map-wrap svg{
       filter: drop-shadow(0 20px 40px var(--term-map-svg-shadow));

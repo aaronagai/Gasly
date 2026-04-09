@@ -9,8 +9,7 @@
   "theme_color": "#ff6a00",
   "icons": [
     {
-      "src": "assets/icons/applogo.png",
-      "sizes": "386x386",
+      "src": "assets/appicon.png",
       "type": "image/png",
       "purpose": "any"
     }

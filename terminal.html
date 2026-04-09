@@ -6,16 +6,22 @@
   <meta name="color-scheme" content="light dark" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f1f1f0" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0f0f" />
+  <meta name="apple-mobile-web-app-title" content="PetrolPrice" />
+  <link rel="apple-touch-icon" href="assets/appicon.png" />
+  <link rel="icon" type="image/png" href="assets/appicon.png" />
   <title>PetrolPrice — Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/terminal.css" />
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
+  <script src="assets/terminal-map-mapkit.js"></script>
+  <script src="assets/terminal-map-openfreemap.js"></script>
   <!-- styles: assets/terminal.css -->
 </head>
 <body>
@@ -26,7 +32,10 @@
 
   <div class="app" role="application" aria-label="Terminal">
     <div class="app-map-backdrop">
-      <div class="terminal-map-wrap" id="terminal-map"></div>
+      <div class="terminal-map-stack">
+        <div class="terminal-map-wrap" id="terminal-map"></div>
+        <div class="terminal-map-top-fade" aria-hidden="true"></div>
+      </div>
     </div>
 
     <aside class="left" aria-label="Portfolio overview">
@@ -756,6 +765,9 @@
       // Reset/keep paging state based on country
       if (countryId !== 458) MY_INDEX = null;
       updateRightPanelForCountry(countryId).catch(() => {});
+      if (typeof window.__terminalMapKitApplySelection === 'function') {
+        try { window.__terminalMapKitApplySelection(); } catch (_) {}
+      }
     }
 
     // Malaysia region dropdown (click the underlined title)
@@ -1046,291 +1058,127 @@
     }
 
     function hideTip() { tooltip.classList.remove('show'); }
-    document.addEventListener('touchstart', hideTip, { passive: true });
+    document.addEventListener('touchstart', (e) => {
+      if (e.target.closest('#terminal-map') || e.target.closest('#tooltip')) return;
+      hideTip();
+    }, { passive: true });
+
+    let __terminalMapKitLoadPromise = null;
+
+    function ensureMapKitCoreLoaded(jwt) {
+      if (window.mapkit) return Promise.resolve();
+      if (__terminalMapKitLoadPromise) return __terminalMapKitLoadPromise;
+      __terminalMapKitLoadPromise = new Promise((resolve, reject) => {
+        const cbName = '__terminalMapKitCoreCb';
+        window[cbName] = function () {
+          try {
+            delete window[cbName];
+          } catch (_) {}
+          __terminalMapKitLoadPromise = null;
+          resolve();
+        };
+        const s = document.createElement('script');
+        s.src = 'https://cdn.apple-mapkit.com/mk/5.x.x/mapkit.core.js';
+        s.crossOrigin = 'anonymous';
+        s.async = true;
+        s.setAttribute('data-callback', cbName);
+        s.setAttribute('data-libraries', 'full-map,annotations,overlays');
+        s.setAttribute('data-token', jwt);
+        s.onerror = () => {
+          __terminalMapKitLoadPromise = null;
+          try {
+            delete window[cbName];
+          } catch (_) {}
+          reject(new Error('MapKit script load failed'));
+        };
+        document.head.appendChild(s);
+      });
+      return __terminalMapKitLoadPromise;
+    }
+
+    function renderTerminalMapOpenFreeMap() {
+      const root = document.getElementById('terminal-map');
+      if (!root) return;
+      root.innerHTML = '';
+      root.classList.remove('terminal-mapkit-root');
+      if (typeof window.__renderTerminalMapOpenFreeMap !== 'function') {
+        console.error('OpenFreeMap bridge missing');
+        return;
+      }
+      window.__renderTerminalMapOpenFreeMap({
+        root,
+        LIVE,
+        NAMES,
+        SEA_IDS: Array.from(SEA),
+        setLeftOverview,
+        setMalaysiaRegion,
+        updateRightPanelForCountry,
+        malaysiaRegionFromLngLat,
+        indonesiaCityFromLngLat,
+        ID_CITY_LONLAT,
+        showTip,
+        hideTip,
+      });
+    }
 
     function renderTerminalMap() {
       const root = document.getElementById('terminal-map');
       if (!root) return;
+
+      window.__terminalMapKitApplySelection = null;
+      if (window.__terminalOfmMap) {
+        try {
+          window.__terminalOfmMap.remove();
+        } catch (_) {}
+      }
+      window.__terminalOfmMap = null;
+      if (window.__terminalMkMap && typeof window.__terminalMkMap.destroy === 'function') {
+        try {
+          window.__terminalMkMap.destroy();
+        } catch (_) {}
+      }
+      window.__terminalMkMap = null;
+
+      const jwt = typeof getMapKitJwt === 'function' ? getMapKitJwt() : '';
+      if (!jwt) {
+        root.classList.remove('terminal-mapkit-root');
+        renderTerminalMapOpenFreeMap();
+        return;
+      }
+
       root.innerHTML = '';
-
-      const rect = root.getBoundingClientRect();
-      const W = Math.max(320, Math.floor(rect.width));
-      const H = Math.max(320, Math.floor(rect.height));
-
-      const svg = d3.select(root)
-        .append('svg')
-        .attr('viewBox', `0 0 ${W} ${H}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet');
-
-      const baseScale = (Math.min(W, H) * 1.55) / 2;
-      const mapCenterY = H * 0.34;
-      const projection = d3.geoOrthographic()
-        .translate([W / 2, mapCenterY])
-        .scale(baseScale)
-        .clipAngle(90)
-        .precision(0.3);
-      const path = d3.geoPath(projection);
-      const mapG = svg.append('g');
-
-      Promise.all([
-        d3.json('./assets/countries-110m.json'),
-        d3.json('./assets/singapore-geo.json').catch(() => null),
-      ]).then(([world, sgGeo]) => {
-        const countries = topojson.feature(world, world.objects.countries);
-        const sgFeature = sgGeo && sgGeo.type === 'Feature'
-          ? Object.assign({}, sgGeo, { id: 702 })
-          : null;
-        const DEFAULT_CENTER = [115, 6];
-        projection.rotate([-DEFAULT_CENTER[0], -DEFAULT_CENTER[1], 0]);
-
-        mapG.append('path').datum({ type: 'Sphere' }).attr('class', 'sphere').attr('d', path);
-        mapG.append('path').datum(d3.geoGraticule().step([10, 10])()).attr('class', 'graticule').attr('d', path);
-
-        mapG.selectAll('.bg')
-          .data(countries.features.filter(d => !SEA.has(+d.id)))
-          .enter().append('path').attr('class', 'country').attr('d', path)
-          .on('mousemove', (e, d) => showTip(e, +d.id))
-          .on('mouseleave', hideTip)
-          .on('touchstart', (e, d) => {
-            e.stopPropagation();
-            const t = e.touches[0];
-            showTip({ clientX: t.clientX, clientY: t.clientY }, +d.id);
-          }, { passive: true });
-
-        const livePaths = mapG.selectAll('.live-c')
-          .data(countries.features.filter(d => LIVE[+d.id]))
-          .enter().append('path')
-          .attr('class', 'country live')
-          .attr('d', path)
-          .on('mousemove', (e, d) => showTip(e, +d.id))
-          .on('mouseleave', hideTip)
-          .on('click', (e, d) => {
-            const id = +d.id;
-            if (id === 458) {
-              const inv = projection.invert(d3.pointer(e, svg.node()));
-              if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
-                setMalaysiaRegion(malaysiaRegionFromLngLat(inv[0], inv[1]));
-              }
-              if (+window.__terminalSelectedCountryId === 458) {
-                updateRightPanelForCountry(458).catch(() => {});
-                applySel();
-                if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
-                return;
-              }
-            }
-            if (id === 360) {
-              const inv = projection.invert(d3.pointer(e, svg.node()));
-              if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
-                const city = indonesiaCityFromLngLat(inv[0], inv[1]);
-                try { localStorage.setItem('terminal_id_city', city); } catch (_) {}
-              }
-              if (+window.__terminalSelectedCountryId === 360) {
-                updateRightPanelForCountry(360).catch(() => {});
-                applySel();
-                if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
-                return;
-              }
-            }
-            setLeftOverview(id);
-            applySel();
-          });
-
-        mapG.append('path')
-          .datum(topojson.mesh(world, world.objects.countries))
-          .attr('class', 'border-mesh')
-          .attr('d', path);
-
-        const liveBorders = mapG.selectAll('.border-live-p')
-          .data(countries.features.filter(d => LIVE[+d.id]))
-          .enter().append('path')
-          .attr('class', 'border-live')
-          .attr('d', path);
-
-        if (sgFeature) {
-          mapG.append('path')
-            .datum(sgFeature)
-            .attr('class', 'country live country-sg')
-            .attr('d', path)
-            .on('mousemove', (e) => showTip(e, 702))
-            .on('mouseleave', hideTip)
-            .on('click', (e) => {
-              e.stopPropagation();
-              if (+window.__terminalSelectedCountryId === 702) {
-                updateRightPanelForCountry(702).catch(() => {});
-                applySel();
-                return;
-              }
-              setLeftOverview(702);
-              applySel();
-            });
-        }
-
-        function applySel() {
-          const sel = window.__terminalSelectedCountryId;
-          mapG.selectAll('.country.live').classed('selected', (d) => d && +d.id === +sel);
-          liveBorders.classed('selected', d => +d.id === +sel);
-        }
-        applySel();
-
-        function updateAll() {
-          mapG.selectAll('path').attr('d', path);
-        }
-
-        const minZoomK = 0.90;
-        const maxZoomK = 9.5;
-        let zoom;
-        function syncZoomFromProjection() {
-          svg.call(zoom.transform, d3.zoomIdentity.scale(projection.scale() / baseScale));
-        }
-        zoom = d3.zoom()
-          .scaleExtent([minZoomK, maxZoomK])
-          .filter((event) => {
-            if (event.type === 'wheel') return true;
-            if (event.type === 'mousedown') return false;
-            if (event.type === 'dblclick') return false;
-            if (event.type === 'touchstart' || event.type === 'touchmove') {
-              return event.touches && event.touches.length >= 2;
-            }
-            return false;
-          })
-          .on('zoom', (event) => {
-            projection.scale(baseScale * event.transform.k);
-            updateAll();
-          });
-
-        function computeFitScale(feature, rotateArr, padPx) {
-          const s0 = projection.scale();
-          const r0 = projection.rotate();
-          try {
-            projection.scale(1).rotate(rotateArr);
-            const b = path.bounds(feature);
-            const dx = b[1][0] - b[0][0];
-            const dy = b[1][1] - b[0][1];
-            if (!(dx > 0) || !(dy > 0)) return null;
-            const s = Math.min((W - padPx) / dx, (H - padPx) / dy);
-            if (!isFinite(s) || s <= 0) return null;
-            return s;
-          } finally {
-            projection.scale(s0).rotate(r0);
+      root.classList.remove('terminal-mapkit-root');
+      ensureMapKitCoreLoaded(jwt)
+        .then(() => {
+          if (typeof window.__renderTerminalMapMapKit !== 'function') {
+            throw new Error('MapKit bridge missing');
           }
-        }
-
-        window.__terminalZoomToCountry = function zoomToCountry(countryId, animate = true) {
-          const f = +countryId === 702 && sgFeature
-            ? sgFeature
-            : countries.features.find(x => +x.id === +countryId);
-          if (!f) return;
-
-          let lon; let lat; let subFocus = false;
-          if (+countryId === 360) {
-            let city = 'Jakarta Pusat';
-            try { city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) {}
-            const ll = ID_CITY_LONLAT[city];
-            if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
-              [lon, lat] = ll;
-              subFocus = true;
-            } else {
-              [lon, lat] = d3.geoCentroid(f);
-            }
-          } else if (+countryId === 458) {
-            let region = 'Semenanjung';
+          window.__renderTerminalMapMapKit({
+            root,
+            mapkit: window.mapkit,
+            LIVE,
+            setLeftOverview,
+            setMalaysiaRegion,
+            updateRightPanelForCountry,
+            getIndonesiaCity,
+            getMalaysiaRegion,
+            malaysiaRegionFromLngLat,
+            indonesiaCityFromLngLat,
+            ID_CITY_LONLAT,
+          });
+        })
+        .catch((err) => {
+          console.warn('MapKit unavailable, using OpenFreeMap:', err);
+          window.__terminalMapKitApplySelection = null;
+          if (window.__terminalMkMap && typeof window.__terminalMkMap.destroy === 'function') {
             try {
-              const k = localStorage.getItem('terminal_my_region') || 'Semenanjung';
-              region = k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
+              window.__terminalMkMap.destroy();
             } catch (_) {}
-            if (region === 'SabahSarawak') {
-              lon = 115; lat = 4;
-            } else {
-              lon = 102; lat = 4;
-            }
-            subFocus = true;
-          } else {
-            [lon, lat] = d3.geoCentroid(f);
           }
-
-          const target = [-lon, -lat, 0];
-          const padZ = 10;
-          const fitS = subFocus ? null : computeFitScale(f, target, padZ);
-          const zoomFocusBoost = 1.38;
-          let nextScale = fitS
-            ? Math.max(
-                baseScale * 0.90,
-                Math.min(baseScale * maxZoomK, fitS * zoomFocusBoost)
-              )
-            : projection.scale();
-          if (subFocus) {
-            const floor = +countryId === 458 ? baseScale * 3.25 : baseScale * 3.35;
-            nextScale = Math.max(nextScale, Math.min(baseScale * maxZoomK, floor));
-          }
-          /* Extra punch on fit / region floor (cap so wheel zoom stays in sync) */
-          nextScale = Math.min(baseScale * maxZoomK, nextScale * 1.65);
-
-          if (!animate) {
-            projection.rotate(target);
-            projection.scale(nextScale);
-            updateAll();
-            syncZoomFromProjection();
-            return;
-          }
-
-          const r0 = projection.rotate();
-          const s0 = projection.scale();
-          let dLon = target[0] - r0[0];
-          while (dLon > 180) dLon -= 360;
-          while (dLon < -180) dLon += 360;
-          const interpR = t => [r0[0] + t * dLon, r0[1] + t * (target[1] - r0[1]), 0];
-          const interpS = d3.interpolateNumber(s0, nextScale);
-          svg.interrupt();
-          svg.transition().duration(420).tween('termFocus', () => (t) => {
-            projection.rotate(interpR(t)).scale(interpS(t));
-            updateAll();
-          }).on('end', syncZoomFromProjection);
-        };
-
-        svg.call(zoom);
-
-        function rotateBy(dx, dy) {
-          const r = projection.rotate();
-          const sens = 0.06;
-          const ddx = Math.abs(dx) < 1.5 ? 0 : dx;
-          const ddy = Math.abs(dy) < 1.5 ? 0 : dy;
-          projection.rotate([r[0] + ddx * sens, Math.max(-85, Math.min(85, r[1] - ddy * sens)), 0]);
-          updateAll();
-        }
-        svg.style('cursor', 'grab');
-        svg.call(d3.drag()
-          .on('start', () => svg.style('cursor', 'grabbing'))
-          .on('drag', (ev) => rotateBy(ev.dx, ev.dy))
-          .on('end', () => svg.style('cursor', 'grab'))
-        );
-
-        const zIn = document.getElementById('zoom-in');
-        const zOut = document.getElementById('zoom-out');
-        /* Use zoom.scaleBy so d3-zoom's internal __zoom stays in sync with projection (wheel + buttons). */
-        function zoomStepBy(factor) {
-          svg.interrupt();
-          svg.transition().duration(140).call(zoom.scaleBy, factor);
-        }
-        if (zIn) {
-          zIn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            zoomStepBy(1.18);
-          });
-        }
-        if (zOut) {
-          zOut.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            zoomStepBy(0.85);
-          });
-        }
-
-        const initialId = window.__terminalSelectedCountryId ?? 458;
-        window.__terminalZoomToCountry(initialId, false);
-
-        updateAll();
-      });
+          window.__terminalMkMap = null;
+          root.classList.remove('terminal-mapkit-root');
+          renderTerminalMapOpenFreeMap();
+        });
     }
 
     // Initial render + resize handling
@@ -1497,82 +1345,91 @@
         next.click();
       }
 
-      document.addEventListener('keydown', (e) => {
-        if (e.defaultPrevented) return;
-        if (e.metaKey || e.ctrlKey || e.altKey) return;
-        if (isTypingTarget(e.target)) return;
+      function stopForTerminalMapKeys(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
 
-        const cid = +window.__terminalSelectedCountryId;
+      document.addEventListener(
+        'keydown',
+        (e) => {
+          if (e.defaultPrevented) return;
+          if (e.metaKey || e.ctrlKey || e.altKey) return;
+          if (isTypingTarget(e.target)) return;
 
-        if (e.key === 'ArrowUp') {
-          if (cid === 458) {
-            e.preventDefault();
-            cycleMalaysiaRegion(-1);
+          const cid = +window.__terminalSelectedCountryId;
+
+          if (e.key === 'ArrowUp') {
+            if (cid === 458) {
+              stopForTerminalMapKeys(e);
+              cycleMalaysiaRegion(-1);
+              return;
+            }
+            if (cid === 360) {
+              stopForTerminalMapKeys(e);
+              cycleIndonesiaCity(-1);
+              return;
+            }
+            if (cid === 702) {
+              stopForTerminalMapKeys(e);
+              cycleSingaporeProvider(-1).catch(() => {});
+              return;
+            }
+            const z = document.getElementById('zoom-in');
+            if (!z || typeof z.onclick !== 'function') return;
+            stopForTerminalMapKeys(e);
+            z.click();
             return;
           }
-          if (cid === 360) {
-            e.preventDefault();
-            cycleIndonesiaCity(-1);
+          if (e.key === 'ArrowDown') {
+            if (cid === 458) {
+              stopForTerminalMapKeys(e);
+              cycleMalaysiaRegion(1);
+              return;
+            }
+            if (cid === 360) {
+              stopForTerminalMapKeys(e);
+              cycleIndonesiaCity(1);
+              return;
+            }
+            if (cid === 702) {
+              stopForTerminalMapKeys(e);
+              cycleSingaporeProvider(1).catch(() => {});
+              return;
+            }
+            const z = document.getElementById('zoom-out');
+            if (!z || typeof z.onclick !== 'function') return;
+            stopForTerminalMapKeys(e);
+            z.click();
             return;
           }
-          if (cid === 702) {
-            e.preventDefault();
-            cycleSingaporeProvider(-1).catch(() => {});
+          if (e.key === '[' || e.key === 'BracketLeft') {
+            stopForTerminalMapKeys(e);
+            clickPagerPrev();
             return;
           }
-          const z = document.getElementById('zoom-in');
-          if (!z || typeof z.onclick !== 'function') return;
-          e.preventDefault();
-          z.click();
-          return;
-        }
-        if (e.key === 'ArrowDown') {
-          if (cid === 458) {
-            e.preventDefault();
-            cycleMalaysiaRegion(1);
+          if (e.key === ']' || e.key === 'BracketRight') {
+            stopForTerminalMapKeys(e);
+            clickPagerNext();
             return;
           }
-          if (cid === 360) {
-            e.preventDefault();
-            cycleIndonesiaCity(1);
+          if (e.key === 'ArrowLeft') {
+            const prev = document.getElementById('pager-prev');
+            if (!prev || prev.style.display === 'none' || prev.disabled) return;
+            stopForTerminalMapKeys(e);
+            prev.click();
             return;
           }
-          if (cid === 702) {
-            e.preventDefault();
-            cycleSingaporeProvider(1).catch(() => {});
+          if (e.key === 'ArrowRight') {
+            const next = document.getElementById('pager-next');
+            if (!next || next.style.display === 'none' || next.disabled) return;
+            stopForTerminalMapKeys(e);
+            next.click();
             return;
           }
-          const z = document.getElementById('zoom-out');
-          if (!z || typeof z.onclick !== 'function') return;
-          e.preventDefault();
-          z.click();
-          return;
-        }
-        if (e.key === '[' || e.key === 'BracketLeft') {
-          e.preventDefault();
-          clickPagerPrev();
-          return;
-        }
-        if (e.key === ']' || e.key === 'BracketRight') {
-          e.preventDefault();
-          clickPagerNext();
-          return;
-        }
-        if (e.key === 'ArrowLeft') {
-          const prev = document.getElementById('pager-prev');
-          if (!prev || prev.style.display === 'none' || prev.disabled) return;
-          e.preventDefault();
-          prev.click();
-          return;
-        }
-        if (e.key === 'ArrowRight') {
-          const next = document.getElementById('pager-next');
-          if (!next || next.style.display === 'none' || next.disabled) return;
-          e.preventDefault();
-          next.click();
-          return;
-        }
-      });
+        },
+        true
+      );
     })();
 
     window.addEventListener('resize', () => {

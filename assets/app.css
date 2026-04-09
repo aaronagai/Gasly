@@ -145,6 +145,19 @@
       opacity: 0.26;
       pointer-events:none;
     }
+    /* OpenFreeMap (MapLibre) fills the map pane */
+    #map.app-map-openfreemap-root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .map .maplibregl-map,
+    .map .maplibregl-canvas-container {
+      position: absolute !important;
+      inset: 0;
+    }
+
     /* Pinch / wheel zoom on the globe — browser must not handle gestures here */
     .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
     .sphere { fill: var(--sphere); }
