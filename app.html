@@ -349,7 +349,7 @@
         const v = row[1];
         const d = row[2];
         if (d != null && d !== '') {
-          return `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v">${v}</span><span class="hi-delta" aria-label="Change vs previous update">${d}</span></div>`;
+          return `<div class="hi-row"><span class="hi-k">${k}</span><div class="hi-price-block"><span class="hi-v">${v}</span><span class="hi-delta" aria-label="Change vs previous update">${d}</span></div></div>`;
         }
         return `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v hi-v--alone">${v}</span></div>`;
       }).join('');

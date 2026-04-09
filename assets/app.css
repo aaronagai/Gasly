@@ -35,10 +35,6 @@
       --chart-grid: rgba(0, 0, 0, 0.06);
       --chart-line-muted: #111827;
       --chart-empty: #d4d4d4;
-      --map-vignette: rgba(0, 0, 0, 0.06);
-      --map-overlay: linear-gradient(0deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
-      --map-base: #d7d7d7;
-      --map-scan: rgba(0, 0, 0, 0.03);
       --sphere: #e7eef7;
       --land: #d9d6d2;
       --land-live: rgba(17, 24, 39, 0.28);
@@ -90,10 +86,6 @@
         --chart-grid: rgba(255, 255, 255, 0.08);
         --chart-line-muted: #8c8c8c;
         --chart-empty: #666666;
-        --map-vignette: rgba(0, 0, 0, 0.45);
-        --map-overlay: linear-gradient(0deg, rgba(22, 22, 22, 0.78), rgba(22, 22, 22, 0.78));
-        --map-base: #1f1f1f;
-        --map-scan: rgba(255, 255, 255, 0.04);
         --sphere: #262626;
         --land: #3a3a3a;
         --land-live: rgba(255, 255, 255, 0.13);
@@ -129,21 +121,8 @@
       position: absolute;
       inset: 0;
       z-index: 0;
-      background:
-        radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
-        radial-gradient(1200px 680px at 44% 56%, var(--map-vignette) 0%, transparent 62%),
-        var(--map-overlay),
-        var(--map-base);
+      background: transparent;
       overflow: hidden;
-    }
-
-    .map::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background: repeating-linear-gradient(0deg, var(--map-scan) 0px, var(--map-scan) 1px, transparent 1px, transparent 8px);
-      opacity: 0.26;
-      pointer-events:none;
     }
     /* OpenFreeMap (MapLibre) fills the map pane */
     #map.app-map-openfreemap-root {
@@ -373,10 +352,11 @@
     }
     .sheet.sheet-scrollable .sheet-scroll{
       overflow-y: auto;
-      overflow-x: hidden;
+      /* Let highlights price/delta extend or scroll horizontally; hidden was clipping the right column. */
+      overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
-      touch-action: pan-y;
+      touch-action: pan-x pan-y;
     }
     .card{
       border-radius: 0;
@@ -387,6 +367,7 @@
     .card .pad{ padding: 14px; }
     #card-highlights .pad{
       padding-top: 2px;
+      padding-right: max(18px, env(safe-area-inset-right, 0px));
       min-width: 0;
     }
     /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
@@ -509,28 +490,30 @@
       font-family: var(--font);
       font-size: 0.78rem;
     }
+    /* Two columns: label | stacked price + delta (delta never competes for width with a third grid track). */
     .lines.hi-lines{
-      display: grid;
-      /* All columns min 0 so the row always fits inside the sheet (scroll area uses overflow-x: hidden). */
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
-      column-gap: 10px;
-      row-gap: 0;
-      align-items: baseline;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
       margin-top: 14px;
       width: 100%;
       max-width: 100%;
       min-width: 0;
       box-sizing: border-box;
+      overflow-x: auto;
+      overflow-y: visible;
+      scrollbar-width: thin;
     }
     .hi-row{
       display: grid;
-      grid-template-columns: subgrid;
-      grid-column: 1 / -1;
-      align-items: baseline;
+      grid-template-columns: minmax(0, 1fr) max-content;
+      column-gap: 12px;
+      align-items: center;
       padding: 11px 0;
       border-bottom: 1px solid var(--hairline);
       font-family: var(--font);
       font-size: 0.84rem;
+      min-width: min-content;
     }
     .hi-row:last-child{ border-bottom: none; padding-bottom: 2px; }
     .hi-k{
@@ -539,19 +522,31 @@
       color: var(--hi-label);
       min-width: 0;
     }
+    .hi-price-block{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      width: max-content;
+      min-width: max-content;
+      flex-shrink: 0;
+    }
     .hi-v{
       font-weight: 750;
       font-variant-numeric: tabular-nums;
       color: var(--hi-value);
       text-align: right;
-      justify-self: stretch;
-      min-width: 0;
-      overflow-wrap: break-word;
+      white-space: nowrap;
     }
     .hi-v--alone{
-      grid-column: 2 / span 2;
+      grid-column: 2;
       text-align: right;
-      justify-self: stretch;
+      justify-self: end;
+      min-width: 0;
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: break-word;
     }
     .hi-delta{
       font-size: 0.78em;
@@ -560,45 +555,7 @@
       color: var(--hi-delta, var(--muted));
       white-space: nowrap;
       text-align: right;
-      justify-self: stretch;
-      min-width: 0;
-    }
-    /* No subgrid: fixed-width price column so short values align with longer ones */
-    @supports not (grid-template-columns: subgrid) {
-      .lines.hi-lines{
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-      .hi-row{
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        grid-column: auto;
-        grid-template-columns: none;
-      }
-      .hi-k{
-        flex: 1;
-        min-width: 0;
-      }
-      .hi-v{
-        margin-left: auto;
-        flex: 1.25 1 0;
-        min-width: 0;
-        text-align: right;
-      }
-      .hi-v--alone{
-        margin-left: auto;
-        min-width: 0;
-        max-width: 100%;
-        flex: 1 1 auto;
-        grid-column: auto;
-      }
-      .hi-delta{
-        flex: 1 1 0;
-        min-width: 0;
-        text-align: right;
-      }
+      width: max-content;
     }
     .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }

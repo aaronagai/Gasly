@@ -261,26 +261,6 @@
       .hero-subhead  { font-size: 0.78rem; }
     }
 
-    /*
-     * Edge vignette — fades must stay tight to the edges. The old vertical gradient
-     * washed the top/bottom ~30–70% of the hero while leaving the middle clear; on a
-     * dark basemap that read as a heavy “blurred” dark horizontal band behind the headline.
-     */
-    .map-vignette {
-      position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background:
-        linear-gradient(to right,
-          color-mix(in srgb, var(--bg) 58%, transparent) 0%,
-          transparent 12%,
-          transparent 88%,
-          color-mix(in srgb, var(--bg) 58%, transparent) 100%),
-        linear-gradient(to bottom,
-          color-mix(in srgb, var(--bg) 72%, transparent) 0%,
-          transparent 10%,
-          transparent 90%,
-          color-mix(in srgb, var(--bg) 72%, transparent) 100%);
-    }
-
     /* Map hint */
     .map-hint {
       position: absolute; bottom: 40px; left: 50%;
@@ -474,20 +454,6 @@
       .status-dot   { width: 5px; height: 5px; }
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
-      .map-vignette {
-        background:
-          linear-gradient(to right,
-            color-mix(in srgb, var(--bg) 52%, transparent) 0%,
-            transparent 7%,
-            transparent 93%,
-            color-mix(in srgb, var(--bg) 52%, transparent) 100%),
-          linear-gradient(to bottom,
-            color-mix(in srgb, var(--bg) 65%, transparent) 0%,
-            transparent 8%,
-            transparent 92%,
-            color-mix(in srgb, var(--bg) 65%, transparent) 100%);
-      }
-
       .map-hint    { font-size: 0.7rem; bottom: 38px; }
       .scroll-nudge { bottom: 10px; }
 
@@ -540,21 +506,6 @@
       }
 
       .scroll-nudge { opacity: 0.42; }
-
-      /* Dark basemap: subtle dark edge fades (not light cream on map). */
-      .map-vignette {
-        background:
-          linear-gradient(to right,
-            rgba(0, 0, 0, 0.2) 0%,
-            transparent 11%,
-            transparent 89%,
-            rgba(0, 0, 0, 0.2) 100%),
-          linear-gradient(to bottom,
-            rgba(0, 0, 0, 0.26) 0%,
-            transparent 9%,
-            transparent 91%,
-            rgba(0, 0, 0, 0.26) 100%);
-      }
 
       .hero-headline {
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);

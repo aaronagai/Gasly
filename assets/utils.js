@@ -379,9 +379,22 @@ async function ensureMalaysiaRows() {
 const _sheetCache = new Map();
 
 /**
- * Turn off basemap text (place names, roads, water labels, route shields).
+ * Country / state (region) label layers to keep visible when suppressing other map text.
+ * Positron (remote): label_country_*, label_state. Dark fork: place_country_*, place_state.
+ */
+function openFreeMapKeepCountryRegionLabelLayer(layerId) {
+  if (!layerId || typeof layerId !== 'string') return false;
+  if (/^label_country_[123]$/.test(layerId)) return true;
+  if (layerId === 'label_state') return true;
+  if (layerId === 'place_state') return true;
+  if (/^place_country_/.test(layerId)) return true;
+  return false;
+}
+
+/**
+ * Turn off basemap text (roads, water labels, cities, route shields) but keep country + region names.
  * Symbol layers without text-field (e.g. one-way arrows) stay visible.
- * Works with OpenFreeMap Positron, Dark, and similar OpenMapTiles styles.
+ * Works with OpenFreeMap Positron, Dark fork, and similar OpenMapTiles styles.
  */
 function suppressOpenFreeMapTextLabels(map) {
   if (!map || typeof map.getStyle !== 'function') return;
@@ -397,8 +410,145 @@ function suppressOpenFreeMapTextLabels(map) {
     if (!def || def.type !== 'symbol') continue;
     const tf = def.layout && def.layout['text-field'];
     if (tf == null || tf === '') continue;
+    if (openFreeMapKeepCountryRegionLabelLayer(def.id)) continue;
     try {
       if (map.getLayer(def.id)) map.setLayoutProperty(def.id, 'visibility', 'none');
+    } catch (_) {}
+  }
+}
+
+/**
+ * OpenFreeMap Positron filters out maritime boundary segments (`maritime == 1`), so shelf/EEZ-style
+ * lines in the ocean only appear in styles that omit that filter (e.g. our dark fork). Relax the
+ * filter on Positron’s boundary layers so light mode matches.
+ */
+function includeOpenFreeMapMaritimeBoundaries(map) {
+  if (!map || typeof map.getLayer !== 'function' || typeof map.setFilter !== 'function') return;
+  const patches = [
+    {
+      id: 'boundary_2',
+      filter: ['all', ['==', ['get', 'admin_level'], 2], ['!=', ['get', 'disputed'], 1], ['!', ['has', 'claimed_by']]],
+    },
+    {
+      id: 'boundary_3',
+      filter: [
+        'all',
+        ['>=', ['get', 'admin_level'], 3],
+        ['<=', ['get', 'admin_level'], 6],
+        ['!=', ['get', 'disputed'], 1],
+        ['!', ['has', 'claimed_by']],
+      ],
+    },
+    {
+      id: 'boundary_disputed',
+      filter: ['==', ['get', 'disputed'], 1],
+    },
+  ];
+  for (let i = 0; i < patches.length; i++) {
+    const p = patches[i];
+    try {
+      if (!map.getLayer(p.id)) continue;
+      map.setFilter(p.id, p.filter);
+    } catch (_) {}
+  }
+}
+
+/**
+ * Warm orange-tinted land for OpenFreeMap Positron / dark fork (OpenMapTiles).
+ * Skips water fills and layers that use fill-pattern (e.g. wood). Safe to call after style load.
+ */
+function applyOpenFreeMapOrangeLand(map) {
+  if (!map || typeof map.getStyle !== 'function') return;
+  let layers;
+  try {
+    layers = map.getStyle().layers;
+  } catch (_) {
+    return;
+  }
+  if (!layers || !layers.length) return;
+
+  let dark = false;
+  try {
+    dark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (_) {}
+
+  const C = dark
+    ? {
+        bg: '#5c280e',
+        land: '#d47a1a',
+        building: '#9a5010',
+        pier: '#5c280e',
+        ice: '#6a5248',
+        outlineBuilding: '#ff9f40',
+      }
+    : {
+        /* Red-orange (hue ~14–20°), not golden/yellow (~40°) */
+        bg: '#f47e4f',
+        land: '#e66321',
+        building: '#e8662e',
+        pier: '#f47e4f',
+        ice: '#fff0ea',
+        outlineBuilding: '#c24100',
+      };
+
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    if (!layer || !layer.id) continue;
+    try {
+      if (!map.getLayer(layer.id)) continue;
+    } catch (_) {
+      continue;
+    }
+
+    if (layer.type === 'background') {
+      try {
+        map.setPaintProperty(layer.id, 'background-color', C.bg);
+      } catch (_) {}
+      continue;
+    }
+
+    if (layer.type === 'raster' && layer.id === 'ne2_shaded') {
+      try {
+        map.setPaintProperty(layer.id, 'raster-hue-rotate', dark ? 42 : 28);
+        map.setPaintProperty(layer.id, 'raster-saturation', dark ? 0 : 0.02);
+      } catch (_) {}
+      continue;
+    }
+
+    if (layer.type !== 'fill') continue;
+
+    const sl = layer['source-layer'];
+    if (sl === 'water') continue;
+
+    const paint = layer.paint || {};
+    if (paint['fill-pattern']) continue;
+
+    let color = C.land;
+    const id = layer.id;
+    if (id === 'landcover_ice_shelf' || id === 'landcover_glacier') color = C.ice;
+    else if (sl === 'building') color = C.building;
+    else if (id === 'road_area_pier' || (typeof id === 'string' && id.indexOf('pier') !== -1)) color = C.pier;
+
+    try {
+      map.setPaintProperty(layer.id, 'fill-color', color);
+    } catch (_) {}
+
+    if (sl === 'building') {
+      try {
+        map.setPaintProperty(layer.id, 'fill-outline-color', C.outlineBuilding);
+      } catch (_) {}
+    }
+  }
+
+  /* Admin boundaries: higher contrast on orange-tinted land (line layers, not affected by label suppression). */
+  const boundaryLineColor = dark ? 'rgba(255, 212, 180, 0.78)' : '#6b6b6b';
+  for (let j = 0; j < layers.length; j++) {
+    const layer = layers[j];
+    if (!layer || layer.type !== 'line' || !layer.id) continue;
+    if (typeof layer.id !== 'string' || layer.id.indexOf('boundary') === -1) continue;
+    try {
+      if (!map.getLayer(layer.id)) continue;
+      map.setPaintProperty(layer.id, 'line-color', boundaryLineColor);
     } catch (_) {}
   }
 }

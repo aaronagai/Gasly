@@ -45,8 +45,7 @@
 
     <div class="map-wrap" id="map-wrap">
       <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
-      <div class="map-vignette"></div>
-      <div class="map-hint">Tap the glowing country to view live prices</div>
+      <div class="map-hint">Tap a country with live data to view prices</div>
       <div class="hero-overlay">
         <h2 class="hero-headline">Know what you pay at the pump.</h2>
         <p class="hero-subhead">Real-time fuel prices across Southeast Asia, sourced from official government data.</p>
@@ -109,7 +108,6 @@
     };
 
     const LIVE_IDS = Object.keys(LIVE).map(Number);
-    const LIVE_IDS_UNDER_SG = LIVE_IDS.filter((id) => id !== 702);
     const SEA_IDS = Array.from(SEA);
     const mobile = window.matchMedia('(max-width: 640px)').matches;
 
@@ -184,16 +182,6 @@
         attributionControl: false,
       });
 
-      let hoveredNid = null;
-      function clearHover() {
-        if (hoveredNid != null) {
-          try {
-            map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: false });
-          } catch (_) {}
-          hoveredNid = null;
-        }
-      }
-
       function pickCountryId(e) {
         if (!map.getLayer('countries-hit')) return null;
         const feats = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
@@ -204,6 +192,8 @@
 
       map.on('load', () => {
         suppressOpenFreeMapTextLabels(map);
+        includeOpenFreeMapMaritimeBoundaries(map);
+        applyOpenFreeMapOrangeLand(map);
         map.addSource('countries', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features },
@@ -216,91 +206,21 @@
           source: 'countries',
           paint: { 'fill-opacity': 0 },
         });
-
-        map.addLayer({
-          id: 'countries-hover-nonlive',
-          type: 'fill',
-          source: 'countries',
-          filter: ['!', ['in', ['get', 'nid'], ['literal', LIVE_IDS]]],
-          paint: {
-            'fill-color': '#303030',
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.08, 0],
-          },
-        });
-
-        const indexLiveFillPaint = {
-          'fill-color': 'rgba(254,94,14,1)',
-          'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.32, 0.18],
-        };
-
-        map.addLayer({
-          id: 'countries-live-fill',
-          type: 'fill',
-          source: 'countries',
-          filter: ['in', ['get', 'nid'], ['literal', LIVE_IDS_UNDER_SG]],
-          paint: indexLiveFillPaint,
-        });
-
-        map.addLayer({
-          id: 'countries-live-fill-singapore',
-          type: 'fill',
-          source: 'countries',
-          filter: ['==', ['get', 'nid'], 702],
-          paint: indexLiveFillPaint,
-        });
-
-        map.addLayer({
-          id: 'countries-outline',
-          type: 'line',
-          source: 'countries',
-          filter: ['!=', ['get', 'nid'], 702],
-          paint: {
-            'line-color': [
-              'case',
-              ['in', ['get', 'nid'], ['literal', LIVE_IDS]],
-              'rgba(254,94,14,0.85)',
-              ['in', ['get', 'nid'], ['literal', SEA_IDS]],
-              'rgba(48,48,48,0.24)',
-              'rgba(48,48,48,0.16)',
-            ],
-            'line-width': ['case', ['in', ['get', 'nid'], ['literal', LIVE_IDS]], 1.35, 0.55],
-          },
-        });
-
-        map.addLayer({
-          id: 'countries-outline-singapore',
-          type: 'line',
-          source: 'countries',
-          filter: ['==', ['get', 'nid'], 702],
-          paint: {
-            'line-color': 'rgba(254,94,14,0.85)',
-            'line-width': 1.35,
-          },
-        });
       });
 
       map.on('mousemove', (e) => {
         const nid = pickCountryId(e);
         const canvas = map.getCanvas();
         if (nid == null) {
-          clearHover();
           hideTip();
           canvas.style.cursor = '';
           return;
-        }
-        if (hoveredNid !== nid) {
-          clearHover();
-          hoveredNid = nid;
-          try {
-            map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: true });
-          } catch (_) {}
         }
         canvas.style.cursor = LIVE[nid] || SEA_IDS.includes(nid) ? 'pointer' : '';
         showTip(e.originalEvent.clientX, e.originalEvent.clientY, nid);
       });
 
       map.on('mouseout', () => {
-        clearHover();
         hideTip();
         map.getCanvas().style.cursor = '';
       });

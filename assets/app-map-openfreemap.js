@@ -45,8 +45,6 @@
   window.__renderAppMapOpenFreeMap = function (o) {
     const root = o.root;
     const COUNTRIES = o.COUNTRIES;
-    const LIVE_IDS = Object.keys(COUNTRIES).map(Number);
-    const LIVE_IDS_UNDER_SG = LIVE_IDS.filter((id) => id !== 702);
     const SEA_IDS = o.SEA_IDS;
     const NAMES = o.NAMES;
 
@@ -81,24 +79,7 @@
 
     window.__appOfmMap = map;
 
-    let hoveredNid = null;
-    function clearHover() {
-      if (hoveredNid != null) {
-        try {
-          map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: false });
-        } catch (_) {}
-        hoveredNid = null;
-      }
-    }
-
-    function applySel() {
-      const sel = +o.getSelected();
-      LIVE_IDS.forEach((id) => {
-        try {
-          map.setFeatureState({ source: 'countries', id }, { selected: id === sel });
-        } catch (_) {}
-      });
-    }
+    function applySel() {}
 
     window.__appMapApplySelection = applySel;
 
@@ -142,6 +123,8 @@
 
     map.on('load', () => {
       suppressOpenFreeMapTextLabels(map);
+      includeOpenFreeMapMaritimeBoundaries(map);
+      applyOpenFreeMapOrangeLand(map);
       Promise.all([
         fetch('./assets/countries-110m.json').then((r) => r.json()),
         fetch('./assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
@@ -178,91 +161,6 @@
             type: 'fill',
             source: 'countries',
             paint: { 'fill-opacity': 0 },
-          });
-
-          map.addLayer({
-            id: 'countries-hover-nonlive',
-            type: 'fill',
-            source: 'countries',
-            filter: ['!', ['in', ['get', 'nid'], ['literal', LIVE_IDS]]],
-            paint: {
-              'fill-color': '#303030',
-              'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.1, 0],
-            },
-          });
-
-          const liveFillPaint = {
-            'fill-color': 'rgba(255,106,0,1)',
-            'fill-opacity': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false],
-              0.4,
-              ['case', ['boolean', ['feature-state', 'hover'], false], 0.34, 0.22],
-            ],
-          };
-
-          map.addLayer({
-            id: 'countries-live-fill',
-            type: 'fill',
-            source: 'countries',
-            filter: ['in', ['get', 'nid'], ['literal', LIVE_IDS_UNDER_SG]],
-            paint: liveFillPaint,
-          });
-
-          map.addLayer({
-            id: 'countries-live-fill-singapore',
-            type: 'fill',
-            source: 'countries',
-            filter: ['==', ['get', 'nid'], 702],
-            paint: liveFillPaint,
-          });
-
-          map.addLayer({
-            id: 'countries-outline',
-            type: 'line',
-            source: 'countries',
-            filter: ['!=', ['get', 'nid'], 702],
-            paint: {
-              'line-color': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false],
-                'rgba(255,106,0,0.95)',
-                ['in', ['get', 'nid'], ['literal', LIVE_IDS]],
-                'rgba(255,106,0,0.75)',
-                ['in', ['get', 'nid'], ['literal', SEA_IDS]],
-                'rgba(120,120,120,0.35)',
-                'rgba(100,100,100,0.28)',
-              ],
-              'line-width': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false],
-                2,
-                ['in', ['get', 'nid'], ['literal', LIVE_IDS]],
-                1.35,
-                0.55,
-              ],
-            },
-          });
-
-          map.addLayer({
-            id: 'countries-outline-singapore',
-            type: 'line',
-            source: 'countries',
-            filter: ['==', ['get', 'nid'], 702],
-            paint: {
-              'line-color': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false],
-                'rgba(255,106,0,0.95)',
-                'rgba(255,106,0,0.75)',
-              ],
-              'line-width': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false],
-                2,
-                1.35,
-              ],
-            },
           });
 
           /** Shift camera target upward so framed area sits above the bottom sheet, not behind it. */
@@ -324,22 +222,13 @@
             const nid = pickCountryId(map, e);
             const canvas = map.getCanvas();
             if (nid == null || NAMES[nid] == null) {
-              clearHover();
               canvas.style.cursor = '';
               return;
-            }
-            if (hoveredNid !== nid) {
-              clearHover();
-              hoveredNid = nid;
-              try {
-                map.setFeatureState({ source: 'countries', id: hoveredNid }, { hover: true });
-              } catch (_) {}
             }
             canvas.style.cursor = COUNTRIES[nid] || SEA_IDS.includes(nid) ? 'pointer' : '';
           });
 
           map.on('mouseout', () => {
-            clearHover();
             map.getCanvas().style.cursor = '';
           });
 
