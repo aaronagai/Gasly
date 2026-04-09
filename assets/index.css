@@ -9,9 +9,25 @@
       --radius:     14px;
     }
 
+    @media (prefers-color-scheme: dark) {
+      html { color-scheme: dark; }
+
+      :root {
+        --bg:         #131314;
+        --bg-card:    #1c1c20;
+        --text:       #ebebee;
+        --text-muted: rgba(235, 235, 238, 0.55);
+        --border:     rgba(255, 255, 255, 0.12);
+        --border-h:   rgba(255, 255, 255, 0.24);
+      }
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+      color-scheme: light;
+    }
 
     body {
       background: var(--bg);
@@ -46,7 +62,7 @@
       width: calc(100% - 32px);
       max-width: 1020px;
       padding: 10px 20px;
-      background: rgba(250,250,248,0.88);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       border-bottom: none;
@@ -244,11 +260,12 @@
     .hero-headline {
       font-size: 2.8rem; font-weight: 700;
       letter-spacing: -0.03em; line-height: 1.15;
-      color: #303030;
+      color: var(--text);
       margin-bottom: 14px;
     }
     .hero-subhead {
-      font-size: 0.875rem; color: #6b6b6b;
+      font-size: 0.875rem;
+      color: var(--text-muted);
       letter-spacing: 0.01em; line-height: 1.7;
     }
 
@@ -257,12 +274,24 @@
       .hero-subhead  { font-size: 0.78rem; }
     }
 
-    /* Edge vignette */
+    /*
+     * Edge vignette — fades must stay tight to the edges. The old vertical gradient
+     * washed the top/bottom ~30–70% of the hero while leaving the middle clear; on a
+     * dark basemap that read as a heavy “blurred” dark horizontal band behind the headline.
+     */
     .map-vignette {
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background:
-        linear-gradient(to right,  rgba(250,250,248,0.9) 0%, rgba(250,250,248,0) 14%, rgba(250,250,248,0) 86%, rgba(250,250,248,0.9) 100%),
-        linear-gradient(to bottom, rgba(250,250,248,0.95) 0%, rgba(250,250,248,0.6) 30%, rgba(250,250,248,0) 52%, rgba(250,250,248,0) 72%, rgba(250,250,248,0.92) 100%);
+        linear-gradient(to right,
+          color-mix(in srgb, var(--bg) 58%, transparent) 0%,
+          transparent 12%,
+          transparent 88%,
+          color-mix(in srgb, var(--bg) 58%, transparent) 100%),
+        linear-gradient(to bottom,
+          color-mix(in srgb, var(--bg) 72%, transparent) 0%,
+          transparent 10%,
+          transparent 90%,
+          color-mix(in srgb, var(--bg) 72%, transparent) 100%);
     }
 
     /* Map hint */
@@ -401,7 +430,7 @@
     }
     .curr-opt + .curr-opt { border-left: 1px solid var(--border); }
     .curr-opt.active {
-      background: rgba(0,0,0,0.06);
+      background: color-mix(in srgb, var(--text) 8%, transparent);
       color: var(--text);
     }
 
@@ -432,7 +461,7 @@
     .mobile-nav {
       display: none;
       position: absolute; top: calc(100% + 8px); left: 0; right: 0;
-      background: rgba(250,250,248,0.97);
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
       border-radius: 14px; padding: 6px 0; z-index: 200;
@@ -445,7 +474,10 @@
       color: var(--text-muted); text-decoration: none;
       transition: color 0.12s, background 0.12s;
     }
-    .mobile-nav a:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+    .mobile-nav a:hover {
+      color: var(--text);
+      background: color-mix(in srgb, var(--text) 6%, transparent);
+    }
 
     @media (max-width: 900px) {
       .nav-links     { display: none; }
@@ -492,8 +524,16 @@
 
       .map-vignette {
         background:
-          linear-gradient(to right,  rgba(250,250,248,0.65) 0%, rgba(250,250,248,0) 8%, rgba(250,250,248,0) 92%, rgba(250,250,248,0.65) 100%),
-          linear-gradient(to bottom, rgba(250,250,248,0.75) 0%, rgba(250,250,248,0) 12%, rgba(250,250,248,0) 80%, rgba(250,250,248,0.88) 100%);
+          linear-gradient(to right,
+            color-mix(in srgb, var(--bg) 52%, transparent) 0%,
+            transparent 7%,
+            transparent 93%,
+            color-mix(in srgb, var(--bg) 52%, transparent) 100%),
+          linear-gradient(to bottom,
+            color-mix(in srgb, var(--bg) 65%, transparent) 0%,
+            transparent 8%,
+            transparent 92%,
+            color-mix(in srgb, var(--bg) 65%, transparent) 100%);
       }
 
       .map-hint    { font-size: 0.7rem; bottom: 38px; }
@@ -510,4 +550,56 @@
       .footer-nav-primary { gap: 14px 24px; }
       .footer-divider { margin: 22px 0 20px; }
       .footer-contact { gap: 12px 20px; }
+    }
+
+    /* Dark system UI: tokens above switch :root; below tweaks map + chrome that sit on the dark basemap. */
+    @media (prefers-color-scheme: dark) {
+      .site-footer {
+        --footer-muted: rgba(255, 255, 255, 0.48);
+        --footer-muted-hover: rgba(255, 255, 255, 0.78);
+      }
+
+      #tooltip {
+        background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+      }
+
+      .scroll-nudge { opacity: 0.42; }
+
+      /* Dark basemap: subtle dark edge fades (not light cream on map). */
+      .map-vignette {
+        background:
+          linear-gradient(to right,
+            rgba(0, 0, 0, 0.2) 0%,
+            transparent 11%,
+            transparent 89%,
+            rgba(0, 0, 0, 0.2) 100%),
+          linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.26) 0%,
+            transparent 9%,
+            transparent 91%,
+            rgba(0, 0, 0, 0.26) 100%);
+      }
+
+      .hero-headline {
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+
+      .hero-subhead {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+      }
+
+      .map-hint {
+        color: rgba(255, 255, 255, 0.52);
+        opacity: 0.9;
+      }
+
+      .map-wrap .maplibregl-ctrl-attrib {
+        background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+        color: var(--text-muted);
+      }
+
+      .map-wrap .maplibregl-ctrl-attrib a {
+        color: var(--text-muted);
+      }
     }
