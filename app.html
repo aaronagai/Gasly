@@ -351,9 +351,18 @@
 
         if (cid === 702) {
           const rows = await ensureSheetRows(SG_SHEET_URL);
-          const seriesAsc = sortRowsByDate(rows);
+          const hasProviders = sortedSingaporeProviders(rows).length > 0;
+          const prov = hasProviders ? resolveSingaporeProviderSelection(rows) : '';
+          if (prov) {
+            try { localStorage.setItem('terminal_sg_provider', prov); } catch (_) {}
+          }
+          const seriesAsc = sortRowsByDate(
+            hasProviders
+              ? rows.filter((r) => normalizeSheetString(r.provider) === normalizeSheetString(prov))
+              : rows,
+          );
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          titleEl.textContent = 'National';
+          titleEl.textContent = hasProviders ? prov : 'National';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
             ['RON92', fmtPerL('SGD', rSel.ron92, 2)],
@@ -418,7 +427,10 @@
         if (cid === 360) {
           const rows = await ensureSheetRows(ID_SHEET_URL);
           const city = getIndonesiaCity();
-          const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
+          const cityNorm = normalizeSheetString(city);
+          const cityRows = sortRowsByDate(
+            rows.filter((r) => normalizeSheetString(r.city) === cityNorm),
+          );
           const rSel = cityRows[cityRows.length - 1] || {};
           titleEl.textContent = city;
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;

@@ -22,3 +22,22 @@ a.site-wordmark:hover {
 a.site-wordmark:active {
   opacity: 0.78;
 }
+
+/* Logo sits left of the wordmark (terminal, index header, etc.) */
+.site-wordmark-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+a.site-wordmark-lockup {
+  text-decoration: none;
+  color: inherit;
+}
+
+.site-wordmark-logo {
+  flex-shrink: 0;
+  height: 1.5rem;
+  width: auto;
+  display: block;
+}

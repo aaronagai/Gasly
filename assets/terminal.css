@@ -74,13 +74,14 @@
       --term-chart-tooltip-title: rgba(0, 0, 0, 0.9);
       --term-chart-tooltip-body: rgba(0, 0, 0, 0.75);
       --term-chart-line-muted: #111827;
-      --term-toggle-shadow: rgba(0, 0, 0, 0.14);
 
       /* Resizable layout; JS resizer overrides these vars. */
       --leftW: clamp(240px, 26vw, 360px);
       --rightW: clamp(320px, 36vw, 520px);
       --leftScale: 1;
       --rightScale: 1;
+      /* Hover strip at left edge — must match .sidebar-hover-panel width for push layout */
+      --sidebar-hover-width: 60px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -148,7 +149,6 @@
         --term-chart-tooltip-title: rgba(255, 255, 255, 0.95);
         --term-chart-tooltip-body: rgba(255, 255, 255, 0.72);
         --term-chart-line-muted: #a8a8a8;
-        --term-toggle-shadow: rgba(0, 0, 0, 0.5);
       }
     }
 
@@ -165,12 +165,18 @@
     .app {
       height: 100%;
       height: 100dvh;
+      width: 100%;
+      margin-left: 0;
+      box-sizing: border-box;
       display: grid;
       grid-template-columns: var(--leftW) 1fr var(--rightW);
       grid-template-rows: 1fr;
       grid-template-areas: "left main right";
       position: relative;
       isolation: isolate;
+      transition:
+        margin-left 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     /* Full-viewport globe behind chrome so glass panels actually frost the map */
@@ -235,73 +241,174 @@
       pointer-events: auto;
     }
 
-    /* Floating search (on map) */
-    .map-topbar{
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 7;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+    body.resizing-height {
+      cursor: row-resize;
       user-select: none;
-      height: 36px;
-      max-width: min(520px, calc(100% - 24px));
+    }
+    body.resizing-height * {
+      pointer-events: none;
+    }
+    body.resizing-height #left-height-handle {
+      pointer-events: auto;
     }
 
+    /* Left edge hover sidebar — empty shell for future menu links */
+    .sidebar-hover {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: min(calc(var(--sidebar-hover-width) + 18px), 40vw);
+      z-index: 35;
+      pointer-events: none;
+    }
+    .sidebar-hover-trigger {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      pointer-events: auto;
+      cursor: default;
+    }
+    .sidebar-hover-panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-hover-width);
+      max-width: min(var(--sidebar-hover-width), calc(100vw - 16px));
+      padding: max(6px, env(safe-area-inset-top, 0px)) 4px 8px max(4px, env(safe-area-inset-left, 0px));
+      box-sizing: border-box;
+      transform: translateX(-100%);
+      transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+      background: var(--term-glass-fill);
+      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      border-right: 1px solid var(--term-glass-stroke);
+      box-shadow: none;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .sidebar-hover:has(.sidebar-hover-trigger:hover) .sidebar-hover-panel,
+      .sidebar-hover:has(.sidebar-hover-panel:hover) .sidebar-hover-panel {
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+      /* Sidebar is a sibling of .app so it stays at the viewport edge while chrome narrows + shifts right */
+      body:has(.sidebar-hover .sidebar-hover-trigger:hover) .app,
+      body:has(.sidebar-hover .sidebar-hover-panel:hover) .app {
+        margin-left: var(--sidebar-hover-width);
+        width: calc(100% - var(--sidebar-hover-width));
+      }
+      body:has(.sidebar-hover .sidebar-hover-trigger:hover) .map-topbar,
+      body:has(.sidebar-hover .sidebar-hover-panel:hover) .map-topbar {
+        left: calc(max(8px, env(safe-area-inset-left, 0px)) + var(--sidebar-hover-width) + var(--leftW));
+      }
+      body:has(.sidebar-hover .sidebar-hover-trigger:hover) .map-topbar-wordmark.site-wordmark,
+      body:has(.sidebar-hover .sidebar-hover-panel:hover) .map-topbar-wordmark.site-wordmark {
+        left: calc(max(14px, env(safe-area-inset-left, 0px)) + var(--sidebar-hover-width));
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sidebar-hover-panel {
+        transition-duration: 0.01ms;
+      }
+      .app {
+        transition-duration: 0.01ms;
+      }
+    }
+
+    /* Map top bar — inset from left/right panel edges (aligned with map column) */
+    .map-topbar {
+      position: fixed;
+      top: max(14px, env(safe-area-inset-top, 0px));
+      left: calc(max(8px, env(safe-area-inset-left, 0px)) + var(--leftW));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 36px;
+      user-select: none;
+      pointer-events: none;
+    }
+    .map-topbar > * {
+      pointer-events: auto;
+    }
+    /* Wordmark: true viewport top-left (out of flex flow); shifts when hover-sidebar is open */
     .map-topbar-wordmark.site-wordmark {
-      flex-shrink: 0;
-      font-size: 0.8125rem;
+      position: fixed;
+      top: max(14px, env(safe-area-inset-top, 0px));
+      left: max(14px, env(safe-area-inset-left, 0px));
+      z-index: 36;
+      height: 36px;
+      font-size: 0.875rem;
       color: var(--term-fg-strong);
       line-height: 1;
+      margin: 0;
     }
-
-    .panel-toggle{
-      width: 36px;
+    .map-topbar-wordmark.site-wordmark .site-wordmark-logo {
+      height: 26px;
+    }
+    .map-topbar-center {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
       height: 36px;
-      display: grid;
-      place-items: center;
-      border: none;
-      background: var(--term-float-0);
-      border: 1px solid var(--term-float-border-0);
-      color: var(--term-fg-secondary);
-      cursor: pointer;
-      border-radius: 12px;
-      margin-right: 10px;
-      box-shadow: 0 10px 24px var(--term-float-shadow);
-      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
-    .panel-toggle:hover{
-      background: var(--term-float-1);
-      border-color: var(--term-float-border-1);
-      transform: translateY(-1px);
+    .map-topbar-center .search {
+      width: 100%;
+      max-width: min(520px, 100%);
+      min-width: min(240px, 100%);
     }
-    .panel-toggle:active{ transform: translateY(0px); }
-    .panel-toggle svg{ width: 16px; height: 16px; opacity: 0.85; }
 
-    /* Collapsed left panel */
-    .left-collapsed .app{
-      grid-template-columns: 0px 1fr var(--rightW);
+    /* Zoom — top-right of map column only (not full viewport) */
+    .main .map-controls {
+      position: absolute;
+      top: max(14px, env(safe-area-inset-top, 0px));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      z-index: 25;
     }
-    .left-collapsed .left,
-    .left-collapsed #gutter-left{
-      display: none !important;
+    .main .map-controls .zoom {
+      display: inline-flex;
+      border: 1px solid var(--term-float-border-0);
+      border-radius: 0;
+      overflow: hidden;
+      background: var(--term-float-0);
+      box-shadow: 0 10px 24px var(--term-float-shadow);
     }
-    /* Desktop-only: no responsive overlay behavior */
+    .main .map-controls .zoom button {
+      width: 44px;
+      height: 36px;
+      font-size: 1.15rem;
+      border: none;
+      background: transparent;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--term-fg-secondary);
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+    .main .map-controls .zoom button + button {
+      border-left: 1px solid var(--term-float-border-0);
+    }
+    .main .map-controls .zoom button:hover {
+      background: var(--term-row-hover-2);
+      color: var(--text);
+    }
+    .main .map-controls .zoom button:active {
+      background: var(--term-row-hover);
+    }
+
     .search {
       display: flex;
       align-items: center;
-      gap: 8px;
-      min-width: 240px;
+      gap: 6px;
+      min-width: 0;
       height: 100%;
-      padding: 0 10px;
+      padding: 0 8px 0 2px;
       border-radius: 0;
       border: none;
       background: transparent;
@@ -320,12 +427,14 @@
     }
     .search input::placeholder { color: var(--term-fg-tertiary); }
     .search-menu{
-      position: absolute;
-      left: 14px;
-      top: calc(14px + 36px + 8px);
-      z-index: 8;
+      position: fixed;
+      left: 0;
+      transform: none;
+      top: calc(max(14px, env(safe-area-inset-top, 0px)) + 36px + 8px);
+      z-index: 26;
+      width: min(520px, calc(100vw - 28px));
       min-width: 260px;
-      max-width: min(520px, calc(100% - 28px));
+      max-width: min(520px, calc(100vw - 28px));
       max-height: min(320px, calc(100vh - 120px));
       overflow: auto;
       border: 1px solid var(--term-float-border-0);
@@ -457,32 +566,71 @@
     }
     .icon-action svg { width: 16px; height: 16px; opacity: 0.8; }
 
-    /* Left panel */
+    /* Left panel — height: default ~80% viewport; --leftPanelH (px) after user resize */
     .left {
       grid-area: left;
+      align-self: end;
+      width: 100%;
+      height: var(--leftPanelH, min(80dvh, 100%));
+      max-height: 100%;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
       background: var(--term-glass-fill);
       backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
       -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
       border-right: 1px solid var(--term-glass-stroke);
-      box-shadow:
-        inset -1px 0 0 var(--term-glass-key),
-        1px 0 0 var(--term-glass-stroke-outer);
-      padding: 16px 18px 22px;
+      box-shadow: none;
+      padding: 0;
       overflow: hidden;
       position: relative;
     }
 
-    /* Toggle sits on the left panel border */
-    /* Put the left-panel toggle above the map/panels */
-    #left-panel-toggle{
-      position: fixed;
-      z-index: 999;
-      border-radius: 999px;
-      width: 36px;
-      height: 36px;
-      margin: 0;
-      box-shadow: 0 12px 28px var(--term-toggle-shadow);
+    .left-inner {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 12px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      -webkit-overflow-scrolling: touch;
     }
+
+    /* Keep overview block toward the bottom when the panel is taller than content */
+    .left-inner-stack {
+      margin-top: auto;
+      min-width: 0;
+    }
+
+    .left-height-handle {
+      flex-shrink: 0;
+      height: 12px;
+      cursor: row-resize;
+      touch-action: none;
+      position: relative;
+      z-index: 2;
+    }
+    .left-height-handle::before {
+      content: '';
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 3px;
+      border-radius: 999px;
+      background: var(--term-gutter-idle);
+      opacity: 0.35;
+      transition: opacity 0.12s ease, background 0.12s ease;
+    }
+    .left-height-handle:hover::before,
+    .left-height-handle:focus-visible::before,
+    .left-height-handle.dragging::before {
+      opacity: 1;
+      background: rgba(255, 106, 0, 0.55);
+    }
+
     .left-head {
       margin-top: 0;
       display: flex;
@@ -556,8 +704,7 @@
       border-radius: 16px;
       box-shadow:
         0 1px 0 var(--term-glass-inset) inset,
-        0 0 0 0.5px var(--term-glass-key),
-        0 12px 40px var(--term-glass-shade);
+        0 0 0 0.5px var(--term-glass-key);
       overflow: hidden;
     }
     .left-card {
@@ -714,37 +861,6 @@
       pointer-events: auto;
     }
 
-    /* Floating map controls (zoom only) — above full-bleed map SVG hit targets */
-    .map-controls {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 25;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      user-select: none;
-      pointer-events: auto;
-    }
-    .map-controls .zoom {
-      border-radius: 0;
-      background: var(--term-float-0);
-      border-color: var(--term-float-border-0);
-    }
-    .map-controls .zoom button {
-      width: 44px;
-      height: 36px;
-      font-size: 1.15rem;
-      color: var(--term-fg-secondary);
-    }
-    .map-controls .zoom button + button { border-left: 1px solid var(--term-float-border-0); }
     /* ── Map (reuse homepage style) ─────────────────────────────── */
     .terminal-map-wrap {
       position: absolute;

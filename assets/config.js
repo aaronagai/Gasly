@@ -6,6 +6,12 @@ const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
+/**
+ * If set to a non-negative integer, use that CSV line as the header row.
+ * Otherwise the parser auto-detects the header (handles preamble rows).
+ */
+const SHEET_CSV_HEADER_ROW_INDEX = null;
+
 /** ISO numeric IDs of Southeast Asian countries shown on the map. */
 const SEA = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
 

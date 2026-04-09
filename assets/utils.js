@@ -1,16 +1,220 @@
 /* Shared utility functions — loaded by index.html, terminal.html, app.html */
 
-/** Parse a CSV string into an array of row objects keyed by header. */
-function parseCSV(text) {
-  const rows = text.trim().split('\n').map(r =>
-    r.split(',').map(c => c.replace(/^"|"$/g, '').trim())
-  );
-  const headers = rows[0];
-  return rows.slice(1).map(r => {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = r[i]; });
-    return obj;
+/** Split one CSV line respecting quoted fields and "" escapes. */
+function splitCSVLine(line) {
+  const out = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQ) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+          continue;
+        }
+        inQ = false;
+        continue;
+      }
+      cur += c;
+      continue;
+    }
+    if (c === '"') {
+      inQ = true;
+      continue;
+    }
+    if (c === ',') {
+      out.push(cur.trim());
+      cur = '';
+      continue;
+    }
+    cur += c;
+  }
+  out.push(cur.trim());
+  return out.map((c) => c.replace(/^"|"$/g, '').trim());
+}
+
+/** Map Google Sheet column titles to stable keys used by the app. */
+function canonicalFuelHeader(h) {
+  const raw = String(h).replace(/^\ufeff/g, '').trim();
+  if (!raw) return '';
+  const low = raw.toLowerCase();
+  if (/country varies|changes date|\bdate\b/i.test(raw) && !/update/i.test(raw)) return 'date';
+  if (/indonesia.*city|region.*city/i.test(raw)) return 'city';
+  if (/provider$/i.test(raw) || /daily provider/i.test(raw)) return 'provider';
+  if (/brunei.*seasonally gasoline/i.test(raw) && !/premium/i.test(raw)) return 'gasoline';
+  const slug = low.replace(/\s+/g, '_');
+  const known = new Set([
+    'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
+    'vpower_gasoline', 'vpower_diesel',
+    'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
+  ]);
+  if (known.has(slug)) return slug;
+  if (low === 'premium') return 'premium';
+  return slug.replace(/[^a-z0-9_]/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || slug;
+}
+
+/** Canonical column keys that hold numeric fuel prices (not date/city/provider). */
+const FUEL_PRICE_HEADER_KEYS = new Set([
+  'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
+  'vpower_gasoline', 'vpower_diesel',
+  'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
+]);
+
+/**
+ * Find header row when the sheet has title rows above the real columns.
+ * Indonesia tabs often omit the word "diesel" (Dexlite / Pertamina Dex only), so we
+ * score rows by canonical fuel columns instead of requiring a diesel substring match.
+ */
+function detectHeaderRowIndex(lineArrays) {
+  let bestIdx = 0;
+  let bestFuelCols = -1;
+  for (let i = 0; i < Math.min(25, lineArrays.length); i++) {
+    const cells = lineArrays[i];
+    if (!cells || cells.length < 4) continue;
+    const canon = cells.map(canonicalFuelHeader);
+    const hasDate = canon.includes('date');
+    let fuelCols = 0;
+    for (const k of canon) {
+      if (k && FUEL_PRICE_HEADER_KEYS.has(k)) fuelCols++;
+    }
+    if (hasDate && fuelCols >= 2 && fuelCols > bestFuelCols) {
+      bestFuelCols = fuelCols;
+      bestIdx = i;
+    }
+  }
+  if (bestFuelCols >= 0) return bestIdx;
+  return 0;
+}
+
+/** Normalize sheet text for comparisons (BOM, NBSP, repeated spaces). */
+function normalizeSheetString(s) {
+  return String(s == null ? '' : s)
+    .replace(/^\ufeff/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Singapore sheet: one date row then provider rows with blank date (and sometimes blank provider).
+ * Forward-fill date and provider so each row is keyed for filtering by provider.
+ */
+function normalizeSingaporeSheetRows(rows) {
+  if (!rows || !rows.length) return [];
+  let curDate = '';
+  let curProvider = '';
+  const filled = rows.map((r) => {
+    const d = r.date != null ? String(r.date).trim() : '';
+    if (d) curDate = d;
+    const p = r.provider != null ? String(r.provider).trim() : '';
+    if (p) curProvider = p;
+    return { ...r, date: curDate, provider: curProvider };
   });
+  return filled.filter((r) => normalizeSheetString(r.date) && normalizeSheetString(r.provider));
+}
+
+/** Unique provider names from normalized Singapore rows, sorted for stable cycling. */
+function sortedSingaporeProviders(rows) {
+  const set = new Set();
+  for (const r of rows || []) {
+    const p = normalizeSheetString(r.provider);
+    if (p) set.add(p);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+/** Pick stored provider from localStorage if it exists in the sheet; else first sorted name. */
+function resolveSingaporeProviderSelection(rows) {
+  const list = sortedSingaporeProviders(rows);
+  if (!list.length) return '';
+  let stored = '';
+  try {
+    stored = typeof localStorage !== 'undefined' ? (localStorage.getItem('terminal_sg_provider') || '') : '';
+  } catch (_) {
+    stored = '';
+  }
+  const w = normalizeSheetString(stored);
+  const hit = list.find((p) => normalizeSheetString(p) === w);
+  return hit || list[0];
+}
+
+/**
+ * Legacy: one row per date with mean prices across providers (when the sheet has no provider column).
+ */
+function aggregateSingaporeProviderRows(rows) {
+  if (!rows || !rows.length) return [];
+  let curDate = '';
+  const filled = rows.map((r) => {
+    const cell = r.date != null ? String(r.date).trim() : '';
+    if (cell) curDate = cell;
+    return { ...r, date: curDate };
+  });
+  const byDate = new Map();
+  for (const r of filled) {
+    const d = r.date && String(r.date).trim();
+    if (!d) continue;
+    if (!byDate.has(d)) byDate.set(d, []);
+    byDate.get(d).push(r);
+  }
+  function avg(group, key) {
+    const nums = group.map((x) => parseFloat(x[key])).filter((n) => Number.isFinite(n));
+    if (!nums.length) return '';
+    const v = nums.reduce((a, b) => a + b, 0) / nums.length;
+    return (Math.round(v * 1000) / 1000).toString();
+  }
+  const keys = ['ron92', 'ron95', 'ron98', 'premium', 'diesel'];
+  const out = [];
+  for (const [date, group] of byDate) {
+    const row = { date };
+    for (const k of keys) row[k] = avg(group, k);
+    out.push(row);
+  }
+  out.sort((a, b) => parseRowDateMs(a.date) - parseRowDateMs(b.date));
+  return out;
+}
+
+/**
+ * Parse a CSV string into an array of row objects keyed by canonical header names.
+ * @param {string} text
+ * @param {{ headerRowIndex?: number }} [options] - optional fixed header line index; omit to auto-detect.
+ */
+function parseCSV(text, options = {}) {
+  const rawLines = text.trim().split(/\r?\n/).filter((ln) => ln.length > 0);
+  const lineArrays = rawLines.map(splitCSVLine);
+  if (!lineArrays.length) return [];
+
+  let headerRowIndex = options.headerRowIndex;
+  if (!Number.isInteger(headerRowIndex) || headerRowIndex < 0) {
+    headerRowIndex = detectHeaderRowIndex(lineArrays);
+  }
+  if (lineArrays.length <= headerRowIndex) return [];
+
+  const rawHeaders = lineArrays[headerRowIndex];
+  const headers = rawHeaders.map(canonicalFuelHeader);
+  const used = Object.create(null);
+  const uniqueHeaders = headers.map((h, i) => {
+    let key = h || `col_${i}`;
+    if (used[key]) {
+      let n = 2;
+      while (used[`${key}_${n}`]) n++;
+      key = `${key}_${n}`;
+    }
+    used[key] = true;
+    return key;
+  });
+
+  return lineArrays.slice(headerRowIndex + 1)
+    .map((cells) => {
+      const obj = {};
+      uniqueHeaders.forEach((key, i) => {
+        if (!key) return;
+        obj[key] = cells[i];
+      });
+      return obj;
+    })
+    .filter((obj) => Object.values(obj).some((v) => v != null && String(v).trim() !== ''));
 }
 
 /** Parse a date cell to UTC milliseconds. Handles ISO YYYY-MM-DD, D/M/Y, and Date.parse fallback. */
@@ -179,7 +383,15 @@ async function ensureSheetRows(url) {
   if (_sheetCache.has(url)) return _sheetCache.get(url);
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Sheet fetch ${res.status}`);
-  const rows = parseCSV(await res.text());
+  const headerIdx =
+    typeof SHEET_CSV_HEADER_ROW_INDEX === 'number' && SHEET_CSV_HEADER_ROW_INDEX >= 0
+      ? SHEET_CSV_HEADER_ROW_INDEX
+      : undefined;
+  let rows = parseCSV(await res.text(), { headerRowIndex: headerIdx });
+  if (url.includes('sheet=Singapore')) {
+    const norm = normalizeSingaporeSheetRows(rows);
+    rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
+  }
   _sheetCache.set(url, rows);
   return rows;
 }

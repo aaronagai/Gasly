@@ -19,34 +19,48 @@
   <!-- styles: assets/terminal.css -->
 </head>
 <body>
+  <div class="sidebar-hover">
+    <div class="sidebar-hover-trigger" aria-hidden="true"></div>
+    <nav class="sidebar-hover-panel" id="sidebar-hover-panel" aria-label="Sidebar menu"></nav>
+  </div>
+
   <div class="app" role="application" aria-label="Terminal">
     <div class="app-map-backdrop">
       <div class="terminal-map-wrap" id="terminal-map"></div>
     </div>
-    <button type="button" class="panel-toggle" id="left-panel-toggle" aria-label="Toggle left panel" aria-expanded="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 18l-6-6 6-6"></path>
-      </svg>
-    </button>
-    <aside class="left" aria-label="Portfolio overview">
-      <div class="left-head">
-        <div class="title" id="left-title">Portfolio<br/>Overview</div>
-      </div>
 
-      <div class="left-stack">
-        <div class="card left-card country-card" aria-label="Selection card">
-          <div class="card-topline-row">
-            <div class="card-topline" id="left-subtitle">Tract</div>
+    <aside class="left" aria-label="Portfolio overview">
+      <div
+        class="left-height-handle"
+        id="left-height-handle"
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize overview panel height from top"
+        aria-valuemin="200"
+        tabindex="0"
+      ></div>
+      <div class="left-inner">
+        <div class="left-inner-stack">
+          <div class="left-head">
+            <div class="title" id="left-title">Portfolio<br/>Overview</div>
           </div>
-          <div class="card-title" id="left-card-title">Rancho<br/>De La Tierra Roja 1H</div>
-          <div class="oil-context" aria-label="Oil context">
-            <div class="k">Oil context</div>
-            <div class="v" id="left-oil-context">—</div>
-          </div>
-          <div class="overview-metrics" id="left-overview-metrics" aria-label="Overview metrics"></div>
-          <div class="mini-bars" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+
+          <div class="left-stack">
+            <div class="card left-card country-card" aria-label="Selection card">
+              <div class="card-topline-row">
+                <div class="card-topline" id="left-subtitle">Tract</div>
+              </div>
+              <div class="card-title" id="left-card-title">Rancho<br/>De La Tierra Roja 1H</div>
+              <div class="oil-context" aria-label="Oil context">
+                <div class="k">Oil context</div>
+                <div class="v" id="left-oil-context">—</div>
+              </div>
+              <div class="overview-metrics" id="left-overview-metrics" aria-label="Overview metrics"></div>
+              <div class="mini-bars" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -55,23 +69,28 @@
     <div class="gutter gutter-left" id="gutter-left" role="separator" aria-label="Resize left panel" aria-orientation="vertical" tabindex="0"></div>
 
     <main class="main" aria-label="Country map">
-      <div class="map-topbar" aria-label="Search and panel controls">
-        <a href="./index.html" class="map-topbar-wordmark site-wordmark">petrolprice.xyz</a>
-        <div class="search" aria-label="Search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7.5"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries" autocomplete="off" spellcheck="false" />
+      <div class="map-topbar" aria-label="Map toolbar">
+        <a href="./index.html" class="map-topbar-wordmark site-wordmark site-wordmark-lockup">
+          <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
+          <span>petrolprice.xyz</span>
+        </a>
+        <div class="map-topbar-center">
+          <div class="search" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7.5"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries" autocomplete="off" spellcheck="false" />
+          </div>
         </div>
       </div>
-      <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
       <div class="map-controls" aria-label="Zoom controls">
         <div class="zoom">
           <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
           <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
         </div>
       </div>
+      <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
     </main>
 
     <div class="gutter gutter-right" id="gutter-right" role="separator" aria-label="Resize right panel" aria-orientation="vertical" tabindex="0"></div>
@@ -92,7 +111,7 @@
         <div class="hint" id="info-sub">Click a country to compare</div>
         <div class="lines" aria-label="Highlights" id="info-lines">
           <div class="kv"><span class="k">Status</span><span class="v">Live</span></div>
-          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region or city · ←/→ date · [ ] date · +/− map zoom</span></div>
+          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region, city, or SG provider · ←/→ date · [ ] date · +/− map zoom</span></div>
         </div>
         <div class="pager" aria-label="Highlights date history">
           <button type="button" id="pager-prev" aria-label="Previous">&lt;</button>
@@ -120,6 +139,7 @@
     const PAGER_INDEX = Object.create(null);
     const LOADED_ROWS = new Map();
     let _idAllRows = null;
+    let _sgAllRows = null;
     function getPagerIndex(countryId) {
       if (+countryId === 458) return MY_INDEX;
       return PAGER_INDEX[+countryId] ?? null;
@@ -147,7 +167,23 @@
       }
     }
 
-    async function ensureSingaporeRows() { return ensureSheetRows(SG_SHEET_URL); }
+    async function ensureSingaporeRows() {
+      const rows = await ensureSheetRows(SG_SHEET_URL);
+      _sgAllRows = rows;
+      return rows;
+    }
+
+    /** Sorted rows for the selected Singapore provider (highlights pager + chart window). */
+    function singaporeSortedProviderRows() {
+      const rows = _sgAllRows || [];
+      const prov = resolveSingaporeProviderSelection(rows);
+      if (prov) {
+        try { localStorage.setItem('terminal_sg_provider', prov); } catch (_) {}
+      }
+      const pNorm = normalizeSheetString(prov);
+      return sortRowsByDate(rows.filter((r) => normalizeSheetString(r.provider) === pNorm));
+    }
+
     async function ensureBruneiRows()    { return ensureSheetRows(BN_SHEET_URL); }
     async function ensureIndonesiaRows() { return ensureSheetRows(ID_SHEET_URL); }
 
@@ -155,12 +191,16 @@
     function indonesiaSortedCityRows() {
       if (!_idAllRows) return [];
       const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-      return sortRowsByDate(_idAllRows.filter(r => r.city === city));
+      const cn = normalizeSheetString(city);
+      return sortRowsByDate(_idAllRows.filter(r => normalizeSheetString(r.city) === cn));
     }
 
     async function pagerSeries(cid) {
       if (cid === 458) return sortRowsByDate((await ensureMalaysiaRows()) || []);
-      if (cid === 702) return sortRowsByDate((await ensureSingaporeRows()) || []);
+      if (cid === 702) {
+        await ensureSingaporeRows();
+        return singaporeSortedProviderRows();
+      }
       if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
       if (cid === 360) {
         await ensureIndonesiaRows();
@@ -351,6 +391,7 @@
       RIGHT_CHART_COUNTRY = null;
       RIGHT_CHART_MY_DIESEL_KEY = null;
       window.__terminalIndonesiaChartKey = null;
+      window.__terminalSingaporeChartKey = null;
     }
 
     function renderRightChart({ labels, datasets, countryId, animate = true }) {
@@ -462,7 +503,10 @@
         const rows = await ensureIndonesiaRows();
         _idAllRows = rows;
         const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-        const seriesAsc = sortRowsByDate(rows.filter(r => r.city === city));
+        const cityNorm = normalizeSheetString(city);
+        const seriesAsc = sortRowsByDate(
+          rows.filter(r => normalizeSheetString(r.city) === cityNorm),
+        );
         LOADED_ROWS.set(360, seriesAsc);
 
         let idx = getPagerIndex(360);
@@ -559,10 +603,10 @@
         return;
       }
 
-      // Singapore
+      // Singapore (per-provider series; ↑/↓ to change provider)
       if (countryId === 702) {
-        const rows = await ensureSingaporeRows();
-        const seriesAsc = sortRowsByDate(rows || []);
+        await ensureSingaporeRows();
+        const seriesAsc = singaporeSortedProviderRows();
         LOADED_ROWS.set(702, seriesAsc);
 
         let idx = getPagerIndex(702);
@@ -571,6 +615,7 @@
         setPagerIndex(702, idx);
 
         const rSel = seriesAsc[idx] || {};
+        const provider = resolveSingaporeProviderSelection(_sgAllRows || []) || 'Singapore';
         const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
@@ -587,7 +632,7 @@
           titleA: 'Singapore',
           titleB: 'Overview',
           subtag: legendHtml(datasets),
-          infoTitle: 'Singapore',
+          infoTitle: provider,
           infoSub: `As of ${fmtDate(rSel.date)} · Singapore`,
           infoLines: [
             ['RON92', fmtTerminalPerL('SGD', parseFloat(rSel.ron92), 2)],
@@ -597,11 +642,17 @@
             ['Diesel', fmtTerminalPerL('SGD', parseFloat(rSel.diesel), 2)],
           ],
         });
-        renderRightChart({
-          labels,
-          datasets,
-          countryId: 702,
-        });
+        const sgChartMode = isTerminalUsd() ? 'usd' : 'local';
+        const sgChartKey = `${provider}|${sgChartMode}`;
+        if (RIGHT_CHART_COUNTRY !== 702 || window.__terminalSingaporeChartKey !== sgChartKey) {
+          renderRightChart({
+            labels,
+            datasets,
+            countryId: 702,
+            animate: true,
+          });
+          window.__terminalSingaporeChartKey = sgChartKey;
+        }
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
@@ -670,7 +721,10 @@
         subEl.textContent = txt;
         subEl.style.display = txt ? '' : 'none';
       }
-      if (cardEl)  cardEl.innerHTML  = `${meta.defaultCardTitle}`;
+      if (cardEl) {
+        const custom = meta.defaultCardTitle != null && String(meta.defaultCardTitle).trim() !== '';
+        cardEl.innerHTML = custom ? meta.defaultCardTitle : (meta.name || '—');
+      }
       const ov = COUNTRY_OVERVIEW[countryId];
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
       if (metricsEl) {
@@ -799,11 +853,22 @@
       let isOpen = false;
       let activeIndex = -1;
 
+      function positionSearchMenu() {
+        const r = input.getBoundingClientRect();
+        const pad = 8;
+        const left = Math.max(pad, r.left);
+        const w = Math.min(520, Math.max(200, window.innerWidth - left - pad));
+        menu.style.left = `${left}px`;
+        menu.style.width = `${w}px`;
+        menu.style.maxWidth = `${w}px`;
+      }
+
       function openMenu(){
         if (isOpen) return;
         isOpen = true;
         menu.classList.add('open');
         input.setAttribute('aria-expanded', 'true');
+        positionSearchMenu();
       }
       function closeMenu(){
         if (!isOpen) return;
@@ -865,6 +930,14 @@
         const filtered = getFiltered();
         render(filtered);
         setActive(filtered.length ? 0 : -1);
+        if (isOpen) positionSearchMenu();
+      }
+
+      window.addEventListener('resize', () => { if (isOpen) positionSearchMenu(); });
+      const appEl = document.querySelector('.app');
+      if (appEl && typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => { if (isOpen) positionSearchMenu(); });
+        ro.observe(appEl);
       }
 
       input.setAttribute('aria-controls', 'country-search-menu');
@@ -1389,7 +1462,21 @@
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
     }
 
-    // Keyboard: ↑/↓ = Malaysia region / Indonesia city (+ map); ←/→ = date pager; SG/BN ↑/↓ = zoom; [ ] = date pager
+    async function cycleSingaporeProvider(step) {
+      await ensureSingaporeRows();
+      const providers = sortedSingaporeProviders(_sgAllRows || []);
+      if (providers.length < 2) return;
+      let cur = resolveSingaporeProviderSelection(_sgAllRows || []);
+      let i = providers.findIndex((p) => normalizeSheetString(p) === normalizeSheetString(cur));
+      if (i < 0) i = 0;
+      const n = (i + step + providers.length) % providers.length;
+      try { localStorage.setItem('terminal_sg_provider', providers[n]); } catch (_) {}
+      delete PAGER_INDEX[702];
+      await updateRightPanelForCountry(702);
+      if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+    }
+
+    // Keyboard: ↑/↓ = Malaysia region / Indonesia city / Singapore provider; ←/→ = date pager; BN ↑/↓ = zoom; [ ] = date pager
     (function initTerminalKeyboardShortcuts() {
       function isTypingTarget(el) {
         if (!el || el.nodeType !== 1) return false;
@@ -1428,6 +1515,11 @@
             cycleIndonesiaCity(-1);
             return;
           }
+          if (cid === 702) {
+            e.preventDefault();
+            cycleSingaporeProvider(-1).catch(() => {});
+            return;
+          }
           const z = document.getElementById('zoom-in');
           if (!z || typeof z.onclick !== 'function') return;
           e.preventDefault();
@@ -1443,6 +1535,11 @@
           if (cid === 360) {
             e.preventDefault();
             cycleIndonesiaCity(1);
+            return;
+          }
+          if (cid === 702) {
+            e.preventDefault();
+            cycleSingaporeProvider(1).catch(() => {});
             return;
           }
           const z = document.getElementById('zoom-out');
@@ -1606,119 +1703,103 @@
       if (gr) drag(gr, 'right');
     })();
 
-    // Collapse/expand left panel
-    (function initLeftPanelToggle() {
-      const btnBorder = document.getElementById('left-panel-toggle');
-      if (!btnBorder) return;
+    // Resizable overview panel height (left column)
+    (function initLeftPanelHeight() {
+      const root = document.documentElement;
+      const handle = document.getElementById('left-height-handle');
+      const leftSel = () => document.querySelector('aside.left');
+      const key = 'terminal_leftPanelH';
 
-      const storageKey = 'terminal_leftCollapsed';
-      const body = document.body;
-      const mqMobile = window.matchMedia('(max-width: 720px)');
+      function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+      function px(n) { return `${Math.round(n)}px`; }
+      function maxPanelH() {
+        return Math.max(200, window.innerHeight - 24);
+      }
 
-      function positionBtn() {
-        // Keep it on the left panel border, slightly lower than center (less distracting).
-        const isCollapsed = body.classList.contains('left-collapsed');
-        const leftEl = document.querySelector('aside.left');
-        const mapTopbar = document.querySelector('.map-topbar');
+      function setLeftPanelH(h, persist) {
+        const x = clamp(h, 200, maxPanelH());
+        root.style.setProperty('--leftPanelH', px(x));
+        if (handle) {
+          handle.setAttribute('aria-valuenow', String(Math.round(x)));
+          handle.setAttribute('aria-valuemax', String(Math.round(maxPanelH())));
+        }
+        if (persist) {
+          try { localStorage.setItem(key, String(x)); } catch (_) {}
+        }
+      }
 
-        const yTarget = () => {
-          if (leftEl) {
-            const r = leftEl.getBoundingClientRect();
-            // 0.65 down the panel looks calmer than dead-center.
-            return Math.round(r.top + r.height * 0.65);
-          }
-          return Math.round(window.innerHeight * 0.65);
+      function readCurrentH() {
+        const v = getComputedStyle(root).getPropertyValue('--leftPanelH').trim();
+        if (v.endsWith('px')) {
+          const n = parseFloat(v);
+          if (Number.isFinite(n)) return n;
+        }
+        const el = leftSel();
+        return el ? el.getBoundingClientRect().height : maxPanelH();
+      }
+
+      try {
+        const saved = parseFloat(localStorage.getItem(key) || '');
+        if (Number.isFinite(saved)) setLeftPanelH(saved, false);
+      } catch (_) {}
+
+      if (handle) {
+        handle.setAttribute('aria-valuemin', '200');
+        handle.setAttribute('aria-valuemax', String(maxPanelH()));
+        handle.setAttribute('aria-valuenow', String(Math.round(readCurrentH())));
+
+        let startY = 0;
+        let startH = 0;
+
+        const onMove = (e) => {
+          const y = e.touches ? e.touches[0].clientY : e.clientY;
+          /* Top handle + bottom-anchored panel: drag down shrinks, drag up grows */
+          setLeftPanelH(startH - (y - startY), true);
+        };
+        const onUp = () => {
+          document.body.classList.remove('resizing-height');
+          handle.classList.remove('dragging');
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          window.removeEventListener('touchmove', onMove);
+          window.removeEventListener('touchend', onUp);
+        };
+        const onDown = (e) => {
+          const y = e.touches ? e.touches[0].clientY : e.clientY;
+          startY = y;
+          startH = readCurrentH();
+          document.body.classList.add('resizing-height');
+          handle.classList.add('dragging');
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+          window.addEventListener('touchmove', onMove, { passive: true });
+          window.addEventListener('touchend', onUp);
         };
 
-        const clampY = (y) => {
-          const padTop = 76;
-          const padBottom = 24;
-          const lo = padTop;
-          const hi = Math.max(lo, window.innerHeight - padBottom);
-          return Math.max(lo, Math.min(hi, y));
-        };
+        handle.addEventListener('mousedown', onDown);
+        handle.addEventListener('touchstart', onDown, { passive: true });
 
-        if (isCollapsed) {
-          // Dock to the map edge; avoid the search topbar area.
-          const fallback = yTarget();
-          const top = mapTopbar
-            ? Math.round(mapTopbar.getBoundingClientRect().top + 140) /* below search */
-            : fallback;
-          btnBorder.style.left = '12px';
-          btnBorder.style.top = `${clampY(top)}px`;
-          btnBorder.style.transform = 'translate(0, -50%)';
-          return;
-        }
-
-        if (leftEl) {
-          const r = leftEl.getBoundingClientRect();
-          btnBorder.style.left = `${Math.round(r.right)}px`;
-          btnBorder.style.top = `${clampY(yTarget())}px`;
-          btnBorder.style.transform = 'translate(-50%, -50%)';
-          return;
-        }
-
-        btnBorder.style.left = '12px';
-        btnBorder.style.top = `${clampY(yTarget())}px`;
-        btnBorder.style.transform = 'translate(0, -50%)';
-      }
-
-      function setCollapsed(next) {
-        body.classList.toggle('left-collapsed', !!next);
-        const expanded = !next;
-        if (btnBorder) btnBorder.setAttribute('aria-expanded', String(expanded));
-
-        // Flip chevron direction (border button points left when open, right when closed)
-        const pathBorder = btnBorder ? btnBorder.querySelector('path') : null;
-        if (pathBorder) pathBorder.setAttribute('d', next ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6');
-
-        try { localStorage.setItem(storageKey, next ? '1' : '0'); } catch (_) {}
-
-        // If the map is using fixed viewBox based on container size, re-render once.
-        clearTimeout(window.__termMapT2);
-        window.__termMapT2 = setTimeout(() => {
-          try { renderTerminalMap(); } catch (_) {}
-        }, 80);
-
-        // Reposition toggle after layout settles
-        clearTimeout(window.__termPosT);
-        window.__termPosT = setTimeout(positionBtn, 60);
-      }
-
-      // Restore
-      try { setCollapsed(localStorage.getItem(storageKey) === '1'); } catch (_) {}
-
-      // On mobile we don't show the left panel; keep the toggle out of the way.
-      function syncMobileVisibility() {
-        if (mqMobile.matches) {
-          btnBorder.style.display = 'none';
-        } else {
-          btnBorder.style.display = '';
-          positionBtn();
-        }
-      }
-      syncMobileVisibility();
-      mqMobile.addEventListener?.('change', syncMobileVisibility);
-
-      function bind(el) {
-        if (!el) return;
-        el.addEventListener('click', () => {
-          setCollapsed(!body.classList.contains('left-collapsed'));
-        });
-        el.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+        handle.addEventListener('keydown', (e) => {
+          const step = e.shiftKey ? 40 : 12;
+          if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setCollapsed(!body.classList.contains('left-collapsed'));
+            setLeftPanelH(readCurrentH() + step, true);
+          }
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setLeftPanelH(readCurrentH() - step, true);
           }
         });
       }
-      bind(btnBorder);
 
-      // Initial + responsive repositioning
-      positionBtn();
       window.addEventListener('resize', () => {
-        clearTimeout(window.__termPosT);
-        window.__termPosT = setTimeout(positionBtn, 60);
+        const v = getComputedStyle(root).getPropertyValue('--leftPanelH').trim();
+        if (!v.endsWith('px')) return;
+        const n = parseFloat(v);
+        if (!Number.isFinite(n)) return;
+        const m = maxPanelH();
+        if (n > m) setLeftPanelH(m, true);
+        if (handle) handle.setAttribute('aria-valuemax', String(Math.round(m)));
       });
     })();
 
