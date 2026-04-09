@@ -39,15 +39,6 @@
     </div>
 
     <aside class="left" aria-label="Portfolio overview">
-      <div
-        class="left-height-handle"
-        id="left-height-handle"
-        role="separator"
-        aria-orientation="horizontal"
-        aria-label="Resize overview panel height from top"
-        aria-valuemin="200"
-        tabindex="0"
-      ></div>
       <div class="left-inner">
         <div class="left-inner-stack">
           <div class="left-head">
@@ -55,11 +46,10 @@
           </div>
 
           <div class="left-stack">
-            <div class="card left-card country-card" aria-label="Selection card">
+            <div class="country-card" aria-label="Country overview">
               <div class="card-topline-row">
                 <div class="card-topline" id="left-subtitle">Tract</div>
               </div>
-              <div class="card-title" id="left-card-title">Rancho<br/>De La Tierra Roja 1H</div>
               <div class="oil-context" aria-label="Oil context">
                 <div class="k">Oil context</div>
                 <div class="v" id="left-oil-context">—</div>
@@ -806,7 +796,6 @@
 
       const titleEl = document.getElementById('left-title');
       const subEl   = document.getElementById('left-subtitle');
-      const cardEl  = document.getElementById('left-card-title');
       const oilEl   = document.getElementById('left-oil-context');
       const metricsEl = document.getElementById('left-overview-metrics');
       const hiTitle = document.getElementById('info-title');
@@ -815,11 +804,10 @@
       if (subEl) {
         const txt = (meta.subtitle || '').trim();
         subEl.textContent = txt;
-        subEl.style.display = txt ? '' : 'none';
-      }
-      if (cardEl) {
-        const custom = meta.defaultCardTitle != null && String(meta.defaultCardTitle).trim() !== '';
-        cardEl.innerHTML = custom ? meta.defaultCardTitle : (meta.name || '—');
+        const showSub = !!txt;
+        subEl.style.display = showSub ? '' : 'none';
+        const topRow = subEl.closest('.card-topline-row');
+        if (topRow) topRow.style.display = showSub ? '' : 'none';
       }
       const ov = COUNTRY_OVERVIEW[countryId];
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
@@ -1645,106 +1633,6 @@
       const gr = document.getElementById('gutter-right');
       if (gl) drag(gl, 'left');
       if (gr) drag(gr, 'right');
-    })();
-
-    // Resizable overview panel height (left column)
-    (function initLeftPanelHeight() {
-      const root = document.documentElement;
-      const handle = document.getElementById('left-height-handle');
-      const leftSel = () => document.querySelector('aside.left');
-      const key = 'terminal_leftPanelH';
-
-      function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
-      function px(n) { return `${Math.round(n)}px`; }
-      function maxPanelH() {
-        return Math.max(200, window.innerHeight - 24);
-      }
-
-      function setLeftPanelH(h, persist) {
-        const x = clamp(h, 200, maxPanelH());
-        root.style.setProperty('--leftPanelH', px(x));
-        if (handle) {
-          handle.setAttribute('aria-valuenow', String(Math.round(x)));
-          handle.setAttribute('aria-valuemax', String(Math.round(maxPanelH())));
-        }
-        if (persist) {
-          try { localStorage.setItem(key, String(x)); } catch (_) {}
-        }
-      }
-
-      function readCurrentH() {
-        const v = getComputedStyle(root).getPropertyValue('--leftPanelH').trim();
-        if (v.endsWith('px')) {
-          const n = parseFloat(v);
-          if (Number.isFinite(n)) return n;
-        }
-        const el = leftSel();
-        return el ? el.getBoundingClientRect().height : maxPanelH();
-      }
-
-      try {
-        const saved = parseFloat(localStorage.getItem(key) || '');
-        if (Number.isFinite(saved)) setLeftPanelH(saved, false);
-      } catch (_) {}
-
-      if (handle) {
-        handle.setAttribute('aria-valuemin', '200');
-        handle.setAttribute('aria-valuemax', String(maxPanelH()));
-        handle.setAttribute('aria-valuenow', String(Math.round(readCurrentH())));
-
-        let startY = 0;
-        let startH = 0;
-
-        const onMove = (e) => {
-          const y = e.touches ? e.touches[0].clientY : e.clientY;
-          /* Top handle + bottom-anchored panel: drag down shrinks, drag up grows */
-          setLeftPanelH(startH - (y - startY), true);
-        };
-        const onUp = () => {
-          document.body.classList.remove('resizing-height');
-          handle.classList.remove('dragging');
-          window.removeEventListener('mousemove', onMove);
-          window.removeEventListener('mouseup', onUp);
-          window.removeEventListener('touchmove', onMove);
-          window.removeEventListener('touchend', onUp);
-        };
-        const onDown = (e) => {
-          const y = e.touches ? e.touches[0].clientY : e.clientY;
-          startY = y;
-          startH = readCurrentH();
-          document.body.classList.add('resizing-height');
-          handle.classList.add('dragging');
-          window.addEventListener('mousemove', onMove);
-          window.addEventListener('mouseup', onUp);
-          window.addEventListener('touchmove', onMove, { passive: true });
-          window.addEventListener('touchend', onUp);
-        };
-
-        handle.addEventListener('mousedown', onDown);
-        handle.addEventListener('touchstart', onDown, { passive: true });
-
-        handle.addEventListener('keydown', (e) => {
-          const step = e.shiftKey ? 40 : 12;
-          if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setLeftPanelH(readCurrentH() + step, true);
-          }
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setLeftPanelH(readCurrentH() - step, true);
-          }
-        });
-      }
-
-      window.addEventListener('resize', () => {
-        const v = getComputedStyle(root).getPropertyValue('--leftPanelH').trim();
-        if (!v.endsWith('px')) return;
-        const n = parseFloat(v);
-        if (!Number.isFinite(n)) return;
-        const m = maxPanelH();
-        if (n > m) setLeftPanelH(m, true);
-        if (handle) handle.setAttribute('aria-valuemax', String(Math.round(m)));
-      });
     })();
 
     // Mobile bottom-sheet UI removed (desktop-only terminal).
