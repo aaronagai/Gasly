@@ -1,6 +1,5 @@
 /* Shared design tokens — loaded by all PetrolPrice pages */
 :root {
   --font:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --mono:      'DM Mono', 'Fira Code', monospace;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
 }

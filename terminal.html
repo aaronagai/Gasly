@@ -10,1151 +10,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
+  <link rel="stylesheet" href="assets/terminal.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
-  <style>
-    :root{
-      color-scheme: light;
-      --bg: #f1f1f0;
-      --panel: #f7f7f6;
-      --panel-2: rgba(255,255,255,0.82);
-      --text: #0f0f0f;
-      --muted: rgba(0,0,0,0.55);
-      --line: rgba(0,0,0,0.10);
-      --hairline: rgba(0, 0, 0, 0.08);
-      --metric-k: rgba(0, 0, 0, 0.52);
-      --metric-v: rgba(0, 0, 0, 0.88);
-      --shadow: 0 10px 28px rgba(0,0,0,0.08);
-      --shadow-2: 0 18px 54px rgba(0,0,0,0.12);
-      --orange: #ff6a00;
-      --orange-2: #ff4d00;
-      /* Highlights panel — shifted toward red-orange */
-      --highlights-red: #e53512;
-      --highlights-red-deep: #c42a0e;
-      /* Translucent layers so backdrop-filter can frost the map */
-      --highlights-glass-sheen: rgba(255, 255, 255, 0.07);
-      --highlights-glass-mix-top: 74%;
-      --highlights-glass-mix-bot: 80%;
-      /* Glass panels — translucent so backdrop-filter blurs the globe */
-      --term-glass-stroke: rgba(255, 255, 255, 0.62);
-      --term-glass-stroke-outer: rgba(0, 0, 0, 0.12);
-      --term-glass-fill: rgba(255, 255, 255, 0.22);
-      --term-glass-deep: rgba(255, 255, 255, 0.14);
-      --term-glass-inset: rgba(255, 255, 255, 0.45);
-      --term-glass-key: rgba(0, 0, 0, 0.06);
-      --term-glass-shade: rgba(0, 0, 0, 0.12);
-      --term-glass-blur: 44px;
-      --term-glass-blur-tight: 28px;
-      /* Surfaces & chrome (theme-aware; overridden in dark) */
-      --term-float-0: rgba(255, 255, 255, 0.65);
-      --term-float-1: rgba(255, 255, 255, 0.82);
-      --term-float-border-0: rgba(0, 0, 0, 0.08);
-      --term-float-border-1: rgba(0, 0, 0, 0.12);
-      --term-float-shadow: rgba(0, 0, 0, 0.08);
-      --term-fg-secondary: rgba(0, 0, 0, 0.72);
-      --term-fg-tertiary: rgba(0, 0, 0, 0.55);
-      --term-fg-strong: rgba(0, 0, 0, 0.86);
-      --term-menu-bg: rgba(255, 255, 255, 0.96);
-      --term-menu-shadow: rgba(0, 0, 0, 0.10);
-      --term-row-hover: rgba(0, 0, 0, 0.035);
-      --term-row-hover-2: rgba(0, 0, 0, 0.04);
-      --term-zoom-chrome: rgba(0, 0, 0, 0.035);
-      --term-tooltip-bg: rgba(255, 255, 255, 0.97);
-      --term-tooltip-border: rgba(0, 0, 0, 0.10);
-      --term-tooltip-shadow: rgba(0, 0, 0, 0.12);
-      --term-tooltip-fg: rgba(0, 0, 0, 0.9);
-      --term-tooltip-muted: rgba(0, 0, 0, 0.55);
-      --term-ghost-bg: rgba(255, 255, 255, 0.70);
-      --term-ghost-bg-hover: rgba(255, 255, 255, 0.86);
-      --term-ghost-bg-active: rgba(255, 255, 255, 0.92);
-      --term-ghost-border: rgba(0, 0, 0, 0.10);
-      --term-ghost-fg: rgba(0, 0, 0, 0.62);
-      --term-ghost-fg-hover: rgba(0, 0, 0, 0.74);
-      --term-tag-bg: rgba(255, 255, 255, 0.7);
-      --term-tag-border: rgba(0, 0, 0, 0.10);
-      --term-tag-fg: rgba(0, 0, 0, 0.7);
-      --term-dot-muted: rgba(0, 0, 0, 0.25);
-      --term-info-fg: #111;
-      --term-legend-ring: rgba(0, 0, 0, 0.06);
-      --term-chart-small: rgba(0, 0, 0, 0.55);
-      --term-chart-stat-k: rgba(0, 0, 0, 0.5);
-      --term-mini-bar: rgba(0, 0, 0, 0.08);
-      --term-divider-soft: rgba(0, 0, 0, 0.08);
-      --term-gutter-idle: rgba(0, 0, 0, 0.10);
-      --term-map-svg-shadow: rgba(0, 0, 0, 0.06);
-      --term-chart-tick: rgba(0, 0, 0, 0.45);
-      --term-chart-grid: rgba(0, 0, 0, 0.06);
-      --term-chart-tooltip-bg: rgba(255, 255, 255, 0.96);
-      --term-chart-tooltip-border: rgba(0, 0, 0, 0.12);
-      --term-chart-tooltip-title: rgba(0, 0, 0, 0.9);
-      --term-chart-tooltip-body: rgba(0, 0, 0, 0.75);
-      --term-chart-line-muted: #111827;
-      --term-toggle-shadow: rgba(0, 0, 0, 0.14);
-
-      /* Resizable layout; JS resizer overrides these vars. */
-      --leftW: clamp(240px, 26vw, 360px);
-      --rightW: clamp(320px, 36vw, 520px);
-      --leftScale: 1;
-      --rightScale: 1;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        color-scheme: dark;
-        --bg: #0f0f0f;
-        --panel: rgba(28, 28, 28, 0.94);
-        --panel-2: rgba(32, 32, 32, 0.88);
-        --text: #f0f0f0;
-        --muted: rgba(255, 255, 255, 0.55);
-        --line: rgba(255, 255, 255, 0.12);
-        --hairline: rgba(255, 255, 255, 0.1);
-        --metric-k: rgba(255, 255, 255, 0.52);
-        --metric-v: rgba(255, 255, 255, 0.92);
-        --shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-        --shadow-2: 0 20px 56px rgba(0, 0, 0, 0.55);
-        --highlights-glass-sheen: rgba(255, 255, 255, 0.06);
-        --term-glass-stroke: rgba(255, 255, 255, 0.18);
-        --term-glass-stroke-outer: rgba(0, 0, 0, 0.55);
-        --term-glass-fill: rgba(32, 32, 32, 0.48);
-        --term-glass-deep: rgba(24, 24, 24, 0.55);
-        --term-glass-inset: rgba(255, 255, 255, 0.08);
-        --term-glass-key: rgba(255, 255, 255, 0.08);
-        --term-glass-shade: rgba(0, 0, 0, 0.45);
-        --term-float-0: rgba(40, 40, 40, 0.88);
-        --term-float-1: rgba(52, 52, 52, 0.92);
-        --term-float-border-0: rgba(255, 255, 255, 0.14);
-        --term-float-border-1: rgba(255, 255, 255, 0.22);
-        --term-float-shadow: rgba(0, 0, 0, 0.4);
-        --term-fg-secondary: rgba(255, 255, 255, 0.78);
-        --term-fg-tertiary: rgba(255, 255, 255, 0.52);
-        --term-fg-strong: rgba(255, 255, 255, 0.92);
-        --term-menu-bg: rgba(28, 28, 28, 0.94);
-        --term-menu-shadow: rgba(0, 0, 0, 0.5);
-        --term-row-hover: rgba(255, 255, 255, 0.06);
-        --term-row-hover-2: rgba(255, 255, 255, 0.07);
-        --term-zoom-chrome: rgba(255, 255, 255, 0.08);
-        --term-tooltip-bg: rgba(28, 28, 28, 0.96);
-        --term-tooltip-border: rgba(255, 255, 255, 0.14);
-        --term-tooltip-shadow: rgba(0, 0, 0, 0.5);
-        --term-tooltip-fg: rgba(255, 255, 255, 0.95);
-        --term-tooltip-muted: rgba(255, 255, 255, 0.55);
-        --term-ghost-bg: rgba(40, 40, 40, 0.85);
-        --term-ghost-bg-hover: rgba(50, 50, 50, 0.9);
-        --term-ghost-bg-active: rgba(56, 56, 56, 0.95);
-        --term-ghost-border: rgba(255, 255, 255, 0.12);
-        --term-ghost-fg: rgba(255, 255, 255, 0.72);
-        --term-ghost-fg-hover: rgba(255, 255, 255, 0.88);
-        --term-tag-bg: rgba(40, 40, 40, 0.75);
-        --term-tag-border: rgba(255, 255, 255, 0.12);
-        --term-tag-fg: rgba(255, 255, 255, 0.78);
-        --term-dot-muted: rgba(255, 255, 255, 0.35);
-        --term-info-fg: rgba(255, 255, 255, 0.95);
-        --term-legend-ring: rgba(255, 255, 255, 0.12);
-        --term-chart-small: rgba(255, 255, 255, 0.55);
-        --term-chart-stat-k: rgba(255, 255, 255, 0.5);
-        --term-mini-bar: rgba(255, 255, 255, 0.12);
-        --term-divider-soft: rgba(255, 255, 255, 0.1);
-        --term-gutter-idle: rgba(255, 255, 255, 0.14);
-        --term-map-svg-shadow: rgba(0, 0, 0, 0.35);
-        --term-chart-tick: rgba(255, 255, 255, 0.45);
-        --term-chart-grid: rgba(255, 255, 255, 0.08);
-        --term-chart-tooltip-bg: rgba(28, 28, 28, 0.96);
-        --term-chart-tooltip-border: rgba(255, 255, 255, 0.16);
-        --term-chart-tooltip-title: rgba(255, 255, 255, 0.95);
-        --term-chart-tooltip-body: rgba(255, 255, 255, 0.72);
-        --term-chart-line-muted: #a8a8a8;
-        --term-toggle-shadow: rgba(0, 0, 0, 0.5);
-      }
-    }
-
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: var(--font);
-      color: var(--text);
-      background: var(--bg);
-      overflow: hidden;
-    }
-
-    .app {
-      height: 100%;
-      height: 100dvh;
-      display: grid;
-      grid-template-columns: var(--leftW) 1fr var(--rightW);
-      grid-template-rows: 1fr;
-      grid-template-areas: "left main right";
-      position: relative;
-      isolation: isolate;
-    }
-
-    /* Full-viewport globe behind chrome so glass panels actually frost the map */
-    .app-map-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: auto;
-      background: var(--bg);
-    }
-    .app-map-backdrop .terminal-map-wrap {
-      position: absolute;
-      inset: 0;
-    }
-
-    .left,
-    .main,
-    .right {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* Resizer gutters */
-    .gutter {
-      grid-row: 1;
-      z-index: 20;
-      width: 14px;
-      margin-left: -7px;
-      cursor: col-resize;
-      position: relative;
-      touch-action: none;
-    }
-    .gutter::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      border-radius: 999px;
-      background: var(--term-gutter-idle);
-      opacity: 0;
-      transition: opacity 0.12s ease, background 0.12s ease;
-    }
-    .gutter:hover::before,
-    .gutter.dragging::before {
-      opacity: 1;
-      background: rgba(255,106,0,0.55);
-    }
-    .gutter-left { grid-column: 2; }  /* boundary between left and map */
-    .gutter-right { grid-column: 3; } /* boundary between map and right */
-
-    body.resizing {
-      cursor: col-resize;
-      user-select: none;
-    }
-    body.resizing * {
-      pointer-events: none;
-    }
-    body.resizing .gutter {
-      pointer-events: auto;
-    }
-
-    /* Floating search (on map) */
-    .map-topbar{
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 7;
-      display: inline-flex;
-      align-items: center;
-      gap: 0;
-      padding: 0;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      user-select: none;
-      height: 36px;
-      max-width: min(520px, calc(100% - 24px));
-    }
-
-    .panel-toggle{
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border: none;
-      background: var(--term-float-0);
-      border: 1px solid var(--term-float-border-0);
-      color: var(--term-fg-secondary);
-      cursor: pointer;
-      border-radius: 12px;
-      margin-right: 10px;
-      box-shadow: 0 10px 24px var(--term-float-shadow);
-      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-    }
-    .panel-toggle:hover{
-      background: var(--term-float-1);
-      border-color: var(--term-float-border-1);
-      transform: translateY(-1px);
-    }
-    .panel-toggle:active{ transform: translateY(0px); }
-    .panel-toggle svg{ width: 16px; height: 16px; opacity: 0.85; }
-
-    /* Collapsed left panel */
-    .left-collapsed .app{
-      grid-template-columns: 0px 1fr var(--rightW);
-    }
-    .left-collapsed .left,
-    .left-collapsed #gutter-left{
-      display: none !important;
-    }
-    /* Desktop-only: no responsive overlay behavior */
-    .search {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 240px;
-      height: 100%;
-      padding: 0 10px;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      color: var(--term-fg-secondary);
-      font-size: 1rem;
-    }
-    .search svg { opacity: 0.7; width: 16px; height: 16px; }
-    .search input {
-      border: none;
-      outline: none;
-      background: transparent;
-      font: inherit;
-      color: inherit;
-      width: min(260px, 42vw);
-      height: 100%;
-    }
-    .search input::placeholder { color: var(--term-fg-tertiary); }
-    .search-menu{
-      position: absolute;
-      left: 14px;
-      top: calc(14px + 36px + 8px);
-      z-index: 8;
-      min-width: 260px;
-      max-width: min(520px, calc(100% - 28px));
-      max-height: min(320px, calc(100vh - 120px));
-      overflow: auto;
-      border: 1px solid var(--term-float-border-0);
-      background: var(--term-menu-bg);
-      border-radius: 0;
-      box-shadow: 0 10px 26px var(--term-menu-shadow);
-      padding: 4px;
-      display: none;
-    }
-    .search-menu.open{ display: block; }
-    .search-item{
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      padding: 9px 10px;
-      border-radius: 0;
-      cursor: pointer;
-      user-select: none;
-      color: var(--term-fg-strong);
-    }
-    .search-item:hover,
-    .search-item.active{
-      background: var(--term-row-hover);
-    }
-    .search-item .label{
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
-    .search-item .sub{
-      font-size: 0.83rem;
-      color: var(--term-fg-tertiary);
-    }
-    .search-empty{
-      padding: 12px 10px;
-      color: var(--term-fg-tertiary);
-      font-size: 0.9rem;
-    }
-    #info-title {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      text-decoration-thickness: 1px;
-    }
-    #info-title.switchable {
-      cursor: pointer;
-    }
-    .city-menu{
-      position: fixed;
-      z-index: 50;
-      min-width: 220px;
-      max-width: min(320px, calc(100vw - 24px));
-      max-height: min(320px, calc(100vh - 24px));
-      overflow: auto;
-      border: 1px solid var(--term-tooltip-border);
-      background: var(--term-tooltip-bg);
-      box-shadow: 0 16px 48px var(--term-tooltip-shadow);
-      padding: 6px;
-      display: none;
-    }
-    .city-menu.open{ display: block; }
-    .city-item{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 10px;
-      cursor: pointer;
-      user-select: none;
-      color: var(--term-fg-strong);
-    }
-    .city-item:hover{ background: var(--term-row-hover-2); }
-    .city-item.active{ background: rgba(255,106,0,0.10); }
-    .city-item .label{ font-weight: 700; letter-spacing: 0.01em; }
-    .city-item .sub{ font-size: 0.82rem; color: var(--term-fg-tertiary); }
-    .spacer { flex: 1; }
-    .zoom {
-      display: inline-flex;
-      border: 1px solid var(--term-float-border-0);
-      border-radius: 0;
-      overflow: hidden;
-      background: var(--term-zoom-chrome);
-    }
-    .zoom button {
-      width: 42px; height: 34px;
-      border: none;
-      background: transparent;
-      font-size: 1.05rem;
-      line-height: 1;
-      cursor: pointer;
-      color: var(--term-fg-secondary);
-      transition: background 0.12s ease, color 0.12s ease;
-    }
-    .zoom button + button { border-left: 1px solid var(--line); }
-    .zoom button:hover { background: var(--term-row-hover-2); color: var(--text); }
-    .zoom button:active { background: var(--term-row-hover); }
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .icon-btn {
-      width: 34px; height: 34px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      background: var(--term-float-0);
-      border-radius: 10px;
-      cursor: not-allowed;
-      opacity: 0.85;
-    }
-    .icon-btn svg { width: 16px; height: 16px; opacity: 0.8; }
-    .icon-action{
-      width: 34px; height: 34px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      background: var(--term-float-0);
-      border-radius: 10px;
-      cursor: pointer;
-      opacity: 0.9;
-      transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
-    }
-    .icon-action:hover{
-      background: var(--term-float-1);
-      border-color: var(--term-float-border-1);
-      opacity: 1;
-    }
-    .icon-action:active{
-      background: var(--term-float-1);
-    }
-    .icon-action svg { width: 16px; height: 16px; opacity: 0.8; }
-
-    /* Left panel */
-    .left {
-      grid-area: left;
-      background: var(--term-glass-fill);
-      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-      border-right: 1px solid var(--term-glass-stroke);
-      box-shadow:
-        inset -1px 0 0 var(--term-glass-key),
-        1px 0 0 var(--term-glass-stroke-outer);
-      padding: 16px 18px 22px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* Toggle sits on the left panel border */
-    /* Put the left-panel toggle above the map/panels */
-    #left-panel-toggle{
-      position: fixed;
-      z-index: 999;
-      border-radius: 999px;
-      width: 36px;
-      height: 36px;
-      margin: 0;
-      box-shadow: 0 12px 28px var(--term-toggle-shadow);
-    }
-    .left-head {
-      margin-top: 0;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .title {
-      margin: 0;
-      font-size: calc(1.75rem * var(--leftScale));
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.02;
-      color: var(--text);
-    }
-    .left-actions {
-      display: flex;
-      gap: 8px;
-      opacity: 0.9;
-    }
-    .mini-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      border: 1px solid var(--term-ghost-border);
-      background: var(--term-float-0);
-      display: grid;
-      place-items: center;
-      cursor: not-allowed;
-    }
-    .mini-btn svg { width: 16px; height: 16px; opacity: 0.75; }
-    .ghost-btn{
-      border: 1px solid var(--term-ghost-border);
-      background: var(--term-ghost-bg);
-      border-radius: 12px;
-      padding: 9px 10px;
-      font-family: var(--font);
-      font-weight: 800;
-      font-size: 0.66rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--term-ghost-fg);
-      cursor: pointer;
-      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-      user-select: none;
-    }
-    .ghost-btn:hover{
-      background: var(--term-ghost-bg-hover);
-      border-color: rgba(255,106,0,0.35);
-      color: var(--term-ghost-fg-hover);
-    }
-    .ghost-btn:active{
-      background: var(--term-ghost-bg-active);
-    }
-    .ghost-btn[aria-pressed="true"]{
-      border-color: rgba(255,106,0,0.40);
-    }
-
-    .left-stack {
-      margin-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-top: 8px;
-    }
-    .card {
-      border: 1px solid var(--term-glass-stroke);
-      background: var(--term-glass-deep);
-      backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(160%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(160%);
-      border-radius: 16px;
-      box-shadow:
-        0 1px 0 var(--term-glass-inset) inset,
-        0 0 0 0.5px var(--term-glass-key),
-        0 12px 40px var(--term-glass-shade);
-      overflow: hidden;
-    }
-    .left-card {
-      padding: 14px 14px 10px;
-    }
-    /* Make the primary country card feel "floating" + compact */
-    .country-card {
-      align-self: flex-start;
-      padding: 12px 12px 12px;
-    }
-    .country-card .card-title { font-size: 0.98rem; }
-    .country-card .mini-bars { display: none; }
-    .oil-context{
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--term-divider-soft);
-      color: var(--term-fg-secondary);
-      font-size: 0.9rem;
-      line-height: 1.35;
-    }
-    .oil-context .k{
-      font-size: 0.62rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      opacity: 0.72;
-      margin-bottom: 6px;
-    }
-    .oil-context .v{
-      font-weight: 600;
-      color: var(--text);
-    }
-    .card-topline {
-      font-size: 0.7rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .card-topline-row{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .card-topline-row .ghost-btn{
-      padding: 7px 9px;
-      border-radius: 999px;
-      font-size: 0.6rem;
-      letter-spacing: 0.14em;
-    }
-    .card-title {
-      margin-top: 10px;
-      font-size: 1.05rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      line-height: 1.12;
-      color: var(--text);
-    }
-    .pill-row {
-      margin-top: 10px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 8px;
-      border: 1px solid var(--term-tag-border);
-      background: var(--term-tag-bg);
-      border-radius: 999px;
-      font-family: var(--font);
-      font-size: 0.68rem;
-      letter-spacing: 0.06em;
-      color: var(--term-tag-fg);
-    }
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--term-dot-muted);
-    }
-    .dot.orange { background: var(--orange); }
-    .dot.green { background: #16a34a; }
-
-    /* Overview numbers — match app.html #card-overview metrics */
-    .overview-metrics{
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin-top: 14px;
-    }
-    .overview-row{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      border-top: 1px solid var(--hairline);
-      padding-top: 10px;
-      padding-bottom: 14px;
-    }
-    .overview-metric-empty{
-      min-width: 0;
-      pointer-events: none;
-    }
-    .overview-metrics .metric{
-      min-width: 0;
-    }
-    .overview-metrics .metric .k{
-      font-family: var(--font);
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--metric-k);
-    }
-    .overview-metrics .metric .v{
-      margin-top: 6px;
-      font-family: var(--font);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      font-variant-numeric: tabular-nums;
-      color: var(--metric-v);
-      line-height: 1.25;
-    }
-
-    .mini-bars {
-      height: 76px;
-      border-top: 1px solid var(--term-divider-soft);
-      margin-top: 12px;
-      padding-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      gap: 5px;
-      align-items: end;
-      opacity: 0.72;
-    }
-    .mini-bars span{
-      display: block;
-      height: 40%;
-      border-radius: 6px;
-      background: var(--term-mini-bar);
-    }
-    .mini-bars span:nth-child(3n){ height: 65%; }
-    .mini-bars span:nth-child(4n){ height: 25%; }
-    .mini-bars span:nth-child(5n){ height: 85%; }
-
-    /* Map chrome only: globe lives in .app-map-backdrop; pass clicks through to globe */
-    .main {
-      grid-area: main;
-      position: relative;
-      background: transparent;
-      overflow: visible;
-      pointer-events: none;
-    }
-    .main > * {
-      pointer-events: auto;
-    }
-
-    /* Floating map controls (zoom only) — above full-bleed map SVG hit targets */
-    .map-controls {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 25;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      user-select: none;
-      pointer-events: auto;
-    }
-    .map-controls .zoom {
-      border-radius: 0;
-      background: var(--term-float-0);
-      border-color: var(--term-float-border-0);
-    }
-    .map-controls .zoom button {
-      width: 44px;
-      height: 36px;
-      font-size: 1.15rem;
-      color: var(--term-fg-secondary);
-    }
-    .map-controls .zoom button + button { border-left: 1px solid var(--term-float-border-0); }
-    /* ── Map (reuse homepage style) ─────────────────────────────── */
-    .terminal-map-wrap {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      z-index: 1;
-    }
-    .terminal-map-wrap svg{
-      filter: drop-shadow(0 20px 40px var(--term-map-svg-shadow));
-    }
-    .terminal-map-wrap svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      touch-action: none;
-    }
-    /* Slightly bluer ocean so the globe reads on mobile */
-    .sphere { fill: #e7eef7; }
-    .graticule { fill: none; stroke: rgba(48,48,48,0.05); stroke-width: 0.3; }
-    .country {
-      fill: none;
-      stroke: rgba(48, 48, 48, 0.22);
-      stroke-width: 0.5;
-      vector-effect: non-scaling-stroke;
-      paint-order: stroke fill;
-      cursor: default;
-      transition: stroke 0.12s ease;
-    }
-    .country:hover {
-      fill: none;
-      stroke: rgba(48, 48, 48, 0.36);
-    }
-    .country.live {
-      fill: rgba(17, 24, 39, 0.28); /* dark grey for non-selected live */
-      stroke: none;
-      cursor: pointer;
-    }
-    .country.live:hover { fill: rgba(17, 24, 39, 0.38); }
-    .country.live.selected {
-      fill: rgba(254,94,14,0.26); /* orange for selected */
-    }
-    .country.live.selected:hover { fill: rgba(254,94,14,0.34); }
-    /* Singapore overlay (countries-110m may merge SG into MY) — matches app.html */
-    .country.live.country-sg{
-      stroke: rgba(32, 32, 32, 0.58);
-      stroke-width: 1.15px;
-      vector-effect: non-scaling-stroke;
-      paint-order: stroke fill;
-    }
-    .country.live.country-sg.selected{
-      stroke: rgba(255, 106, 0, 0.9);
-      stroke-width: 1.85px;
-    }
-    .border-mesh {
-      fill: none;
-      stroke: rgba(48,48,48,0.14);
-      stroke-width: 0.5;
-      pointer-events: none;
-    }
-    .border-live {
-      fill: none;
-      stroke: rgba(17, 24, 39, 0.45); /* dark grey for non-selected live */
-      stroke-width: 1;
-      pointer-events: none;
-    }
-    .border-live.selected {
-      stroke: rgba(254,94,14,0.75); /* orange for selected only */
-    }
-
-    /* Dark globe — after light rules; #terminal-map raises specificity so this wins over .sphere/.country */
-    @media (prefers-color-scheme: dark) {
-      #terminal-map svg {
-        filter: drop-shadow(0 20px 40px var(--term-map-svg-shadow));
-      }
-      #terminal-map .sphere { fill: #1a1a1a; }
-      #terminal-map .graticule {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.08);
-        stroke-width: 0.3;
-      }
-      #terminal-map .country {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.2);
-        stroke-width: 0.5;
-        vector-effect: non-scaling-stroke;
-        paint-order: stroke fill;
-      }
-      #terminal-map .country:hover {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.34);
-      }
-      #terminal-map .country.live {
-        fill: rgba(255, 255, 255, 0.2);
-        stroke: none;
-      }
-      #terminal-map .country.live:hover { fill: rgba(255, 255, 255, 0.3); }
-      #terminal-map .country.live.selected {
-        fill: rgba(255, 106, 0, 0.32);
-      }
-      #terminal-map .country.live.selected:hover { fill: rgba(255, 106, 0, 0.42); }
-      #terminal-map .country.live.country-sg {
-        stroke: rgba(255, 255, 255, 0.4);
-        stroke-width: 1.15px;
-        vector-effect: non-scaling-stroke;
-        paint-order: stroke fill;
-      }
-      #terminal-map .country.live.country-sg.selected {
-        stroke: rgba(255, 200, 140, 0.95);
-        stroke-width: 1.85px;
-      }
-      #terminal-map .border-mesh {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.12);
-        stroke-width: 0.5;
-      }
-      #terminal-map .border-live {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.28);
-        stroke-width: 1;
-      }
-      #terminal-map .border-live.selected {
-        stroke: rgba(255, 106, 0, 0.85);
-      }
-    }
-
-    /* Tooltip (reuse homepage) */
-    #tooltip {
-      position: fixed;
-      z-index: 500;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.12s ease;
-      background: var(--term-tooltip-bg);
-      border: 1px solid var(--term-tooltip-border);
-      border-radius: 10px;
-      padding: 9px 14px 8px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 28px var(--term-tooltip-shadow);
-      min-width: 148px;
-    }
-    #tooltip.show { opacity: 1; }
-    .tt-country {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--term-tooltip-fg);
-      letter-spacing: 0.02em;
-      margin-bottom: 3px;
-    }
-    .tt-status {
-      display: block;
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-family: var(--font);
-      color: var(--term-tooltip-muted);
-    }
-    .tt-status.live { color: rgba(255,106,0,0.95); }
-
-    /* Right panel */
-    .right {
-      grid-area: right;
-      background: transparent;
-      border-left: 1px solid var(--line);
-      display: grid;
-      grid-template-rows: 1fr 1fr;
-      min-height: 0;
-    }
-
-    /* Desktop layout: chart (history) on top, highlights below */
-    .chart {
-      padding: 28px 26px;
-      border-bottom: 1px solid var(--term-glass-key);
-      background: var(--term-glass-fill);
-      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-      box-shadow:
-        inset 0 -1px 0 var(--term-glass-key),
-        -1px 0 0 var(--term-glass-stroke-outer);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      min-height: 0;
-      overflow: auto;
-    }
-    .chart h2 {
-      margin: 0;
-      font-size: calc(3.1rem * var(--rightScale));
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 0.95;
-      color: var(--text);
-    }
-    /* Hide the large country title in the white panel */
-    #right-title { display: none; }
-    .chart .small {
-      color: var(--term-chart-small);
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-    .chart .statgrid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 18px;
-      margin-top: 4px;
-    }
-    .chart .stat .k {
-      font-size: 0.66rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--term-chart-stat-k);
-    }
-    .chart .stat .v {
-      margin-top: 6px;
-      font-family: var(--font);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      color: var(--text);
-    }
-    .chart .toolbar {
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    /* Inline legend (replaces "Gov API" tag) */
-    #right-subtag{
-      display: inline-flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      color: var(--term-chart-small);
-      font-family: var(--font);
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-    .legend-item{
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      white-space: nowrap;
-    }
-    .legend-dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      box-shadow: 0 0 0 2px var(--term-legend-ring);
-      flex: 0 0 auto;
-    }
-    /* export buttons now use .icon-action */
-
-    .chart-canvas-wrap {
-      position: relative;
-      flex: 1;
-      min-height: 220px;
-      border: 1px solid var(--term-glass-stroke);
-      border-radius: 16px;
-      background: var(--term-glass-deep);
-      backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(155%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur-tight)) saturate(155%);
-      box-shadow:
-        0 1px 0 var(--term-glass-inset) inset,
-        0 8px 28px var(--term-glass-shade);
-      padding: 12px 12px 10px;
-    }
-    .chart-canvas-wrap canvas {
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-    }
-    .info {
-      background-color: transparent;
-      background-image:
-        linear-gradient(180deg, var(--highlights-glass-sheen) 0%, transparent 40%),
-        linear-gradient(
-          165deg,
-          color-mix(in srgb, var(--highlights-red) var(--highlights-glass-mix-top), transparent) 0%,
-          color-mix(in srgb, var(--highlights-red-deep) var(--highlights-glass-mix-bot), transparent) 100%
-        );
-      backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
-      color: var(--term-info-fg);
-      padding: 28px 26px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      gap: 10px;
-      min-height: 0;
-      overflow: auto;
-      border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 55%, rgba(0, 0, 0, 0.18));
-      box-shadow:
-        inset 0 1px 0 rgba(0, 0, 0, 0.06),
-        inset 0 -1px 0 rgba(90, 20, 8, 0.14),
-        -1px 0 0 var(--term-glass-stroke-outer),
-        0 10px 36px color-mix(in srgb, var(--highlights-red-deep) 34%, transparent);
-    }
-    .info h3 {
-      margin: 0;
-      font-size: 2.1rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.05;
-    }
-    .info .hint {
-      font-family: var(--font);
-      font-size: 0.78rem;
-      letter-spacing: 0.06em;
-      opacity: 0.8;
-    }
-    .info .lines {
-      margin-top: 10px;
-      display: grid;
-      gap: 10px;
-      font-family: var(--font);
-      font-size: 0.78rem;
-      letter-spacing: 0.02em;
-      opacity: 0.95;
-    }
-    .info .kv {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      padding-top: 10px;
-      border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 45%, rgba(0, 0, 0, 0.2));
-    }
-    .kv .k { opacity: 0.72; }
-    .kv .v { font-weight: 800; }
-
-    @media (prefers-color-scheme: dark) {
-      .info {
-        background-color: var(--term-glass-fill);
-        background-image: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 42%
-        );
-        background-repeat: no-repeat;
-        backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-        -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
-        color: var(--term-info-fg);
-        border-top: 1px solid var(--term-glass-key);
-        box-shadow:
-          inset 0 1px 0 var(--term-glass-inset),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-          -1px 0 0 var(--term-glass-stroke-outer),
-          0 8px 32px var(--term-glass-shade);
-      }
-      .info .kv {
-        border-top: 1px solid var(--hairline);
-      }
-    }
-
-    .pager {
-      position: absolute;
-      right: 20px;
-      bottom: 18px;
-      display: inline-flex;
-      gap: 0;
-      border-radius: 0;
-      border: 1px solid #3a3a3a;
-      background: #2f2f2f;
-      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .pager button {
-      width: 38px;
-      height: 38px;
-      border-radius: 0;
-      border: none;
-      background: transparent;
-      color: #bdbdbd;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 400;
-      line-height: 1;
-      display: grid;
-      place-items: center;
-      transition: background 0.12s ease, color 0.12s ease;
-    }
-    .pager button + button { border-left: 1px solid #3a3a3a; }
-    .pager button:hover { background: #3a3a3a; color: #d6d6d6; }
-    .pager button:active { background: #444444; }
-    .pager button:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
-
-  </style>
+  <!-- styles: assets/terminal.css -->
 </head>
 <body>
   <div class="app" role="application" aria-label="Terminal">
@@ -1249,201 +111,24 @@
   <div id="my-city-menu" class="city-menu" role="listbox" aria-label="Select Malaysia city"></div>
 
   <script>
-    // Simple UI state (we'll expand this over time)
-    const TERMINAL_COUNTRIES = {
-      458: { name: 'Malaysia',   subtitle: '', defaultCardTitle: 'Malaysia' },
-      702: { name: 'Singapore',  subtitle: '', defaultCardTitle: 'Singapore' },
-      96:  { name: 'Brunei',     subtitle: '', defaultCardTitle: 'Brunei' },
-      360: { name: 'Indonesia',  subtitle: '', defaultCardTitle: 'Indonesia' },
-    };
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
+    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, asNum, buildChartSeries — from utils.js
 
-    /** Oil context + overview metrics — same `metricRows` layout as app.html */
-    const COUNTRY_OVERVIEW = {
-      458: {
-        oilContext:
-          'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-        metricRows: [
-          [['BOPD', '570,000'], ['1P Reserves', '2.7B Barrels']],
-          [['Refinery Intake', '747,000'], null],
-          [['Export Value', 'RM6.2bil'], ['Import Value', 'RM13.6bil']],
-          [['Status', 'Net Importer'], null],
-        ],
-      },
-      96: {
-        oilContext:
-          'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
-        metricRows: [
-          [['BOPD', '102,677'], ['1P Reserves', '1.1B Barrels']],
-          [['Refinery Intake', '16,338'], null],
-          [['Export Value', 'BND 13.45bil'], ['Import Value', 'BND 8.62bil']],
-          [['Status', 'Net Exporter'], null],
-        ],
-      },
-      360: {
-        oilContext:
-          "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
-        metricRows: [
-          [['BOPD', '608,100'], ['1P Reserves', '2.41B Barrels']],
-          [['Refinery Intake', '1,626,878'], null],
-          [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
-          [['Status', 'Net Importer'], null],
-        ],
-      },
-      702: {
-        oilContext:
-          'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
-        metricRows: [
-          [['BOPD', '0'], ['1P Reserves', '0 Barrels']],
-          [['Refinery Intake', '~1,100,000'], null],
-          [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
-          [['Status', 'Net Importer (refining hub)'], null],
-        ],
-      },
-    };
-
-    // Indonesia city-based pricing (from existing Google Sheet)
-    let ID_ROWS = null;
-
-    async function ensureIndonesiaRows() {
-      if (ID_ROWS) return ID_ROWS;
-      const res = await fetch(ID_SHEET_URL, { cache: 'no-store' });
-      const text = await res.text();
-      ID_ROWS = parseCSV(text);
-      return ID_ROWS;
-    }
-
-    // Country-wide data fetch helpers
-
-    let MY_ROWS = null;
-    let SG_ROWS = null;
-    let BN_ROWS = null;
     let MY_INDEX = null; // selected week index in ascending series
     // Per-country selected index for the highlights pager (all non-Malaysia).
-    const TERMINAL_PAGER_INDEX = Object.create(null);
+    const PAGER_INDEX = Object.create(null);
+    const LOADED_ROWS = new Map();
+    let _idAllRows = null;
     function getPagerIndex(countryId) {
       if (+countryId === 458) return MY_INDEX;
-      return TERMINAL_PAGER_INDEX[+countryId] ?? null;
+      return PAGER_INDEX[+countryId] ?? null;
     }
     function setPagerIndex(countryId, idx) {
       if (+countryId === 458) { MY_INDEX = idx; return; }
-      TERMINAL_PAGER_INDEX[+countryId] = idx;
+      PAGER_INDEX[+countryId] = idx;
     }
 
-    const MY_REGIONS = [
-      { key: 'Semenanjung', label: 'Semenanjung' },
-      { key: 'SabahSarawak', label: 'East Malaysia' },
-    ];
     let MY_REGION = localStorage.getItem('terminal_my_region') || 'Semenanjung';
-
-    /** Geo boxes for orthographic fit — map focus only (matches app.html logic). */
-    const TERMINAL_MY_SUBREGION_FOCUS = {
-      Semenanjung: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [99.5, 0.75], [104.95, 0.75], [104.95, 6.95], [99.5, 6.95], [99.5, 0.75],
-          ]],
-        },
-      },
-      SabahSarawak: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [108.8, 0.45], [119.6, 0.45], [119.6, 7.55], [108.8, 7.55], [108.8, 0.45],
-          ]],
-        },
-      },
-    };
-
-    /** [lon, lat] — keys match `city` in the Indonesia sheet (see app.html). */
-    const TERMINAL_ID_CITY_LONLAT = {
-      'Jakarta Pusat': [106.8456, -6.2088],
-      'Jakarta Selatan': [106.81, -6.26],
-      'Jakarta Barat': [106.74, -6.15],
-      'Jakarta Timur': [106.9, -6.22],
-      'Jakarta Utara': [106.88, -6.13],
-      Bekasi: [106.99, -6.24],
-      Bogor: [106.8, -6.6],
-      Depok: [106.82, -6.4],
-      Tangerang: [106.63, -6.18],
-      'Tangerang Selatan': [106.71, -6.29],
-      Bandung: [107.62, -6.92],
-      Semarang: [110.42, -6.99],
-      Surabaya: [112.75, -7.26],
-      Surakarta: [110.82, -7.57],
-      Yogyakarta: [110.36, -7.8],
-      Medan: [98.67, 3.59],
-      Palembang: [104.75, -2.98],
-      Pekanbaru: [101.45, 0.51],
-      Denpasar: [115.22, -8.65],
-      Makassar: [119.43, -5.15],
-    };
-
-    function terminalLonLatBoxFeature(lon, lat, padDeg) {
-      const p = padDeg ?? 1.18;
-      return {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [lon - p, lat - p],
-            [lon + p, lat - p],
-            [lon + p, lat + p],
-            [lon - p, lat + p],
-            [lon - p, lat - p],
-          ]],
-        },
-      };
-    }
-
-    /** Same heuristics as app.html `appMalaysiaRegionFromLngLat` for click → MY_REGION. */
-    function terminalMalaysiaRegionFromLngLat(lon, lat) {
-      const PEN = { minLon: 99.5, maxLon: 104.95, minLat: 0.75, maxLat: 6.95 };
-      const EAST = { minLon: 108.8, maxLon: 119.6, minLat: 0.45, maxLat: 7.55 };
-      const inPen = lon >= PEN.minLon && lon <= PEN.maxLon && lat >= PEN.minLat && lat <= PEN.maxLat;
-      const inEast = lon >= EAST.minLon && lon <= EAST.maxLon && lat >= EAST.minLat && lat <= EAST.maxLat;
-      if (inEast && !inPen) return 'SabahSarawak';
-      if (inPen && !inEast) return 'Semenanjung';
-      if (inEast && inPen) return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
-      if (inEast) return 'SabahSarawak';
-      if (inPen) return 'Semenanjung';
-      return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
-    }
-
-    /** Nearest sheet `city` to a click — same idea as app.html `appIndonesiaCityFromLngLat`. */
-    function terminalIndonesiaCityFromLngLat(lon, lat) {
-      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return 'Jakarta Pusat';
-      let best = 'Jakarta Pusat';
-      let bestD = Infinity;
-      for (const [city, ll] of Object.entries(TERMINAL_ID_CITY_LONLAT)) {
-        const dx = lon - ll[0];
-        const dy = lat - ll[1];
-        const d = dx * dx + dy * dy;
-        if (d < bestD) {
-          bestD = d;
-          best = city;
-        }
-      }
-      return best;
-    }
-
-    /** Valid key for TERMINAL_MY_SUBREGION_FOCUS — prefers live MY_REGION, then localStorage. */
-    function terminalResolveMalaysiaRegionForMap() {
-      let k = typeof MY_REGION === 'string' ? MY_REGION.trim() : '';
-      if (!TERMINAL_MY_SUBREGION_FOCUS[k]) {
-        try {
-          const s = localStorage.getItem('terminal_my_region');
-          const t = s && String(s).trim();
-          if (TERMINAL_MY_SUBREGION_FOCUS[t]) k = t;
-        } catch (_) {}
-      }
-      return TERMINAL_MY_SUBREGION_FOCUS[k] ? k : 'Semenanjung';
-    }
 
     function myIsEastMalaysia(regionKey) {
       return regionKey === 'SabahSarawak';
@@ -1461,43 +146,24 @@
       }
     }
 
-    async function ensureMalaysiaRows() {
-      if (MY_ROWS) return MY_ROWS;
-      const res = await fetch(MY_API_URL);
-      const json = await res.json();
-      MY_ROWS = (json || []).filter(r => r.series_type === 'level');
-      return MY_ROWS;
-    }
-    async function ensureSheetRows(url) {
-      const res = await fetch(url, { cache: 'no-store' });
-      const text = await res.text();
-      return parseCSV(text);
-    }
-    async function ensureSingaporeRows() {
-      if (SG_ROWS) return SG_ROWS;
-      SG_ROWS = await ensureSheetRows(SG_SHEET_URL);
-      return SG_ROWS;
-    }
-    async function ensureBruneiRows() {
-      if (BN_ROWS) return BN_ROWS;
-      BN_ROWS = await ensureSheetRows(BN_SHEET_URL);
-      return BN_ROWS;
-    }
+    async function ensureSingaporeRows() { return ensureSheetRows(SG_SHEET_URL); }
+    async function ensureBruneiRows()    { return ensureSheetRows(BN_SHEET_URL); }
+    async function ensureIndonesiaRows() { return ensureSheetRows(ID_SHEET_URL); }
 
     /** Sorted rows for the currently selected Indonesia city (for highlights pager). */
-    function terminalIndonesiaSortedCityRows() {
-      if (!ID_ROWS) return [];
+    function indonesiaSortedCityRows() {
+      if (!_idAllRows) return [];
       const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-      return sortRowsByDate(ID_ROWS.filter((r) => r.city === city));
+      return sortRowsByDate(_idAllRows.filter(r => r.city === city));
     }
 
-    async function terminalPagerSeries(cid) {
+    async function pagerSeries(cid) {
       if (cid === 458) return sortRowsByDate((await ensureMalaysiaRows()) || []);
       if (cid === 702) return sortRowsByDate((await ensureSingaporeRows()) || []);
       if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
       if (cid === 360) {
         await ensureIndonesiaRows();
-        return terminalIndonesiaSortedCityRows();
+        return indonesiaSortedCityRows();
       }
       return [];
     }
@@ -1638,24 +304,15 @@
     }
 
     // Right-panel chart
-    function terminalCssVar(name, fallback) {
-      try {
-        const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        return v || fallback;
-      } catch (_) {
-        return fallback;
-      }
-    }
-
-    function terminalChartThemeOptions() {
-      const tick = terminalCssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
+    function chartThemeOptions() {
+      const tick = cssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
       return {
         tooltip: {
-          backgroundColor: terminalCssVar('--term-chart-tooltip-bg', 'rgba(255,255,255,0.96)'),
-          borderColor: terminalCssVar('--term-chart-tooltip-border', 'rgba(0,0,0,0.12)'),
+          backgroundColor: cssVar('--term-chart-tooltip-bg', 'rgba(255,255,255,0.96)'),
+          borderColor: cssVar('--term-chart-tooltip-border', 'rgba(0,0,0,0.12)'),
           borderWidth: 1,
-          titleColor: terminalCssVar('--term-chart-tooltip-title', 'rgba(0,0,0,0.9)'),
-          bodyColor: terminalCssVar('--term-chart-tooltip-body', 'rgba(0,0,0,0.75)'),
+          titleColor: cssVar('--term-chart-tooltip-title', 'rgba(0,0,0,0.9)'),
+          bodyColor: cssVar('--term-chart-tooltip-body', 'rgba(0,0,0,0.75)'),
           titleFont: { family: 'Inter', size: 12, weight: '700' },
           bodyFont: { family: 'Inter', size: 12, weight: '600' },
         },
@@ -1665,16 +322,16 @@
             ticks: { color: tick, font: { family: 'Inter', size: 11 }, maxRotation: 0 },
           },
           y: {
-            grid: { color: terminalCssVar('--term-chart-grid', 'rgba(0,0,0,0.06)') },
+            grid: { color: cssVar('--term-chart-grid', 'rgba(0,0,0,0.06)') },
             ticks: { color: tick, font: { family: 'Inter', size: 11 } },
           },
         },
       };
     }
 
-    function terminalApplyChartTheme(chart) {
+    function applyChartTheme(chart) {
       if (!chart?.options?.plugins?.tooltip || !chart?.options?.scales) return;
-      const t = terminalChartThemeOptions();
+      const t = chartThemeOptions();
       Object.assign(chart.options.plugins.tooltip, t.tooltip);
       chart.options.scales.x.grid = { ...chart.options.scales.x.grid, ...t.scales.x.grid };
       chart.options.scales.x.ticks = { ...chart.options.scales.x.ticks, ...t.scales.x.ticks };
@@ -1701,32 +358,6 @@
       if (!cv || !window.Chart) return;
 
       const ctx = cv.getContext('2d');
-      function withAlpha(c, a) {
-        if (!c) return c;
-        const s = String(c).trim();
-        // rgba(r,g,b,a)
-        if (/^rgba\(/i.test(s)) return s.replace(/rgba\(([^)]+)\)/i, (m, inner) => {
-          const parts = inner.split(',').map(p => p.trim());
-          if (parts.length < 3) return s;
-          return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
-        });
-        // rgb(r,g,b)
-        if (/^rgb\(/i.test(s)) return s.replace(/rgb\(([^)]+)\)/i, (m, inner) => {
-          const parts = inner.split(',').map(p => p.trim());
-          if (parts.length < 3) return s;
-          return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
-        });
-        // #RRGGBB or #RGB
-        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
-          const hex = s.slice(1);
-          const full = hex.length === 3 ? hex.split('').map(ch => ch + ch).join('') : hex;
-          const r = parseInt(full.slice(0, 2), 16);
-          const g = parseInt(full.slice(2, 4), 16);
-          const b = parseInt(full.slice(4, 6), 16);
-          return `rgba(${r}, ${g}, ${b}, ${a})`;
-        }
-        return s;
-      }
       const mkFill = (stroke) => {
         const grad = ctx.createLinearGradient(0, 0, 0, cv.height || 220);
         grad.addColorStop(0, withAlpha(stroke, 0.18));
@@ -1769,7 +400,7 @@
         nextDs.forEach((ds, i) => {
           RIGHT_CHART.data.datasets[i] = { ...RIGHT_CHART.data.datasets[i], ...ds };
         });
-        terminalApplyChartTheme(RIGHT_CHART);
+        applyChartTheme(RIGHT_CHART);
 
         if (animate) {
           const prevAnim = RIGHT_CHART.options.animation;
@@ -1783,7 +414,7 @@
       }
 
       destroyRightChart();
-      const themeChart = terminalChartThemeOptions();
+      const themeChart = chartThemeOptions();
       RIGHT_CHART = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: nextDs },
@@ -1813,15 +444,10 @@
 
     async function updateRightPanelForCountry(countryId) {
       // Default skeleton
-      const meta = TERMINAL_COUNTRIES[countryId];
+      const meta = COUNTRIES[countryId];
       if (!meta) return;
       await waitForChartJs();
 
-      const takeLast = (arr, n) => arr.slice(Math.max(0, arr.length - n));
-      const asNum = (v) => {
-        const n = parseFloat(v);
-        return Number.isFinite(n) ? n : null;
-      };
       const legendHtml = (datasets) => {
         if (!datasets?.length) return '';
         return datasets.map(ds => {
@@ -1830,22 +456,13 @@
           return `<span class="legend-item"><span class="legend-dot" style="background:${c}"></span>${label}</span>`;
         }).join('');
       };
-      const buildSeries = ({ rows, keys, labels, colorOffset = 0 }) => {
-        return keys.map((k, i) => ({
-          label: k.label,
-          color: CHART_COLORS[(colorOffset + i) % CHART_COLORS.length],
-          data: labels.map(d => {
-            const r = rows.find(x => x.__label === d);
-            return r ? asNum(r[k.key]) : null;
-          }),
-        }));
-      };
-
       // Indonesia: reflect selected city/fuel from city card (pager = history rows for this city)
       if (countryId === 360) {
         const rows = await ensureIndonesiaRows();
+        _idAllRows = rows;
         const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-        const seriesAsc = sortRowsByDate(rows.filter((r) => r.city === city));
+        const seriesAsc = sortRowsByDate(rows.filter(r => r.city === city));
+        LOADED_ROWS.set(360, seriesAsc);
 
         let idx = getPagerIndex(360);
         if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
@@ -1854,9 +471,9 @@
         setPagerIndex(360, idx);
 
         const rSel = seriesAsc[idx] || {};
-        const sliceRows = takeLast(seriesAsc, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const sliceRows = takeLastN(seriesAsc, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
-        const datasets = buildSeries({ rows: sliceRows, keys: ID_FUELS, labels });
+        const datasets = buildChartSeries(sliceRows, ID_FUELS, labels);
         setRightPanel({
           kicker: 'Indonesia Petrol Prices History',
           titleA: 'Indonesia',
@@ -1885,6 +502,7 @@
       if (countryId === 458) {
         const rows = await ensureMalaysiaRows();
         const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(458, seriesAsc);
 
         if (MY_INDEX == null) MY_INDEX = Math.max(0, seriesAsc.length - 1); // default: latest
         MY_INDEX = Math.max(0, Math.min(seriesAsc.length - 1, MY_INDEX));
@@ -1892,7 +510,7 @@
         const rSel = seriesAsc[MY_INDEX] || {};
         // Keep the chart stable (always show the latest window),
         // while the pager changes only the selected-week details.
-        const slice = takeLast(seriesAsc, 13);
+        const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const isEast = myIsEastMalaysia(MY_REGION);
@@ -1903,10 +521,10 @@
           { key: 'ron97', label: 'RON97' },
           { key: dieselKey, label: dieselLabel },
         ];
-        const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 }).map(ds => {
+        const datasets = buildChartSeries(sliceRows, keys, labels).map(ds => {
           if (ds.label === 'RON95') return { ...ds, color: '#fbbf24' }; // yellow/amber
           if (ds.label === 'RON97') return { ...ds, color: '#16a34a' }; // green
-          if (ds.label === dieselLabel) return { ...ds, color: terminalCssVar('--term-chart-line-muted', '#111827') };
+          if (ds.label === dieselLabel) return { ...ds, color: cssVar('--term-chart-line-muted', '#111827') };
           return ds;
         });
         setRightPanel({
@@ -1944,6 +562,7 @@
       if (countryId === 702) {
         const rows = await ensureSingaporeRows();
         const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(702, seriesAsc);
 
         let idx = getPagerIndex(702);
         if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
@@ -1951,7 +570,7 @@
         setPagerIndex(702, idx);
 
         const rSel = seriesAsc[idx] || {};
-        const slice = takeLast(seriesAsc, 13);
+        const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
@@ -1961,7 +580,7 @@
           { key: 'premium', label: 'Premium' },
           { key: 'diesel', label: 'Diesel' },
         ];
-        const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 });
+        const datasets = buildChartSeries(sliceRows, keys, labels);
         setRightPanel({
           kicker: 'Singapore Petrol Prices History',
           titleA: 'Singapore',
@@ -1990,6 +609,7 @@
       if (countryId === 96) {
         const rows = await ensureBruneiRows();
         const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(96, seriesAsc);
 
         let idx = getPagerIndex(96);
         if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
@@ -1997,7 +617,7 @@
         setPagerIndex(96, idx);
 
         const rSel = seriesAsc[idx] || {};
-        const slice = takeLast(seriesAsc, 13);
+        const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
@@ -2006,7 +626,7 @@
           { key: 'vpower_gasoline', label: 'V-Power Gasoline' },
           { key: 'vpower_diesel', label: 'V-Power Diesel' },
         ];
-        const datasets = buildSeries({ rows: sliceRows, keys, labels, colorOffset: 0 });
+        const datasets = buildChartSeries(sliceRows, keys, labels);
         setRightPanel({
           kicker: 'Brunei Petrol Prices History',
           titleA: 'Brunei',
@@ -2032,7 +652,7 @@
     }
 
     function setLeftOverview(countryId) {
-      const meta = TERMINAL_COUNTRIES[countryId];
+      const meta = COUNTRIES[countryId];
       if (!meta) return;
       window.__terminalSelectedCountryId = countryId;
 
@@ -2169,7 +789,7 @@
       const menu  = document.getElementById('country-search-menu');
       if (!input || !menu) return;
 
-      const all = Object.entries(TERMINAL_COUNTRIES).map(([id, meta]) => ({
+      const all = Object.entries(COUNTRIES).map(([id, meta]) => ({
         id: +id,
         name: meta.name,
         subtitle: meta.subtitle || ''
@@ -2200,7 +820,7 @@
         }
       }
       function selectCountry(id){
-        const meta = TERMINAL_COUNTRIES[id];
+        const meta = COUNTRIES[id];
         if (!meta) return;
         input.value = meta.name;
         setLeftOverview(id);
@@ -2415,7 +1035,7 @@
             if (id === 458) {
               const inv = projection.invert(d3.pointer(e, svg.node()));
               if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
-                setMalaysiaRegion(terminalMalaysiaRegionFromLngLat(inv[0], inv[1]));
+                setMalaysiaRegion(malaysiaRegionFromLngLat(inv[0], inv[1]));
               }
               if (+window.__terminalSelectedCountryId === 458) {
                 updateRightPanelForCountry(458).catch(() => {});
@@ -2427,7 +1047,7 @@
             if (id === 360) {
               const inv = projection.invert(d3.pointer(e, svg.node()));
               if (inv && Number.isFinite(inv[0]) && Number.isFinite(inv[1])) {
-                const city = terminalIndonesiaCityFromLngLat(inv[0], inv[1]);
+                const city = indonesiaCityFromLngLat(inv[0], inv[1]);
                 try { localStorage.setItem('terminal_id_city', city); } catch (_) {}
               }
               if (+window.__terminalSelectedCountryId === 360) {
@@ -2531,7 +1151,7 @@
           if (+countryId === 360) {
             let city = 'Jakarta Pusat';
             try { city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) {}
-            const ll = TERMINAL_ID_CITY_LONLAT[city];
+            const ll = ID_CITY_LONLAT[city];
             if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
               [lon, lat] = ll;
               subFocus = true;
@@ -2685,11 +1305,7 @@
         if (!show) return;
 
         // While data is still loading, keep buttons clickable so the first click can fetch.
-        let rows = null;
-        if (cid === 458) rows = MY_ROWS;
-        else if (cid === 702) rows = SG_ROWS;
-        else if (cid === 96) rows = BN_ROWS;
-        else if (cid === 360) rows = ID_ROWS ? terminalIndonesiaSortedCityRows() : null;
+        const rows = LOADED_ROWS.get(cid) || null;
 
         const idx = (typeof getPagerIndex === 'function') ? getPagerIndex(cid) : null;
         const hasRows = Array.isArray(rows) && rows.length > 0;
@@ -2711,7 +1327,7 @@
       prevBtn.addEventListener('click', async () => {
         const cid = +window.__terminalSelectedCountryId;
         if (!PAGER_COUNTRIES.has(cid)) return;
-        const seriesAsc = await terminalPagerSeries(cid);
+        const seriesAsc = await pagerSeries(cid);
         const seriesLen = seriesAsc.filter(r => r?.date).length || seriesAsc.length;
         if (!seriesLen) return;
         let idx = getPagerIndex(cid);
@@ -2725,7 +1341,7 @@
       nextBtn.addEventListener('click', async () => {
         const cid = +window.__terminalSelectedCountryId;
         if (!PAGER_COUNTRIES.has(cid)) return;
-        const seriesAsc = await terminalPagerSeries(cid);
+        const seriesAsc = await pagerSeries(cid);
         const seriesLen = seriesAsc.filter(r => r?.date).length || seriesAsc.length;
         if (!seriesLen) return;
         let idx = getPagerIndex(cid);
@@ -2748,16 +1364,16 @@
       syncPager();
     })();
 
-    const TERMINAL_MY_REGION_CYCLE = ['Semenanjung', 'SabahSarawak'];
-    function terminalCycleMalaysiaRegion(step) {
-      const i = TERMINAL_MY_REGION_CYCLE.indexOf(MY_REGION);
+    const MY_REGION_CYCLE = ['Semenanjung', 'SabahSarawak'];
+    function cycleMalaysiaRegion(step) {
+      const i = MY_REGION_CYCLE.indexOf(MY_REGION);
       const base = i >= 0 ? i : 0;
-      const n = (base + step + TERMINAL_MY_REGION_CYCLE.length) % TERMINAL_MY_REGION_CYCLE.length;
-      setMalaysiaRegion(TERMINAL_MY_REGION_CYCLE[n]);
+      const n = (base + step + MY_REGION_CYCLE.length) % MY_REGION_CYCLE.length;
+      setMalaysiaRegion(MY_REGION_CYCLE[n]);
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
     }
-    function terminalCycleIndonesiaCity(step) {
-      const cities = Object.keys(TERMINAL_ID_CITY_LONLAT).sort((a, b) => a.localeCompare(b));
+    function cycleIndonesiaCity(step) {
+      const cities = Object.keys(ID_CITY_LONLAT).sort((a, b) => a.localeCompare(b));
       if (!cities.length) return;
       let cur = '';
       try { cur = localStorage.getItem('terminal_id_city') || ''; } catch (_) {}
@@ -2766,7 +1382,7 @@
       if (i < 0) i = 0;
       const n = (i + step + cities.length) % cities.length;
       try { localStorage.setItem('terminal_id_city', cities[n]); } catch (_) {}
-      delete TERMINAL_PAGER_INDEX[360];
+      delete PAGER_INDEX[360];
       updateRightPanelForCountry(360).catch(() => {});
       if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
@@ -2803,12 +1419,12 @@
         if (e.key === 'ArrowUp') {
           if (cid === 458) {
             e.preventDefault();
-            terminalCycleMalaysiaRegion(-1);
+            cycleMalaysiaRegion(-1);
             return;
           }
           if (cid === 360) {
             e.preventDefault();
-            terminalCycleIndonesiaCity(-1);
+            cycleIndonesiaCity(-1);
             return;
           }
           const z = document.getElementById('zoom-in');
@@ -2820,12 +1436,12 @@
         if (e.key === 'ArrowDown') {
           if (cid === 458) {
             e.preventDefault();
-            terminalCycleMalaysiaRegion(1);
+            cycleMalaysiaRegion(1);
             return;
           }
           if (cid === 360) {
             e.preventDefault();
-            terminalCycleIndonesiaCity(1);
+            cycleIndonesiaCity(1);
             return;
           }
           const z = document.getElementById('zoom-out');

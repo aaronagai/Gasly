@@ -1,0 +1,712 @@
+    :root{
+      color-scheme: light dark;
+      --bg: #f1f1f0;
+      --panel: rgba(247,247,246,0.92);
+      --text: #0f0f0f;
+      --muted: rgba(0,0,0,0.55);
+      --line: rgba(0,0,0,0.10);
+      --shadow: 0 18px 54px rgba(0,0,0,0.12);
+      --orange: #ff6a00;
+      --surface: #ffffff;
+      --sticky-bg: #ffffff;
+      --glass-stroke: rgba(255, 255, 255, 0.55);
+      --glass-fill: rgba(255, 255, 255, 0.38);
+      --glass-fill-menu: rgba(255, 255, 255, 0.52);
+      --glass-inset: rgba(255, 255, 255, 0.72);
+      --glass-shadow-outer: rgba(0, 0, 0, 0.07);
+      --glass-keyline: rgba(0, 0, 0, 0.04);
+      --input-fg: rgba(0, 0, 0, 0.72);
+      --input-ph: rgba(0, 0, 0, 0.36);
+      --icon-fg: rgba(0, 0, 0, 0.45);
+      --menu-hover: rgba(0, 0, 0, 0.04);
+      --menu-shadow: rgba(0, 0, 0, 0.1);
+      --hairline: rgba(0, 0, 0, 0.08);
+      --hi-label: rgba(0, 0, 0, 0.72);
+      --hi-value: rgba(0, 0, 0, 0.88);
+      --oil: rgba(0, 0, 0, 0.78);
+      --metric-k: rgba(0, 0, 0, 0.52);
+      --metric-v: rgba(0, 0, 0, 0.88);
+      --grab: rgba(0, 0, 0, 0.2);
+      --scroll-thumb: rgba(0, 0, 0, 0.22);
+      --sticky-raised: rgba(0, 0, 0, 0.12);
+      --export-icon: rgba(0, 0, 0, 0.42);
+      --chart-legend: rgba(0, 0, 0, 0.48);
+      --chart-tick: rgba(0, 0, 0, 0.45);
+      --chart-grid: rgba(0, 0, 0, 0.06);
+      --chart-line-muted: #111827;
+      --chart-empty: #d4d4d4;
+      --map-vignette: rgba(0, 0, 0, 0.06);
+      --map-overlay: linear-gradient(0deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
+      --map-base: #d7d7d7;
+      --map-scan: rgba(0, 0, 0, 0.03);
+      --sphere: #e7eef7;
+      --land: #d9d6d2;
+      --land-live: rgba(17, 24, 39, 0.28);
+      --land-live-selected: rgba(255, 106, 0, 0.26);
+      --graticule: rgba(48, 48, 48, 0.05);
+      --border-mesh: rgba(48, 48, 48, 0.14);
+      --map-country-outline: rgba(48, 48, 48, 0.22);
+      --border-live: rgba(17, 24, 39, 0.45);
+      --border-live-selected: rgba(255, 106, 0, 0.78);
+      --sg-stroke: rgba(32, 32, 32, 0.58);
+      --sg-stroke-selected: rgba(255, 106, 0, 0.9);
+      --export-story-img-bg: #ffffff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Monochrome dark — neutral grays only (no slate / navy tint) */
+        --bg: #0c0c0c;
+        --panel: rgba(32, 32, 32, 0.94);
+        --text: #ececec;
+        --muted: rgba(255, 255, 255, 0.55);
+        --line: rgba(255, 255, 255, 0.12);
+        --shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
+        --surface: #1a1a1a;
+        --sticky-bg: #1a1a1a;
+        --glass-stroke: rgba(255, 255, 255, 0.12);
+        --glass-fill: rgba(42, 42, 42, 0.78);
+        --glass-fill-menu: rgba(42, 42, 42, 0.94);
+        --glass-inset: rgba(255, 255, 255, 0.08);
+        --glass-shadow-outer: rgba(0, 0, 0, 0.4);
+        --glass-keyline: rgba(255, 255, 255, 0.06);
+        --input-fg: rgba(255, 255, 255, 0.88);
+        --input-ph: rgba(255, 255, 255, 0.38);
+        --icon-fg: rgba(255, 255, 255, 0.5);
+        --menu-hover: rgba(255, 255, 255, 0.06);
+        --menu-shadow: rgba(0, 0, 0, 0.45);
+        --hairline: rgba(255, 255, 255, 0.1);
+        --hi-label: rgba(255, 255, 255, 0.72);
+        --hi-value: rgba(255, 255, 255, 0.95);
+        --oil: rgba(255, 255, 255, 0.82);
+        --metric-k: rgba(255, 255, 255, 0.52);
+        --metric-v: rgba(255, 255, 255, 0.92);
+        --grab: rgba(255, 255, 255, 0.28);
+        --scroll-thumb: rgba(255, 255, 255, 0.22);
+        --sticky-raised: rgba(0, 0, 0, 0.5);
+        --export-icon: rgba(255, 255, 255, 0.45);
+        --chart-legend: rgba(255, 255, 255, 0.5);
+        --chart-tick: rgba(255, 255, 255, 0.45);
+        --chart-grid: rgba(255, 255, 255, 0.08);
+        --chart-line-muted: #8c8c8c;
+        --chart-empty: #666666;
+        --map-vignette: rgba(0, 0, 0, 0.45);
+        --map-overlay: linear-gradient(0deg, rgba(22, 22, 22, 0.78), rgba(22, 22, 22, 0.78));
+        --map-base: #1f1f1f;
+        --map-scan: rgba(255, 255, 255, 0.04);
+        --sphere: #262626;
+        --land: #3a3a3a;
+        --land-live: rgba(255, 255, 255, 0.13);
+        --land-live-selected: rgba(255, 106, 0, 0.32);
+        --graticule: rgba(255, 255, 255, 0.06);
+        --border-mesh: rgba(255, 255, 255, 0.12);
+        --map-country-outline: rgba(255, 255, 255, 0.2);
+        --border-live: rgba(255, 255, 255, 0.28);
+        --border-live-selected: rgba(255, 106, 0, 0.85);
+        --sg-stroke: rgba(255, 255, 255, 0.42);
+        --sg-stroke-selected: rgba(255, 200, 140, 0.95);
+        --export-story-img-bg: #1a1a1a;
+      }
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      overflow: hidden;
+    }
+
+    .app{
+      position: relative;
+      height: 100dvh;
+      width: 100%;
+    }
+
+    /* Map layer — full viewport behind UI */
+    .map{
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
+        radial-gradient(1200px 680px at 44% 56%, var(--map-vignette) 0%, transparent 62%),
+        var(--map-overlay),
+        var(--map-base);
+      overflow: hidden;
+    }
+
+    .map::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background: repeating-linear-gradient(0deg, var(--map-scan) 0px, var(--map-scan) 1px, transparent 1px, transparent 8px);
+      opacity: 0.26;
+      pointer-events:none;
+    }
+    /* Pinch / wheel zoom on the globe — browser must not handle gestures here */
+    .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
+    .sphere { fill: var(--sphere); }
+    .graticule { fill: none; stroke: var(--graticule); stroke-width: 0.3; }
+    .country {
+      fill: none;
+      stroke: var(--map-country-outline);
+      stroke-width: 0.5;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+    }
+    .country.live { fill: var(--land-live); stroke: none; }
+    .country.live.selected { fill: var(--land-live-selected); }
+    /* Singapore is not a separate polygon in countries-110m (merged into Malaysia); overlay + stroke vs MY */
+    .country.live.country-sg{
+      stroke: var(--sg-stroke);
+      stroke-width: 1.15px;
+      vector-effect: non-scaling-stroke;
+      paint-order: stroke fill;
+    }
+    .country.live.country-sg.selected{
+      stroke: var(--sg-stroke-selected);
+      stroke-width: 1.85px;
+    }
+    .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
+    .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
+    .border-live.selected { stroke: var(--border-live-selected); }
+
+    /* Top search */
+    .topbar{
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 0px));
+      left: max(12px, env(safe-area-inset-left, 0px));
+      right: max(12px, env(safe-area-inset-right, 0px));
+      z-index: 10;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+    .search{
+      flex: 1;
+      height: 40px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 8px 28px var(--glass-shadow-outer),
+        0 2px 8px var(--glass-shadow-outer);
+    }
+    .search svg{
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      opacity: 0.42;
+      color: var(--icon-fg);
+    }
+    .search input{
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font);
+      /* ≥16px prevents iOS Safari focus-zoom (stuck zoom after blur) */
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: var(--input-fg);
+    }
+    .search input::placeholder{
+      color: var(--input-ph);
+      font-weight: 300;
+    }
+    .topbar-circle{
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 0 0 0.5px var(--glass-keyline),
+        0 8px 28px var(--glass-shadow-outer),
+        0 2px 8px var(--glass-shadow-outer);
+      pointer-events: none;
+    }
+    .topbar-circle svg{
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      opacity: 0.42;
+      color: var(--icon-fg);
+    }
+    .search-menu{
+      position: absolute;
+      top: calc(max(12px, env(safe-area-inset-top, 0px)) + 40px + 8px);
+      left: max(12px, env(safe-area-inset-left, 0px));
+      right: max(12px, env(safe-area-inset-right, 0px));
+      z-index: 11;
+      border: 1px solid var(--glass-stroke);
+      background: var(--glass-fill-menu);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-radius: 18px;
+      box-shadow:
+        0 1px 0 var(--glass-inset) inset,
+        0 12px 40px var(--menu-shadow),
+        0 2px 10px var(--glass-shadow-outer);
+      padding: 6px;
+      display:none;
+      max-height: min(320px, calc(100dvh - 180px));
+      overflow:auto;
+    }
+    .search-menu.open{ display:block; }
+    .search-item{
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    .search-item:hover{ background: var(--menu-hover); }
+
+    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
+    .sheet{
+      position: absolute;
+      left: max(10px, env(safe-area-inset-left, 0px));
+      right: max(10px, env(safe-area-inset-right, 0px));
+      /* Sit above home indicator + display corner radius so bottom corners stay visible in PWA */
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      z-index: 20;
+      height: var(--sheetH, 50vh);
+      max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-direction: column;
+      border-radius: 26px 26px 36px 36px;
+      border: none;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    /* Bottom fade: pinned to card bottom only. Sticky+negative margin inside .sheet-scroll overlapped mid-content (e.g. overview copy). */
+    .sheet::after{
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 52px;
+      pointer-events: none;
+      z-index: 2;
+      border-bottom-left-radius: 36px;
+      border-bottom-right-radius: 36px;
+      background: linear-gradient(to bottom, transparent, var(--surface));
+      display: none;
+    }
+    .sheet.sheet-scrollable::after{
+      display: block;
+    }
+    /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
+    .sheet:not(.sheet-scrollable){
+      touch-action: none;
+    }
+    .sheet.sheet-scrollable:not(.sheet-expanded){
+      touch-action: manipulation;
+    }
+    .grab{
+      position: relative;
+      z-index: 4;
+      flex-shrink: 0;
+      min-height: 36px;
+      padding: 5px 0 6px;
+      margin: 0;
+      background: transparent;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: grab;
+    }
+    .grab:active{ cursor: grabbing; }
+    .grab::before{
+      content:'';
+      display:block;
+      width: 46px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--grab);
+      margin: 0 auto;
+    }
+    .sheet-scroll{
+      flex: 1;
+      min-height: 0;
+      overflow-y: hidden;
+      overscroll-behavior-y: none;
+      /* Inset from sheet edges so the scrollbar stops above the rounded bottom corners */
+      margin: 0 8px 16px 8px;
+      padding: 0 4px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      box-sizing: border-box;
+      border-radius: 0 0 24px 24px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--scroll-thumb) transparent;
+      position: relative;
+      z-index: 1;
+    }
+    .sheet-scroll::-webkit-scrollbar{
+      width: 5px;
+    }
+    .sheet-scroll::-webkit-scrollbar-thumb{
+      background: var(--scroll-thumb);
+      border-radius: 999px;
+    }
+    .sheet-scroll::-webkit-scrollbar-track{
+      background: transparent;
+    }
+    .sheet-cards-stack{
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-height: 0;
+    }
+    .sheet.sheet-scrollable .sheet-scroll{
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      touch-action: pan-y;
+    }
+    .card{
+      border-radius: 0;
+      border: none;
+      overflow: visible;
+      background: transparent;
+    }
+    .card .pad{ padding: 14px; }
+    #card-highlights .pad{ padding-top: 2px; }
+    /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
+    .sheet-region-sticky{
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      flex-shrink: 0;
+      margin: 0 -4px 0 -12px;
+      padding: 0 14px 8px 26px;
+      background: var(--sticky-bg);
+      box-shadow: none;
+      transition: box-shadow 0.2s ease;
+    }
+    .sheet-region-sticky .title{
+      margin: 0;
+    }
+    .sheet-region-sticky.sheet-region-sticky--raised{
+      box-shadow: 0 6px 12px -8px var(--sticky-raised);
+    }
+    /* Highlights: date line + export beside the text */
+    .card-sub-row{
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      min-width: 0;
+      margin-top: 6px;
+    }
+    #card-highlights .card-sub-row .sub{
+      margin-top: 0;
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+    }
+    /* Kicker + export beside the text */
+    .card-head-inline{
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      min-width: 0;
+    }
+    .card-head-inline .kicker{
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .card-export{
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--export-icon);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card-export:disabled{
+      opacity: 0.45;
+      cursor: wait;
+      pointer-events: none;
+    }
+    .card-export svg{
+      width: 14px;
+      height: 14px;
+    }
+    .card-export:focus-visible{
+      outline: 2px solid rgba(255, 106, 0, 0.45);
+      outline-offset: 2px;
+    }
+    .kicker{
+      font-family: var(--font);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .title{
+      margin: 8px 0 0;
+      font-size: 1.9rem;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .sub{
+      margin-top: 6px;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    .lines{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      font-family: var(--font);
+      font-size: 0.78rem;
+    }
+    .lines.hi-lines{
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 14px;
+    }
+    .hi-row{
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 14px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--hairline);
+      font-family: var(--font);
+      font-size: 0.84rem;
+    }
+    .hi-row:last-child{ border-bottom: none; padding-bottom: 2px; }
+    .hi-k{
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--hi-label);
+    }
+    .hi-v{
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      color: var(--hi-value);
+      text-align: right;
+    }
+    .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
+    .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
+    .chart-wrap{ height: 210px; padding: 12px; }
+    .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
+    .sheet.sheet-scrollable .chart-wrap{
+      touch-action: pan-y;
+    }
+    .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: var(--oil); }
+    .overview-metrics{
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 14px;
+    }
+    .overview-row{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      border-top: 1px solid var(--hairline);
+      padding-top: 10px;
+      padding-bottom: 14px;
+    }
+    .overview-metric-empty{
+      min-width: 0;
+      pointer-events: none;
+    }
+    .overview-metrics .metric{
+      min-width: 0;
+    }
+    .overview-metrics .metric .k{
+      font-family: var(--font);
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--metric-k);
+    }
+    .overview-metrics .metric .v{
+      margin-top: 6px;
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--metric-v);
+      line-height: 1.25;
+    }
+
+    @media (min-width: 900px){
+      /* "App" can still run on desktop, but keep it phone-ish */
+      .sheet{
+        left: max(16px, env(safe-area-inset-left, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      .topbar{
+        left: max(16px, env(safe-area-inset-left, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+        max-width: 520px;
+        margin: 0 auto;
+      }
+    }
+
+    /* Export: IG story preview (9:16) — save via share sheet or download on tap */
+    .export-story-modal{
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0.22s;
+    }
+    .export-story-modal.export-story-modal--open{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .export-story-backdrop{
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .export-story-dialog{
+      position: relative;
+      z-index: 1;
+      width: min(100%, 380px);
+      max-height: min(94dvh, 900px);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .export-story-header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 2px;
+    }
+    .export-story-heading{
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+    }
+    .export-story-close{
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .export-story-close:focus-visible{
+      outline: 2px solid var(--orange);
+      outline-offset: 2px;
+    }
+    .export-story-frame{
+      width: min(100%, 300px);
+      aspect-ratio: 9 / 16;
+      margin: 0 auto;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #0a0a0a;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    }
+    .export-story-frame img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: var(--export-story-img-bg);
+    }
+    .export-story-save{
+      margin: 0;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      background: var(--orange);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 106, 0, 0.35);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .export-story-save:focus-visible{
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
+    .export-story-save:disabled{
+      opacity: 0.55;
+      cursor: wait;
+    }

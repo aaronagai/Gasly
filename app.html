@@ -17,725 +17,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
+  <link rel="stylesheet" href="assets/app.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
-  <style>
-    :root{
-      color-scheme: light dark;
-      --bg: #f1f1f0;
-      --panel: rgba(247,247,246,0.92);
-      --text: #0f0f0f;
-      --muted: rgba(0,0,0,0.55);
-      --line: rgba(0,0,0,0.10);
-      --shadow: 0 18px 54px rgba(0,0,0,0.12);
-      --orange: #ff6a00;
-      --surface: #ffffff;
-      --sticky-bg: #ffffff;
-      --glass-stroke: rgba(255, 255, 255, 0.55);
-      --glass-fill: rgba(255, 255, 255, 0.38);
-      --glass-fill-menu: rgba(255, 255, 255, 0.52);
-      --glass-inset: rgba(255, 255, 255, 0.72);
-      --glass-shadow-outer: rgba(0, 0, 0, 0.07);
-      --glass-keyline: rgba(0, 0, 0, 0.04);
-      --input-fg: rgba(0, 0, 0, 0.72);
-      --input-ph: rgba(0, 0, 0, 0.36);
-      --icon-fg: rgba(0, 0, 0, 0.45);
-      --menu-hover: rgba(0, 0, 0, 0.04);
-      --menu-shadow: rgba(0, 0, 0, 0.1);
-      --hairline: rgba(0, 0, 0, 0.08);
-      --hi-label: rgba(0, 0, 0, 0.72);
-      --hi-value: rgba(0, 0, 0, 0.88);
-      --oil: rgba(0, 0, 0, 0.78);
-      --metric-k: rgba(0, 0, 0, 0.52);
-      --metric-v: rgba(0, 0, 0, 0.88);
-      --grab: rgba(0, 0, 0, 0.2);
-      --scroll-thumb: rgba(0, 0, 0, 0.22);
-      --sticky-raised: rgba(0, 0, 0, 0.12);
-      --export-icon: rgba(0, 0, 0, 0.42);
-      --chart-legend: rgba(0, 0, 0, 0.48);
-      --chart-tick: rgba(0, 0, 0, 0.45);
-      --chart-grid: rgba(0, 0, 0, 0.06);
-      --chart-line-muted: #111827;
-      --chart-empty: #d4d4d4;
-      --map-vignette: rgba(0, 0, 0, 0.06);
-      --map-overlay: linear-gradient(0deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6));
-      --map-base: #d7d7d7;
-      --map-scan: rgba(0, 0, 0, 0.03);
-      --sphere: #e7eef7;
-      --land: #d9d6d2;
-      --land-live: rgba(17, 24, 39, 0.28);
-      --land-live-selected: rgba(255, 106, 0, 0.26);
-      --graticule: rgba(48, 48, 48, 0.05);
-      --border-mesh: rgba(48, 48, 48, 0.14);
-      --map-country-outline: rgba(48, 48, 48, 0.22);
-      --border-live: rgba(17, 24, 39, 0.45);
-      --border-live-selected: rgba(255, 106, 0, 0.78);
-      --sg-stroke: rgba(32, 32, 32, 0.58);
-      --sg-stroke-selected: rgba(255, 106, 0, 0.9);
-      --export-story-img-bg: #ffffff;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        /* Monochrome dark — neutral grays only (no slate / navy tint) */
-        --bg: #0c0c0c;
-        --panel: rgba(32, 32, 32, 0.94);
-        --text: #ececec;
-        --muted: rgba(255, 255, 255, 0.55);
-        --line: rgba(255, 255, 255, 0.12);
-        --shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
-        --surface: #1a1a1a;
-        --sticky-bg: #1a1a1a;
-        --glass-stroke: rgba(255, 255, 255, 0.12);
-        --glass-fill: rgba(42, 42, 42, 0.78);
-        --glass-fill-menu: rgba(42, 42, 42, 0.94);
-        --glass-inset: rgba(255, 255, 255, 0.08);
-        --glass-shadow-outer: rgba(0, 0, 0, 0.4);
-        --glass-keyline: rgba(255, 255, 255, 0.06);
-        --input-fg: rgba(255, 255, 255, 0.88);
-        --input-ph: rgba(255, 255, 255, 0.38);
-        --icon-fg: rgba(255, 255, 255, 0.5);
-        --menu-hover: rgba(255, 255, 255, 0.06);
-        --menu-shadow: rgba(0, 0, 0, 0.45);
-        --hairline: rgba(255, 255, 255, 0.1);
-        --hi-label: rgba(255, 255, 255, 0.72);
-        --hi-value: rgba(255, 255, 255, 0.95);
-        --oil: rgba(255, 255, 255, 0.82);
-        --metric-k: rgba(255, 255, 255, 0.52);
-        --metric-v: rgba(255, 255, 255, 0.92);
-        --grab: rgba(255, 255, 255, 0.28);
-        --scroll-thumb: rgba(255, 255, 255, 0.22);
-        --sticky-raised: rgba(0, 0, 0, 0.5);
-        --export-icon: rgba(255, 255, 255, 0.45);
-        --chart-legend: rgba(255, 255, 255, 0.5);
-        --chart-tick: rgba(255, 255, 255, 0.45);
-        --chart-grid: rgba(255, 255, 255, 0.08);
-        --chart-line-muted: #8c8c8c;
-        --chart-empty: #666666;
-        --map-vignette: rgba(0, 0, 0, 0.45);
-        --map-overlay: linear-gradient(0deg, rgba(22, 22, 22, 0.78), rgba(22, 22, 22, 0.78));
-        --map-base: #1f1f1f;
-        --map-scan: rgba(255, 255, 255, 0.04);
-        --sphere: #262626;
-        --land: #3a3a3a;
-        --land-live: rgba(255, 255, 255, 0.13);
-        --land-live-selected: rgba(255, 106, 0, 0.32);
-        --graticule: rgba(255, 255, 255, 0.06);
-        --border-mesh: rgba(255, 255, 255, 0.12);
-        --map-country-outline: rgba(255, 255, 255, 0.2);
-        --border-live: rgba(255, 255, 255, 0.28);
-        --border-live-selected: rgba(255, 106, 0, 0.85);
-        --sg-stroke: rgba(255, 255, 255, 0.42);
-        --sg-stroke-selected: rgba(255, 200, 140, 0.95);
-        --export-story-img-bg: #1a1a1a;
-      }
-    }
-
-    *{ box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body{
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      overflow: hidden;
-    }
-
-    .app{
-      position: relative;
-      height: 100dvh;
-      width: 100%;
-    }
-
-    /* Map layer — full viewport behind UI */
-    .map{
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      background:
-        radial-gradient(900px 520px at 55% 48%, rgba(255,106,0,0.14) 0%, rgba(255,106,0,0.06) 30%, rgba(255,106,0,0.00) 62%),
-        radial-gradient(1200px 680px at 44% 56%, var(--map-vignette) 0%, transparent 62%),
-        var(--map-overlay),
-        var(--map-base);
-      overflow: hidden;
-    }
-
-    .map::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background: repeating-linear-gradient(0deg, var(--map-scan) 0px, var(--map-scan) 1px, transparent 1px, transparent 8px);
-      opacity: 0.26;
-      pointer-events:none;
-    }
-    /* Pinch / wheel zoom on the globe — browser must not handle gestures here */
-    .map svg{ width: 100%; height: 100%; display:block; touch-action: none; }
-    .sphere { fill: var(--sphere); }
-    .graticule { fill: none; stroke: var(--graticule); stroke-width: 0.3; }
-    .country {
-      fill: none;
-      stroke: var(--map-country-outline);
-      stroke-width: 0.5;
-      vector-effect: non-scaling-stroke;
-      paint-order: stroke fill;
-    }
-    .country.live { fill: var(--land-live); stroke: none; }
-    .country.live.selected { fill: var(--land-live-selected); }
-    /* Singapore is not a separate polygon in countries-110m (merged into Malaysia); overlay + stroke vs MY */
-    .country.live.country-sg{
-      stroke: var(--sg-stroke);
-      stroke-width: 1.15px;
-      vector-effect: non-scaling-stroke;
-      paint-order: stroke fill;
-    }
-    .country.live.country-sg.selected{
-      stroke: var(--sg-stroke-selected);
-      stroke-width: 1.85px;
-    }
-    .border-mesh { fill:none; stroke: var(--border-mesh); stroke-width: 0.5; pointer-events:none; }
-    .border-live { fill:none; stroke: var(--border-live); stroke-width: 1; pointer-events:none; }
-    .border-live.selected { stroke: var(--border-live-selected); }
-
-    /* Top search */
-    .topbar{
-      position: absolute;
-      top: max(12px, env(safe-area-inset-top, 0px));
-      left: max(12px, env(safe-area-inset-left, 0px));
-      right: max(12px, env(safe-area-inset-right, 0px));
-      z-index: 10;
-      display:flex;
-      gap: 10px;
-      align-items:center;
-    }
-    .search{
-      flex: 1;
-      height: 40px;
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid var(--glass-stroke);
-      background: var(--glass-fill);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      box-shadow:
-        0 1px 0 var(--glass-inset) inset,
-        0 0 0 0.5px var(--glass-keyline),
-        0 8px 28px var(--glass-shadow-outer),
-        0 2px 8px var(--glass-shadow-outer);
-    }
-    .search svg{
-      width: 15px;
-      height: 15px;
-      flex-shrink: 0;
-      opacity: 0.42;
-      color: var(--icon-fg);
-    }
-    .search input{
-      flex: 1;
-      min-width: 0;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-family: var(--font);
-      /* ≥16px prevents iOS Safari focus-zoom (stuck zoom after blur) */
-      font-size: 16px;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-      color: var(--input-fg);
-    }
-    .search input::placeholder{
-      color: var(--input-ph);
-      font-weight: 300;
-    }
-    .topbar-circle{
-      flex-shrink: 0;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--glass-stroke);
-      background: var(--glass-fill);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      box-shadow:
-        0 1px 0 var(--glass-inset) inset,
-        0 0 0 0.5px var(--glass-keyline),
-        0 8px 28px var(--glass-shadow-outer),
-        0 2px 8px var(--glass-shadow-outer);
-      pointer-events: none;
-    }
-    .topbar-circle svg{
-      width: 17px;
-      height: 17px;
-      flex-shrink: 0;
-      opacity: 0.42;
-      color: var(--icon-fg);
-    }
-    .search-menu{
-      position: absolute;
-      top: calc(max(12px, env(safe-area-inset-top, 0px)) + 40px + 8px);
-      left: max(12px, env(safe-area-inset-left, 0px));
-      right: max(12px, env(safe-area-inset-right, 0px));
-      z-index: 11;
-      border: 1px solid var(--glass-stroke);
-      background: var(--glass-fill-menu);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      border-radius: 18px;
-      box-shadow:
-        0 1px 0 var(--glass-inset) inset,
-        0 12px 40px var(--menu-shadow),
-        0 2px 10px var(--glass-shadow-outer);
-      padding: 6px;
-      display:none;
-      max-height: min(320px, calc(100dvh - 180px));
-      overflow:auto;
-    }
-    .search-menu.open{ display:block; }
-    .search-item{
-      padding: 11px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      user-select: none;
-      display:flex;
-      justify-content: space-between;
-      gap: 12px;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-    }
-    .search-item:hover{ background: var(--menu-hover); }
-
-    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
-    .sheet{
-      position: absolute;
-      left: max(10px, env(safe-area-inset-left, 0px));
-      right: max(10px, env(safe-area-inset-right, 0px));
-      /* Sit above home indicator + display corner radius so bottom corners stay visible in PWA */
-      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      z-index: 20;
-      height: var(--sheetH, 50vh);
-      max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-      display: flex;
-      flex-direction: column;
-      border-radius: 26px 26px 36px 36px;
-      border: none;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    /* Bottom fade: pinned to card bottom only. Sticky+negative margin inside .sheet-scroll overlapped mid-content (e.g. overview copy). */
-    .sheet::after{
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 52px;
-      pointer-events: none;
-      z-index: 2;
-      border-bottom-left-radius: 36px;
-      border-bottom-right-radius: 36px;
-      background: linear-gradient(to bottom, transparent, var(--surface));
-      display: none;
-    }
-    .sheet.sheet-scrollable::after{
-      display: block;
-    }
-    /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
-    .sheet:not(.sheet-scrollable){
-      touch-action: none;
-    }
-    .sheet.sheet-scrollable:not(.sheet-expanded){
-      touch-action: manipulation;
-    }
-    .grab{
-      position: relative;
-      z-index: 4;
-      flex-shrink: 0;
-      min-height: 36px;
-      padding: 5px 0 6px;
-      margin: 0;
-      background: transparent;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      cursor: grab;
-    }
-    .grab:active{ cursor: grabbing; }
-    .grab::before{
-      content:'';
-      display:block;
-      width: 46px;
-      height: 5px;
-      border-radius: 999px;
-      background: var(--grab);
-      margin: 0 auto;
-    }
-    .sheet-scroll{
-      flex: 1;
-      min-height: 0;
-      overflow-y: hidden;
-      overscroll-behavior-y: none;
-      /* Inset from sheet edges so the scrollbar stops above the rounded bottom corners */
-      margin: 0 8px 16px 8px;
-      padding: 0 4px 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      box-sizing: border-box;
-      border-radius: 0 0 24px 24px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--scroll-thumb) transparent;
-      position: relative;
-      z-index: 1;
-    }
-    .sheet-scroll::-webkit-scrollbar{
-      width: 5px;
-    }
-    .sheet-scroll::-webkit-scrollbar-thumb{
-      background: var(--scroll-thumb);
-      border-radius: 999px;
-    }
-    .sheet-scroll::-webkit-scrollbar-track{
-      background: transparent;
-    }
-    .sheet-cards-stack{
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      min-height: 0;
-    }
-    .sheet.sheet-scrollable .sheet-scroll{
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior-y: contain;
-      touch-action: pan-y;
-    }
-    .card{
-      border-radius: 0;
-      border: none;
-      overflow: visible;
-      background: transparent;
-    }
-    .card .pad{ padding: 14px; }
-    #card-highlights .pad{ padding-top: 2px; }
-    /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
-    .sheet-region-sticky{
-      position: sticky;
-      top: 0;
-      z-index: 6;
-      flex-shrink: 0;
-      margin: 0 -4px 0 -12px;
-      padding: 0 14px 8px 26px;
-      background: var(--sticky-bg);
-      box-shadow: none;
-      transition: box-shadow 0.2s ease;
-    }
-    .sheet-region-sticky .title{
-      margin: 0;
-    }
-    .sheet-region-sticky.sheet-region-sticky--raised{
-      box-shadow: 0 6px 12px -8px var(--sticky-raised);
-    }
-    /* Highlights: date line + export beside the text */
-    .card-sub-row{
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      min-width: 0;
-      margin-top: 6px;
-    }
-    #card-highlights .card-sub-row .sub{
-      margin-top: 0;
-      flex: 0 1 auto;
-      min-width: 0;
-      max-width: 100%;
-    }
-    /* Kicker + export beside the text */
-    .card-head-inline{
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      min-width: 0;
-    }
-    .card-head-inline .kicker{
-      flex: 0 1 auto;
-      min-width: 0;
-      max-width: 100%;
-    }
-    .card-export{
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      margin: 0;
-      padding: 0;
-      border: none;
-      border-radius: 6px;
-      background: transparent;
-      color: var(--export-icon);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .card-export:disabled{
-      opacity: 0.45;
-      cursor: wait;
-      pointer-events: none;
-    }
-    .card-export svg{
-      width: 14px;
-      height: 14px;
-    }
-    .card-export:focus-visible{
-      outline: 2px solid rgba(255, 106, 0, 0.45);
-      outline-offset: 2px;
-    }
-    .kicker{
-      font-family: var(--font);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      opacity: 0.85;
-    }
-    .title{
-      margin: 8px 0 0;
-      font-size: 1.9rem;
-      font-weight: 850;
-      letter-spacing: -0.02em;
-      line-height: 1.05;
-    }
-    .sub{
-      margin-top: 6px;
-      font-family: var(--font);
-      font-size: 0.8rem;
-      opacity: 0.85;
-    }
-    .lines{
-      margin-top: 12px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 12px;
-      font-family: var(--font);
-      font-size: 0.78rem;
-    }
-    .lines.hi-lines{
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin-top: 14px;
-    }
-    .hi-row{
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 14px;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--hairline);
-      font-family: var(--font);
-      font-size: 0.84rem;
-    }
-    .hi-row:last-child{ border-bottom: none; padding-bottom: 2px; }
-    .hi-k{
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: var(--hi-label);
-    }
-    .hi-v{
-      font-weight: 750;
-      font-variant-numeric: tabular-nums;
-      color: var(--hi-value);
-      text-align: right;
-    }
-    .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
-    .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }
-    .chart-wrap{ height: 210px; padding: 12px; }
-    .chart-wrap canvas{ width:100% !important; height:100% !important; display:block; }
-    .sheet.sheet-scrollable .chart-wrap{
-      touch-action: pan-y;
-    }
-    .oil{ font-size: 0.95rem; line-height: 1.45; font-weight: 600; color: var(--oil); }
-    .overview-metrics{
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin-top: 14px;
-    }
-    .overview-row{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      border-top: 1px solid var(--hairline);
-      padding-top: 10px;
-      padding-bottom: 14px;
-    }
-    .overview-metric-empty{
-      min-width: 0;
-      pointer-events: none;
-    }
-    .overview-metrics .metric{
-      min-width: 0;
-    }
-    .overview-metrics .metric .k{
-      font-family: var(--font);
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--metric-k);
-    }
-    .overview-metrics .metric .v{
-      margin-top: 6px;
-      font-family: var(--font);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      font-variant-numeric: tabular-nums;
-      color: var(--metric-v);
-      line-height: 1.25;
-    }
-
-    @media (min-width: 900px){
-      /* "App" can still run on desktop, but keep it phone-ish */
-      .sheet{
-        left: max(16px, env(safe-area-inset-left, 0px));
-        right: max(16px, env(safe-area-inset-right, 0px));
-        max-width: 520px;
-        margin: 0 auto;
-      }
-      .topbar{
-        left: max(16px, env(safe-area-inset-left, 0px));
-        right: max(16px, env(safe-area-inset-right, 0px));
-        max-width: 520px;
-        margin: 0 auto;
-      }
-    }
-
-    /* Export: IG story preview (9:16) — save via share sheet or download on tap */
-    .export-story-modal{
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.22s ease, visibility 0.22s;
-    }
-    .export-story-modal.export-story-modal--open{
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    .export-story-backdrop{
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .export-story-dialog{
-      position: relative;
-      z-index: 1;
-      width: min(100%, 380px);
-      max-height: min(94dvh, 900px);
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
-    }
-    .export-story-header{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 0 2px;
-    }
-    .export-story-heading{
-      margin: 0;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #fff;
-      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
-    }
-    .export-story-close{
-      flex-shrink: 0;
-      width: 40px;
-      height: 40px;
-      margin: 0;
-      padding: 0;
-      border: none;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      font-size: 1.35rem;
-      line-height: 1;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .export-story-close:focus-visible{
-      outline: 2px solid var(--orange);
-      outline-offset: 2px;
-    }
-    .export-story-frame{
-      width: min(100%, 300px);
-      aspect-ratio: 9 / 16;
-      margin: 0 auto;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #0a0a0a;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
-    }
-    .export-story-frame img{
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      background: var(--export-story-img-bg);
-    }
-    .export-story-save{
-      margin: 0;
-      padding: 14px 20px;
-      border: none;
-      border-radius: 14px;
-      background: var(--orange);
-      color: #fff;
-      font-family: var(--font);
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(255, 106, 0, 0.35);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .export-story-save:focus-visible{
-      outline: 2px solid #fff;
-      outline-offset: 3px;
-    }
-    .export-story-save:disabled{
-      opacity: 0.55;
-      cursor: wait;
-    }
-  </style>
+  <!-- styles: assets/app.css -->
 </head>
 <body>
   <div class="app">
@@ -843,114 +131,35 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    const COUNTRIES = {
-      458: { name: 'Malaysia' },
-      702: { name: 'Singapore' },
-      96:  { name: 'Brunei' },
-      360: { name: 'Indonesia' },
-    };
-    const LIVE = { 458: true, 702: true, 96: true, 360: true };
-    /** Same oil context as terminal.html; metricRows = 2-col layout per row */
-    const APP_COUNTRY_OVERVIEW = {
-      458: {
-        oilContext:
-          'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
-        metricRows: [
-          [['BOPD', '570,000'], ['1P Reserves', '2.7B Barrels']],
-          [['Refinery Intake', '747,000'], null],
-          [['Export Value', 'RM6.2bil'], ['Import Value', 'RM13.6bil']],
-          [['Status', 'Net Importer'], null],
-        ],
-      },
-      96: {
-        oilContext:
-          'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
-        metricRows: [
-          [['BOPD', '102,677'], ['1P Reserves', '1.1B Barrels']],
-          [['Refinery Intake', '16,338'], null],
-          [['Export Value', 'BND 13.45bil'], ['Import Value', 'BND 8.62bil']],
-          [['Status', 'Net Exporter'], null],
-        ],
-      },
-      360: {
-        oilContext:
-          "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
-        metricRows: [
-          [['BOPD', '608,100'], ['1P Reserves', '2.41B Barrels']],
-          [['Refinery Intake', '1,626,878'], null],
-          [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
-          [['Status', 'Net Importer'], null],
-        ],
-      },
-      702: {
-        oilContext:
-          'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
-        metricRows: [
-          [['BOPD', '0'], ['1P Reserves', '0 Barrels']],
-          [['Refinery Intake', '~1,100,000'], null],
-          [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
-          [['Status', 'Net Importer (refining hub)'], null],
-        ],
-      },
-    };
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
+    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, asNum, buildChartSeries — from utils.js
 
     let selected = 458;
     let RIGHT_CHART = null;
     let APP_ZOOM_TO = null;
 
-
-    /** [lon, lat] centroids — keys must match `city` in the Indonesia Google Sheet (see indonesia.html). */
-    const APP_ID_CITY_LONLAT = {
-      'Jakarta Pusat': [106.8456, -6.2088],
-      'Jakarta Selatan': [106.81, -6.26],
-      'Jakarta Barat': [106.74, -6.15],
-      'Jakarta Timur': [106.9, -6.22],
-      'Jakarta Utara': [106.88, -6.13],
-      Bekasi: [106.99, -6.24],
-      Bogor: [106.8, -6.6],
-      Depok: [106.82, -6.4],
-      Tangerang: [106.63, -6.18],
-      'Tangerang Selatan': [106.71, -6.29],
-      Bandung: [107.62, -6.92],
-      Semarang: [110.42, -6.99],
-      Surabaya: [112.75, -7.26],
-      Surakarta: [110.82, -7.57],
-      Yogyakarta: [110.36, -7.8],
-      Medan: [98.67, 3.59],
-      Palembang: [104.75, -2.98],
-      Pekanbaru: [101.45, 0.51],
-      Denpasar: [115.22, -8.65],
-      Makassar: [119.43, -5.15],
-    };
-
-    function getAppSearchRegions() {
-      const c = COUNTRIES;
+    function getSearchRegions() {
       const rows = [];
-      rows.push({ countryId: 458, label: `${c[458].name} - Semenanjung`, myRegion: 'Semenanjung' });
-      rows.push({ countryId: 458, label: `${c[458].name} - East Malaysia`, myRegion: 'SabahSarawak' });
-      rows.push({ countryId: 702, label: `${c[702].name} - National` });
-      rows.push({ countryId: 96, label: `${c[96].name} - National` });
-      Object.keys(APP_ID_CITY_LONLAT)
+      rows.push({ countryId: 458, label: `${COUNTRIES[458].name} - Semenanjung`, myRegion: 'Semenanjung' });
+      rows.push({ countryId: 458, label: `${COUNTRIES[458].name} - East Malaysia`, myRegion: 'SabahSarawak' });
+      rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
+      rows.push({ countryId: 96,  label: `${COUNTRIES[96].name} - National` });
+      Object.keys(ID_CITY_LONLAT)
         .sort((a, b) => a.localeCompare(b))
         .forEach((city) => {
-          rows.push({ countryId: 360, label: `${c[360].name} - ${city}`, idCity: city });
+          rows.push({ countryId: 360, label: `${COUNTRIES[360].name} - ${city}`, idCity: city });
         });
       return rows;
     }
 
-    let _appMyRows = null;
-    let _appSgRows = null;
-    let _appBnRows = null;
-    let _appIdRows = null;
 
-
-    function fmtAppIdrPerL(n) {
+    function fmtIDR(n) {
       const x = parseFloat(n);
       if (!Number.isFinite(x)) return '—';
       return `IDR ${Math.round(x).toLocaleString('en-US')}/L`;
     }
 
-    function appMalaysiaRegionKey() {
+    function getMalaysiaRegion() {
       try {
         const k = localStorage.getItem('terminal_my_region') || 'Semenanjung';
         return k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
@@ -959,35 +168,14 @@
       }
     }
 
-    /** Rough boxes: peninsular vs Borneo (Sabah/Sarawak/Labuan). Matches map clicks, not maritime claims. */
-    function appMalaysiaRegionFromLngLat(lon, lat) {
-      const PEN = { minLon: 99.5, maxLon: 104.95, minLat: 0.75, maxLat: 6.95 };
-      const EAST = { minLon: 108.8, maxLon: 119.6, minLat: 0.45, maxLat: 7.55 };
-      const inPen = lon >= PEN.minLon && lon <= PEN.maxLon && lat >= PEN.minLat && lat <= PEN.maxLat;
-      const inEast = lon >= EAST.minLon && lon <= EAST.maxLon && lat >= EAST.minLat && lat <= EAST.maxLat;
-      if (inEast && !inPen) return 'SabahSarawak';
-      if (inPen && !inEast) return 'Semenanjung';
-      if (inEast && inPen) return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
-      if (inEast) return 'SabahSarawak';
-      if (inPen) return 'Semenanjung';
-      return lon >= 106.5 ? 'SabahSarawak' : 'Semenanjung';
-    }
-
-    function appApplyMalaysiaClickRegion(event, svgNode, projection) {
+    function applyMalaysiaClickRegion(event, svgNode, projection) {
       const inv = projection.invert(d3.pointer(event, svgNode));
       if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
-      const next = appMalaysiaRegionFromLngLat(inv[0], inv[1]);
-      try {
-        localStorage.setItem('terminal_my_region', next);
-      } catch (_) {}
+      try { localStorage.setItem('terminal_my_region', malaysiaRegionFromLngLat(inv[0], inv[1])); } catch (_) {}
     }
 
-    function appIndonesiaCity() {
-      try {
-        return localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
-      } catch (_) {
-        return 'Jakarta Pusat';
-      }
+    function getIndonesiaCity() {
+      try { return localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) { return 'Jakarta Pusat'; }
     }
 
     function syncSearchInputFromSelection() {
@@ -996,91 +184,20 @@
       inp.value = '';
     }
 
-    /** Pick the sheet `city` whose centroid is closest to the click (degrees² is fine at this scale). */
-    function appIndonesiaCityFromLngLat(lon, lat) {
-      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return 'Jakarta Pusat';
-      let best = 'Jakarta Pusat';
-      let bestD = Infinity;
-      for (const [city, ll] of Object.entries(APP_ID_CITY_LONLAT)) {
-        const dx = lon - ll[0];
-        const dy = lat - ll[1];
-        const d = dx * dx + dy * dy;
-        if (d < bestD) {
-          bestD = d;
-          best = city;
-        }
-      }
-      return best;
-    }
-
-    function appApplyIndonesiaClickCity(event, svgNode, projection) {
+    function applyIndonesiaClickCity(event, svgNode, projection) {
       const inv = projection.invert(d3.pointer(event, svgNode));
       if (!inv || !Number.isFinite(inv[0]) || !Number.isFinite(inv[1])) return;
-      const city = appIndonesiaCityFromLngLat(inv[0], inv[1]);
-      try {
-        localStorage.setItem('terminal_id_city', city);
-      } catch (_) {}
+      try { localStorage.setItem('terminal_id_city', indonesiaCityFromLngLat(inv[0], inv[1])); } catch (_) {}
     }
 
-    async function ensureAppMalaysiaRows() {
-      if (_appMyRows) return _appMyRows;
-      const res = await fetch(MY_API_URL);
-      if (!res.ok) throw new Error('MY');
-      const json = await res.json();
-      _appMyRows = (json || []).filter(r => r.series_type === 'level');
-      return _appMyRows;
-    }
-
-    async function ensureAppSheetRows(url, cacheRef) {
-      if (cacheRef.val) return cacheRef.val;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error('sheet');
-      const text = await res.text();
-      cacheRef.val = parseCSV(text);
-      return cacheRef.val;
-    }
-
-    const _sgCache = { val: null };
-    const _bnCache = { val: null };
-    const _idCache = { val: null };
+    // Data fetch helpers — ensureMalaysiaRows / ensureSheetRows come from utils.js
 
     const APP_CHART_POINTS = 30;
 
-    function appCssVar(name, fallback) {
-      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-      return v || fallback;
-    }
-
-    function appChartColors() {
-      const muted = appCssVar('--chart-line-muted', '#111827');
-      return ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', muted, '#0ea5e9', '#ef4444'];
-    }
-
-    function takeLastApp(arr, n) {
-      return arr.slice(Math.max(0, arr.length - n));
-    }
-
-    function appAsNum(v) {
-      const n = parseFloat(v);
-      return Number.isFinite(n) ? n : null;
-    }
-
-    function buildAppChartSeries(rows, keys, labels) {
-      const palette = appChartColors();
-      return keys.map((k, i) => ({
-        label: k.label,
-        color: k.color || palette[i % palette.length],
-        data: labels.map((lab) => {
-          const r = rows.find((x) => x.__label === lab);
-          return r ? appAsNum(r[k.key]) : null;
-        }),
-      }));
-    }
-
-    function appChartOptions(countryId) {
-      const legendColor = appCssVar('--chart-legend', 'rgba(0,0,0,0.48)');
-      const tickColor = appCssVar('--chart-tick', 'rgba(0,0,0,0.45)');
-      const gridColor = appCssVar('--chart-grid', 'rgba(0,0,0,0.06)');
+    function chartOptions(countryId) {
+      const legendColor = cssVar('--chart-legend', 'rgba(0,0,0,0.48)');
+      const tickColor = cssVar('--chart-tick', 'rgba(0,0,0,0.45)');
+      const gridColor = cssVar('--chart-grid', 'rgba(0,0,0,0.06)');
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -1144,38 +261,10 @@
       };
     }
 
-    function updateAppChart({ labels, datasets, countryId }) {
+    function updateChart({ labels, datasets, countryId }) {
       const cv = document.getElementById('chart');
       if (!cv || !window.Chart) return;
       const ctx = cv.getContext('2d');
-
-      function withAlpha(c, a) {
-        if (!c) return c;
-        const s = String(c).trim();
-        if (/^rgba\(/i.test(s)) {
-          return s.replace(/rgba\(([^)]+)\)/i, (m, inner) => {
-            const parts = inner.split(',').map((p) => p.trim());
-            if (parts.length < 3) return s;
-            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
-          });
-        }
-        if (/^rgb\(/i.test(s)) {
-          return s.replace(/rgb\(([^)]+)\)/i, (m, inner) => {
-            const parts = inner.split(',').map((p) => p.trim());
-            if (parts.length < 3) return s;
-            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
-          });
-        }
-        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
-          const hex = s.slice(1);
-          const full = hex.length === 3 ? hex.split('').map((ch) => ch + ch).join('') : hex;
-          const r = parseInt(full.slice(0, 2), 16);
-          const g = parseInt(full.slice(2, 4), 16);
-          const b = parseInt(full.slice(4, 6), 16);
-          return `rgba(${r}, ${g}, ${b}, ${a})`;
-        }
-        return s;
-      }
 
       function mkFill(stroke) {
         const grad = ctx.createLinearGradient(0, 0, 0, cv.height || 210);
@@ -1205,7 +294,7 @@
       RIGHT_CHART = new Chart(ctx, {
         type: 'line',
         data: { labels: labels || [], datasets: nextDs },
-        options: appChartOptions(countryId),
+        options: chartOptions(countryId),
       });
     }
 
@@ -1228,19 +317,19 @@
       setHiLoading();
 
       function emptyChart() {
-        updateAppChart({
+        updateChart({
           labels: ['—'],
-          datasets: [{ label: 'No data', data: [null], color: appCssVar('--chart-empty', '#d4d4d4') }],
+          datasets: [{ label: 'No data', data: [null], color: cssVar('--chart-empty', '#d4d4d4') }],
           countryId: null,
         });
       }
 
       try {
         if (cid === 458) {
-          const rows = await ensureAppMalaysiaRows();
+          const rows = await ensureMalaysiaRows();
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          const regionKey = appMalaysiaRegionKey();
+          const regionKey = getMalaysiaRegion();
           const isEast = regionKey === 'SabahSarawak';
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
           const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
@@ -1254,18 +343,18 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron95_budi95', label: 'BUDI95', color: '#9333ea' },
             { key: 'ron95', label: 'RON95', color: '#fbbf24' },
             { key: 'ron97', label: 'RON97', color: '#16a34a' },
-            { key: dieselKey, label: dieselLabel, color: appCssVar('--chart-line-muted', '#111827') },
+            { key: dieselKey, label: dieselLabel, color: cssVar('--chart-line-muted', '#111827') },
           ];
           if (labels.length) {
-            updateAppChart({
+            updateChart({
               labels,
-              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 458,
             });
           } else emptyChart();
@@ -1273,7 +362,7 @@
         }
 
         if (cid === 702) {
-          const rows = await ensureAppSheetRows(SG_SHEET_URL, _sgCache);
+          const rows = await ensureSheetRows(SG_SHEET_URL);
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'National';
@@ -1287,7 +376,7 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron92', label: 'RON92' },
@@ -1297,9 +386,9 @@
             { key: 'diesel', label: 'Diesel' },
           ];
           if (labels.length) {
-            updateAppChart({
+            updateChart({
               labels,
-              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 702,
             });
           } else emptyChart();
@@ -1307,7 +396,7 @@
         }
 
         if (cid === 96) {
-          const rows = await ensureAppSheetRows(BN_SHEET_URL, _bnCache);
+          const rows = await ensureSheetRows(BN_SHEET_URL);
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
           titleEl.textContent = 'National';
@@ -1320,7 +409,7 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'gasoline', label: 'Gasoline' },
@@ -1329,9 +418,9 @@
             { key: 'vpower_diesel', label: 'V-Power Diesel' },
           ];
           if (labels.length) {
-            updateAppChart({
+            updateChart({
               labels,
-              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 96,
             });
           } else emptyChart();
@@ -1339,23 +428,23 @@
         }
 
         if (cid === 360) {
-          const rows = await ensureAppSheetRows(ID_SHEET_URL, _idCache);
-          const city = appIndonesiaCity();
+          const rows = await ensureSheetRows(ID_SHEET_URL);
+          const city = getIndonesiaCity();
           const cityRows = sortRowsByDate(rows.filter((r) => r.city === city));
           const rSel = cityRows[cityRows.length - 1] || {};
           titleEl.textContent = city;
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
-          const pairs = ID_FUELS.map(f => [f.label, fmtAppIdrPerL(rSel[f.key])]);
+          const pairs = ID_FUELS.map(f => [f.label, fmtIDR(rSel[f.key])]);
           renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastApp(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = takeLastN(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = ID_FUELS.map(f => ({ key: f.key, label: f.label }));
           if (labels.length) {
-            updateAppChart({
+            updateChart({
               labels,
-              datasets: buildAppChartSeries(sliceRows, chartKeys, labels),
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 360,
             });
           } else emptyChart();
@@ -1377,7 +466,7 @@
     }
 
     function renderCountryOverview(cid) {
-      const ov = APP_COUNTRY_OVERVIEW[cid];
+      const ov = COUNTRY_OVERVIEW[cid];
       const oilEl = document.getElementById('overview-text');
       const metricsEl = document.getElementById('overview-metrics');
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
@@ -1523,7 +612,7 @@
     function initSearch(){
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
-      const list = getAppSearchRegions();
+      const list = getSearchRegions();
       let open = false;
       const openMenu = () => { open=true; menu.classList.add('open'); };
       const closeMenu = () => { open=false; menu.classList.remove('open'); };
@@ -1579,9 +668,9 @@
     function initChart(){
       const cv = document.getElementById('chart');
       if (!cv || !window.Chart) return;
-      updateAppChart({
+      updateChart({
         labels: [''],
-        datasets: [{ label: 'Loading…', data: [null], color: appCssVar('--chart-empty', '#d4d4d4') }],
+        datasets: [{ label: 'Loading…', data: [null], color: cssVar('--chart-empty', '#d4d4d4') }],
         countryId: 458,
       });
     }
@@ -1626,12 +715,12 @@
           .enter().append('path').attr('class', 'country').attr('d', path);
 
         mapG.selectAll('.live-c')
-          .data(countries.features.filter(d => LIVE[+d.id]))
+          .data(countries.features.filter(d => !!COUNTRIES[+d.id]))
           .enter().append('path').attr('class', 'country live').attr('d', path)
           .on('click', (e, d) => {
             const id = +d.id;
             if (id === 458) {
-              appApplyMalaysiaClickRegion(e, svg.node(), projection);
+              applyMalaysiaClickRegion(e, svg.node(), projection);
               if (+selected === 458) {
                 refreshHighlights(458);
                 applySel();
@@ -1640,7 +729,7 @@
               }
             }
             if (id === 360) {
-              appApplyIndonesiaClickCity(e, svg.node(), projection);
+              applyIndonesiaClickCity(e, svg.node(), projection);
               if (+selected === 360) {
                 refreshHighlights(360);
                 applySel();
@@ -1658,7 +747,7 @@
           .attr('d', path);
 
         const liveBorders = mapG.selectAll('.border-live-p')
-          .data(countries.features.filter(d => LIVE[+d.id]))
+          .data(countries.features.filter(d => !!COUNTRIES[+d.id]))
           .enter().append('path')
           .attr('class', 'border-live')
           .attr('d', path);
@@ -1682,7 +771,7 @@
 
         function applySel(){
           mapG.selectAll('.country.live').classed('selected', (d) => d && +d.id === +selected);
-          liveBorders.classed('selected', d => +d.id === +selected);
+          liveBorders.classed('selected', d => +d.id === selected);
         }
         applySel();
 
@@ -1738,8 +827,8 @@
 
           let lon, lat, subFocus = false;
           if (+countryId === 360) {
-            const city = appIndonesiaCity();
-            const ll = APP_ID_CITY_LONLAT[city];
+            const city = getIndonesiaCity();
+            const ll = ID_CITY_LONLAT[city];
             if (ll && Number.isFinite(ll[0]) && Number.isFinite(ll[1])) {
               [lon, lat] = ll;
               subFocus = true;
@@ -1747,7 +836,7 @@
               [lon, lat] = d3.geoCentroid(f);
             }
           } else if (+countryId === 458) {
-            const region = appMalaysiaRegionKey();
+            const region = getMalaysiaRegion();
             if (region === 'SabahSarawak') {
               lon = 115; lat = 4;
             } else {
@@ -1914,7 +1003,7 @@
       out.width = APP_STORY_W;
       out.height = APP_STORY_H;
       const ctx = out.getContext('2d');
-      ctx.fillStyle = appCssVar('--surface', '#ffffff');
+      ctx.fillStyle = cssVar('--surface', '#ffffff');
       ctx.fillRect(0, 0, APP_STORY_W, APP_STORY_H);
       const maxW = APP_STORY_W - APP_STORY_PAD * 2;
       const maxH = APP_STORY_H - APP_STORY_PAD * 2;
@@ -1935,7 +1024,7 @@
       const html2canvas = window.html2canvas;
       if (typeof html2canvas !== 'function') throw new Error('html2canvas missing');
 
-      const exportBg = appCssVar('--surface', '#ffffff');
+      const exportBg = cssVar('--surface', '#ffffff');
       const h2cOpts = {
         scale: 2,
         backgroundColor: exportBg,
