@@ -43,31 +43,18 @@
     }
 
     header {
-      position: fixed;
-      top: 0; left: 50%;
-      transform: translateX(-50%);
+      position: sticky;
+      top: 0;
       z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
       width: 100%;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 28px;
+      padding: 14px clamp(16px, 4vw, 32px);
+      padding-top: max(14px, env(safe-area-inset-top, 0px));
       background: var(--bg);
       border-bottom: 1px solid var(--border);
-      border-radius: 0;
-      transition: top 0.38s ease, width 0.38s ease, border-radius 0.38s ease,
-                  background 0.38s ease, padding 0.38s ease,
-                  backdrop-filter 0.38s ease, border-color 0.38s ease;
-    }
-    header.scrolled {
-      top: 12px;
-      width: calc(100% - 32px);
-      max-width: 1020px;
-      padding: 10px 20px;
-      background: color-mix(in srgb, var(--bg) 88%, transparent);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-bottom: none;
-      outline: 1px solid var(--border);
-      border-radius: 16px;
     }
 
     .logo-block { display: flex; align-items: center; gap: 10px; }
@@ -377,6 +364,7 @@
       line-height: 1.5;
     }
     .footer-copyright { color: var(--footer-muted); }
+    .footer-copyright-break { display: none; }
     .footer-legal-sep {
       color: var(--footer-muted);
       opacity: 0.45;
@@ -447,44 +435,6 @@
     }
     .nav-links a:hover { color: var(--text); }
 
-    /* ── Hamburger ──────────────────────────────────────────────── */
-    .nav-hamburger {
-      display: none;
-      background: none; border: 1px solid var(--border);
-      border-radius: 8px; padding: 6px 8px; cursor: pointer;
-      color: var(--text-muted);
-      align-items: center; justify-content: center;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .nav-hamburger:hover { color: var(--text); border-color: var(--border-h); }
-
-    .mobile-nav {
-      display: none;
-      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
-      background: color-mix(in srgb, var(--bg) 94%, transparent);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      border-radius: 14px; padding: 6px 0; z-index: 200;
-    }
-    .mobile-nav.open { display: block; }
-    .mobile-nav a {
-      display: block; padding: 11px 22px;
-      font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--text-muted); text-decoration: none;
-      transition: color 0.12s, background 0.12s;
-    }
-    .mobile-nav a:hover {
-      color: var(--text);
-      background: color-mix(in srgb, var(--text) 6%, transparent);
-    }
-
-    @media (max-width: 900px) {
-      .nav-links     { display: none; }
-      .nav-hamburger { display: flex; }
-    }
-
-
 
 
     /* ── Tooltip ──────────────────────────────────────────────── */
@@ -515,7 +465,9 @@
        MOBILE  (< 640px)
     ══════════════════════════════════════���════════════════════ */
     @media (max-width: 639px) {
-      header { padding: 14px 16px 12px; }
+      header {
+        padding: max(12px, env(safe-area-inset-top, 0px)) 16px 12px;
+      }
 
       .logo-block .site-wordmark { font-size: 0.9rem; }
       .status-pill  { font-size: 0.7rem; padding: 4px 9px; gap: 5px; }
@@ -546,10 +498,33 @@
       .footer-row-bottom {
         flex-direction: column;
         align-items: flex-start;
+        gap: 18px;
+        width: 100%;
       }
-      .footer-nav-primary { gap: 14px 24px; }
+      .footer-nav-primary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
       .footer-divider { margin: 22px 0 20px; }
-      .footer-contact { gap: 12px 20px; }
+      .footer-legal {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+      }
+      .footer-legal-sep {
+        display: none;
+      }
+      .footer-copyright-break {
+        display: inline;
+      }
+      .footer-contact {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+      }
     }
 
     /* Dark system UI: tokens above switch :root; below tweaks map + chrome that sit on the dark basemap. */

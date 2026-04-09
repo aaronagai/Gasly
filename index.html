@@ -35,21 +35,9 @@
     </div>
 
     <div class="header-actions">
-      <a class="try-terminal-btn" href="./terminal.html">Try Terminal</a>
+      <a class="try-terminal-btn" href="./terminal.html">Terminal</a>
       <a class="try-terminal-btn" href="./app.html">App</a>
-      <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu" aria-expanded="false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <line x1="3" y1="6"  x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
     </div>
-
-    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
-      <a href="./terminal.html">Try Terminal</a>
-      <a href="./app.html">App</a>
-    </nav>
   </header>
 
   <!-- ── Hero: full viewport ───────────────────��─────────────── -->
@@ -80,7 +68,7 @@
     <div class="footer-divider" aria-hidden="true"></div>
     <div class="footer-row footer-row-bottom">
       <div class="footer-legal">
-        <span class="footer-copyright">© 2026 petrolprice.xyz. All rights reserved.</span>
+        <span class="footer-copyright">© 2026 petrolprice.xyz. <br class="footer-copyright-break" aria-hidden="true">All rights reserved.</span>
         <span class="footer-legal-sep" aria-hidden="true">·</span>
         <a href="#">Privacy Policy</a>
         <span class="footer-legal-sep" aria-hidden="true">·</span>
@@ -377,26 +365,6 @@
       console.error('Index map failed to load', err);
     });
 
-    const hdr = document.querySelector('header');
-    window.addEventListener('scroll', () => {
-      hdr.classList.toggle('scrolled', window.scrollY > 50);
-    }, { passive: true });
-
-    function toggleMobileNav() {
-      const nav = document.getElementById('mobile-nav');
-      const btn = document.querySelector('.nav-hamburger');
-      const open = nav.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open);
-    }
-
-    function closeMobileNav() {
-      document.getElementById('mobile-nav').classList.remove('open');
-      document.querySelector('.nav-hamburger').setAttribute('aria-expanded', 'false');
-    }
-
-    document.addEventListener('click', e => {
-      if (!e.target.closest('header')) closeMobileNav();
-    });
   </script>
 </body>
 </html>
