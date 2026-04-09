@@ -421,6 +421,15 @@
 
           existing.set(k, { row, wrap, vEl, dEl });
         }
+
+        for (const item of infoLines) {
+          const want = String(item[0]);
+          const match = [...lines.querySelectorAll('.kv')].find((r) => {
+            const kEl = r.querySelector('.k');
+            return kEl && kEl.textContent === want;
+          });
+          if (match) lines.appendChild(match);
+        }
       }
     }
 
@@ -648,11 +657,13 @@
         const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
         const dieselLabel = 'Diesel';
         const keys = [
+          { key: 'ron95_budi95', label: 'BUDI95' },
           { key: 'ron95', label: 'RON95' },
           { key: 'ron97', label: 'RON97' },
           { key: dieselKey, label: dieselLabel },
         ];
         const datasets = buildChartSeries(sliceRows, keys, labels).map(ds => {
+          if (ds.label === 'BUDI95') return { ...ds, color: '#9333ea' };
           if (ds.label === 'RON95') return { ...ds, color: '#fbbf24' }; // yellow/amber
           if (ds.label === 'RON97') return { ...ds, color: '#16a34a' }; // green
           if (ds.label === dieselLabel) return { ...ds, color: cssVar('--term-chart-line-muted', '#111827') };

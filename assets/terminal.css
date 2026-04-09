@@ -1169,20 +1169,23 @@
       letter-spacing: 0.06em;
       opacity: 0.8;
     }
+    /* Parent grid + subgrid on each row so price/delta columns share one width across all
+       rows (avoids “MYR 1.99/L” shifting when delta is “-” vs “+MYR 0.40”). */
     .info .lines {
       margin-top: 10px;
       display: grid;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) max-content max-content;
+      column-gap: 10px;
+      row-gap: 10px;
       font-family: var(--font);
       font-size: 0.78rem;
       letter-spacing: 0.02em;
       opacity: 0.95;
     }
-    /* Three shared columns: label | price | delta — label width no longer shifts numbers (e.g. Indonesia). */
     .info .kv {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 14rem 7.5rem;
-      column-gap: 12px;
+      grid-template-columns: subgrid;
+      grid-column: 1 / -1;
       align-items: baseline;
       padding-top: 10px;
       border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 45%, rgba(0, 0, 0, 0.2));
@@ -1191,6 +1194,8 @@
       opacity: 0.72;
       grid-column: 1;
       min-width: 0;
+      line-height: 1.3;
+      hyphens: none;
     }
     .kv .v {
       font-weight: 800;
@@ -1201,7 +1206,7 @@
     }
     .kv .v-wrap .v {
       grid-column: 2;
-      text-align: right;
+      text-align: left;
       margin-top: 0;
     }
     .kv .v-wrap .v:only-child {
@@ -1210,6 +1215,7 @@
     .kv > .v {
       grid-column: 2 / span 2;
       margin-top: 0;
+      text-align: left;
     }
     .kv .v-wrap .v-delta {
       grid-column: 3;
@@ -1218,7 +1224,19 @@
       font-variant-numeric: tabular-nums;
       opacity: 0.72;
       white-space: nowrap;
-      text-align: right;
+      text-align: left;
+    }
+
+    @supports not (grid-template-columns: subgrid) {
+      .info .lines {
+        grid-template-columns: minmax(0, 1fr);
+        column-gap: 0;
+      }
+      .info .kv {
+        grid-column: auto;
+        grid-template-columns: minmax(0, 1fr) minmax(12.5ch, max-content) minmax(10.5ch, max-content);
+        column-gap: 10px;
+      }
     }
 
     @media (prefers-color-scheme: dark) {

@@ -144,30 +144,6 @@
       margin-right: 8px;
     }
 
-    .index-map-my-live-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      pointer-events: none;
-    }
-
-    .index-map-live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 4px rgba(254, 94, 14, 0.55);
-      flex-shrink: 0;
-    }
-
-    .index-map-live-text {
-      font-family: var(--font-mono);
-      font-size: 7px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: var(--accent);
-    }
-
     .index-map-sg-hit {
       width: 36px;
       height: 36px;

@@ -108,7 +108,7 @@ const COUNTRY_OVERVIEW = {
       "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
     metricRows: [
       [['BOPD', '608,100'],             ['1P Reserves', '2.41B Barrels']],
-      [['Refinery Intake', '1,626,878'], null],
+      [['Refinery Capacity', '~1.22M bpd'], null],
       [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
       [['Status', 'Net Importer'],       null],
     ],
@@ -117,10 +117,10 @@ const COUNTRY_OVERVIEW = {
     oilContext:
       'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
     metricRows: [
-      [['BOPD', '0'],                                          ['1P Reserves', '0 Barrels']],
-      [['Refinery Intake', '~1,100,000'],                       null],
-      [['Export Value', 'Not specified in available data'],    ['Import Value', 'Not specified in available data']],
-      [['Status', 'Net Importer (refining hub)'],               null],
+      [['BOPD', '-'],                          ['1P Reserves', '- barrels']],
+      [['Refinery Intake', '~1,100,000 bpd'],  null],
+      [['Export Value', '~US$465B/year'],     ['Import Value', '~US$515B/year']],
+      [['Status', 'Net Importer (refining hub)'], null],
     ],
   },
 };

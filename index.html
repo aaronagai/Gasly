@@ -47,8 +47,8 @@
       <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
       <div class="map-hint">Tap a country with live data to view prices</div>
       <div class="hero-overlay">
-        <h2 class="hero-headline">Know what you pay at the pump.</h2>
-        <p class="hero-subhead">Real-time fuel prices across Southeast Asia, sourced from official government data.</p>
+        <h2 class="hero-headline">The Smartest Way to Check Petrol Prices.</h2>
+        <p class="hero-subhead">Compare live fuel prices across Southeast Asia before you drive, travel, or fill up.</p>
       </div>
     </div>
   </div>
@@ -107,7 +107,6 @@
       626:'Timor-Leste', 702:'Singapore', 704:'Vietnam', 764:'Thailand',
     };
 
-    const LIVE_IDS = Object.keys(LIVE).map(Number);
     const SEA_IDS = Array.from(SEA);
     const mobile = window.matchMedia('(max-width: 640px)').matches;
 
@@ -171,7 +170,7 @@
         container: 'index-hero-map',
         style: styleUrl,
         center: [115, mobile ? 6 : 9],
-        zoom: mobile ? 3.85 : 4.15,
+        zoom: mobile ? 3.35 : 3.65,
         minZoom: 2.6,
         maxZoom: 14,
         maxPitch: 0,
@@ -242,13 +241,6 @@
         const t = e.originalEvent.touches[0];
         showTip(t.clientX, t.clientY, nid);
       });
-
-      const myBadge = document.createElement('div');
-      myBadge.className = 'index-map-my-live-badge';
-      myBadge.innerHTML = '<span class="index-map-live-dot"></span><span class="index-map-live-text">LIVE</span>';
-      new maplibregl.Marker({ element: myBadge, anchor: 'left' })
-        .setLngLat([101.72, 3.42])
-        .addTo(map);
 
       const sgHit = document.createElement('button');
       sgHit.type = 'button';
