@@ -39,7 +39,6 @@
         </svg>
         <input id="country-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
       </div>
-      <a href="./index.html" class="topbar-wordmark site-wordmark">petrolprice.xyz</a>
     </div>
     <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
 
@@ -52,6 +51,7 @@
         <div class="sheet-cards-stack">
         <div class="card" id="card-highlights">
           <div class="pad">
+            <div class="hi-highlight-kicker" id="hi-highlight-kicker">Highlight</div>
             <div class="card-sub-row">
               <div class="sub" id="hi-sub">—</div>
               <button type="button" class="card-export" aria-label="Export highlights" title="Export">
@@ -177,6 +177,42 @@
       const x = parseFloat(n);
       if (!Number.isFinite(x)) return '—';
       return `IDR ${Math.round(x).toLocaleString('en-US')}/L`;
+    }
+
+    /** Highlight card: show copy instead of em-dash when price is missing. */
+    function fmtHiPerL(sym, n, decimals) {
+      const s = fmtPerL(sym, n, decimals);
+      return s === '—' ? 'Unavailable' : s;
+    }
+
+    function fmtHiIDR(n) {
+      const s = fmtIDR(n);
+      return s === '—' ? 'Unavailable' : s;
+    }
+
+    /** vs previous dated row; '-' if unchanged or no comparison (same ASCII hyphen everywhere). */
+    function fmtDeltaPerL(sym, currentVal, prevVal, decimals = 2) {
+      const cur = parseFloat(currentVal);
+      const prev = parseFloat(prevVal);
+      if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
+      const diff = cur - prev;
+      const mag = Math.abs(diff).toFixed(decimals);
+      if (diff > 0) return `+${sym} ${mag}`;
+      return `-${sym} ${mag}`;
+    }
+
+    function fmtDeltaIDR(currentVal, prevVal) {
+      const cur = parseFloat(currentVal);
+      const prev = parseFloat(prevVal);
+      if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      const a = Math.round(cur);
+      const b = Math.round(prev);
+      if (a === b) return '-';
+      const diff = a - b;
+      const abs = Math.abs(diff).toLocaleString('en-US');
+      if (diff > 0) return `+IDR ${abs}/L`;
+      return `-IDR ${abs}/L`;
     }
 
     function getMalaysiaRegion() {
@@ -308,9 +344,15 @@
 
     function renderHiRows(pairs) {
       const el = document.getElementById('hi-lines');
-      el.innerHTML = pairs.map(([k, v]) =>
-        `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v">${v}</span></div>`
-      ).join('');
+      el.innerHTML = pairs.map((row) => {
+        const k = row[0];
+        const v = row[1];
+        const d = row[2];
+        if (d != null && d !== '') {
+          return `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v">${v}</span><span class="hi-delta" aria-label="Change vs previous update">${d}</span></div>`;
+        }
+        return `<div class="hi-row"><span class="hi-k">${k}</span><span class="hi-v hi-v--alone">${v}</span></div>`;
+      }).join('');
     }
 
     function setHiLoading() {
@@ -337,6 +379,7 @@
           const rows = await ensureMalaysiaRows();
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
+          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
           const regionKey = getMalaysiaRegion();
           const isEast = regionKey === 'SabahSarawak';
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
@@ -344,10 +387,10 @@
           titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['BUDI95', fmtPerL('MYR', rSel.ron95_budi95, 2)],
-            ['RON95', fmtPerL('MYR', rSel.ron95, 2)],
-            ['RON97', fmtPerL('MYR', rSel.ron97, 2)],
-            [dieselLabel, fmtPerL('MYR', rSel[dieselKey], 2)],
+            ['BUDI95', fmtHiPerL('MYR', rSel.ron95_budi95, 2), fmtDeltaPerL('MYR', rSel.ron95_budi95, rPrev?.ron95_budi95, 2)],
+            ['RON95', fmtHiPerL('MYR', rSel.ron95, 2), fmtDeltaPerL('MYR', rSel.ron95, rPrev?.ron95, 2)],
+            ['RON97', fmtHiPerL('MYR', rSel.ron97, 2), fmtDeltaPerL('MYR', rSel.ron97, rPrev?.ron97, 2)],
+            [dieselLabel, fmtHiPerL('MYR', rSel[dieselKey], 2), fmtDeltaPerL('MYR', rSel[dieselKey], rPrev?.[dieselKey], 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
@@ -382,14 +425,14 @@
               : rows,
           );
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
+          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
           titleEl.textContent = hasProviders ? prov : 'National';
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['RON92', fmtPerL('SGD', rSel.ron92, 2)],
-            ['RON95', fmtPerL('SGD', rSel.ron95, 2)],
-            ['RON98', fmtPerL('SGD', rSel.ron98, 2)],
-            ['Premium', fmtPerL('SGD', rSel.premium, 2)],
-            ['Diesel', fmtPerL('SGD', rSel.diesel, 2)],
+            ['RON92', fmtHiPerL('SGD', rSel.ron92, 2), fmtDeltaPerL('SGD', rSel.ron92, rPrev?.ron92, 2)],
+            ['RON95', fmtHiPerL('SGD', rSel.ron95, 2), fmtDeltaPerL('SGD', rSel.ron95, rPrev?.ron95, 2)],
+            ['RON98', fmtHiPerL('SGD', rSel.ron98, 2), fmtDeltaPerL('SGD', rSel.ron98, rPrev?.ron98, 2)],
+            ['Diesel', fmtHiPerL('SGD', rSel.diesel, 2), fmtDeltaPerL('SGD', rSel.diesel, rPrev?.diesel, 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
@@ -399,7 +442,6 @@
             { key: 'ron92', label: 'RON92' },
             { key: 'ron95', label: 'RON95' },
             { key: 'ron98', label: 'RON98' },
-            { key: 'premium', label: 'Premium' },
             { key: 'diesel', label: 'Diesel' },
           ];
           if (labels.length) {
@@ -416,13 +458,14 @@
           const rows = await ensureSheetRows(BN_SHEET_URL);
           const seriesAsc = sortRowsByDate(rows);
           const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          titleEl.textContent = 'National';
+          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
+          titleEl.textContent = cname;
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
           renderHiRows([
-            ['Gasoline', fmtPerL('BND', rSel.gasoline, 2)],
-            ['Diesel', fmtPerL('BND', rSel.diesel, 2)],
-            ['V-Power Gasoline', fmtPerL('BND', rSel.vpower_gasoline, 2)],
-            ['V-Power Diesel', fmtPerL('BND', rSel.vpower_diesel, 2)],
+            ['Gasoline', fmtHiPerL('BND', rSel.gasoline, 2), fmtDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Diesel', fmtHiPerL('BND', rSel.diesel, 2), fmtDeltaPerL('BND', rSel.diesel, rPrev?.diesel, 2)],
+            ['V-Power Gasoline', fmtHiPerL('BND', rSel.vpower_gasoline, 2), fmtDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
+            ['V-Power Diesel', fmtHiPerL('BND', rSel.vpower_diesel, 2), fmtDeltaPerL('BND', rSel.vpower_diesel, rPrev?.vpower_diesel, 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
@@ -452,9 +495,14 @@
             rows.filter((r) => normalizeSheetString(r.city) === cityNorm),
           );
           const rSel = cityRows[cityRows.length - 1] || {};
+          const rPrev = cityRows.length >= 2 ? cityRows[cityRows.length - 2] : null;
           titleEl.textContent = city;
           subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
-          const pairs = ID_FUELS.map(f => [f.label, fmtIDR(rSel[f.key])]);
+          const pairs = ID_FUELS.map((f) => [
+            f.label,
+            fmtHiIDR(rSel[f.key]),
+            fmtDeltaIDR(rSel[f.key], rPrev ? rPrev[f.key] : NaN),
+          ]);
           renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
@@ -473,7 +521,7 @@
 
         titleEl.textContent = cname;
         subEl.textContent = 'No live price feed for this view';
-        renderHiRows([['Source', '—']]);
+        renderHiRows([['Source', 'Unavailable']]);
         emptyChart();
       } catch (_) {
         titleEl.textContent = cname;

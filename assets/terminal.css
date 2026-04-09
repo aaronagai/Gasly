@@ -1220,15 +1220,48 @@
       letter-spacing: 0.02em;
       opacity: 0.95;
     }
+    /* Three shared columns: label | price | delta — label width no longer shifts numbers (e.g. Indonesia). */
     .info .kv {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 14rem 7.5rem;
+      column-gap: 12px;
+      align-items: baseline;
       padding-top: 10px;
       border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 45%, rgba(0, 0, 0, 0.2));
     }
-    .kv .k { opacity: 0.72; }
-    .kv .v { font-weight: 800; }
+    .kv .k {
+      opacity: 0.72;
+      grid-column: 1;
+      min-width: 0;
+    }
+    .kv .v {
+      font-weight: 800;
+      min-width: 0;
+    }
+    .kv .v-wrap {
+      display: contents;
+    }
+    .kv .v-wrap .v {
+      grid-column: 2;
+      text-align: right;
+      margin-top: 0;
+    }
+    .kv .v-wrap .v:only-child {
+      grid-column: 2 / span 2;
+    }
+    .kv > .v {
+      grid-column: 2 / span 2;
+      margin-top: 0;
+    }
+    .kv .v-wrap .v-delta {
+      grid-column: 3;
+      font-size: 0.85em;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.72;
+      white-space: nowrap;
+      text-align: right;
+    }
 
     @media (prefers-color-scheme: dark) {
       .info {

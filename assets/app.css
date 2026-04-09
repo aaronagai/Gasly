@@ -239,27 +239,6 @@
       color: var(--input-ph);
       font-weight: 300;
     }
-    .topbar-wordmark{
-      flex-shrink: 0;
-      height: 40px;
-      padding: 0 14px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--glass-stroke);
-      background: var(--glass-fill);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      box-shadow:
-        0 1px 0 var(--glass-inset) inset,
-        0 0 0 0.5px var(--glass-keyline),
-        0 8px 28px var(--glass-shadow-outer),
-        0 2px 8px var(--glass-shadow-outer);
-      font-size: 0.8125rem;
-      color: var(--input-fg);
-      white-space: nowrap;
-    }
     .search-menu{
       position: absolute;
       top: calc(max(12px, env(safe-area-inset-top, 0px)) + 40px + 8px);
@@ -325,9 +304,6 @@
       border-bottom-left-radius: 36px;
       border-bottom-right-radius: 36px;
       background: linear-gradient(to bottom, transparent, var(--surface));
-      display: none;
-    }
-    .sheet.sheet-scrollable::after{
       display: block;
     }
     /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
@@ -409,7 +385,10 @@
       background: transparent;
     }
     .card .pad{ padding: 14px; }
-    #card-highlights .pad{ padding-top: 2px; }
+    #card-highlights .pad{
+      padding-top: 2px;
+      min-width: 0;
+    }
     /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
     .sheet-region-sticky{
       position: sticky;
@@ -428,6 +407,16 @@
     .sheet-region-sticky.sheet-region-sticky--raised{
       box-shadow: 0 6px 12px -8px var(--sticky-raised);
     }
+    /* Highlights: section label above date line */
+    .hi-highlight-kicker{
+      display: block;
+      margin: 0 0 6px;
+      font-family: var(--font);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
     /* Highlights: date line + export beside the text */
     .card-sub-row{
       display: flex;
@@ -438,6 +427,9 @@
       gap: 6px;
       min-width: 0;
       margin-top: 6px;
+    }
+    #card-highlights .card-sub-row{
+      margin-top: 0;
     }
     #card-highlights .card-sub-row .sub{
       margin-top: 0;
@@ -518,16 +510,23 @@
       font-size: 0.78rem;
     }
     .lines.hi-lines{
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+      display: grid;
+      /* All columns min 0 so the row always fits inside the sheet (scroll area uses overflow-x: hidden). */
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+      column-gap: 10px;
+      row-gap: 0;
+      align-items: baseline;
       margin-top: 14px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
     .hi-row{
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: subgrid;
+      grid-column: 1 / -1;
       align-items: baseline;
-      gap: 14px;
       padding: 11px 0;
       border-bottom: 1px solid var(--hairline);
       font-family: var(--font);
@@ -538,12 +537,68 @@
       font-weight: 600;
       letter-spacing: 0.04em;
       color: var(--hi-label);
+      min-width: 0;
     }
     .hi-v{
       font-weight: 750;
       font-variant-numeric: tabular-nums;
       color: var(--hi-value);
       text-align: right;
+      justify-self: stretch;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+    .hi-v--alone{
+      grid-column: 2 / span 2;
+      text-align: right;
+      justify-self: stretch;
+    }
+    .hi-delta{
+      font-size: 0.78em;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      color: var(--hi-delta, var(--muted));
+      white-space: nowrap;
+      text-align: right;
+      justify-self: stretch;
+      min-width: 0;
+    }
+    /* No subgrid: fixed-width price column so short values align with longer ones */
+    @supports not (grid-template-columns: subgrid) {
+      .lines.hi-lines{
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .hi-row{
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        grid-column: auto;
+        grid-template-columns: none;
+      }
+      .hi-k{
+        flex: 1;
+        min-width: 0;
+      }
+      .hi-v{
+        margin-left: auto;
+        flex: 1.25 1 0;
+        min-width: 0;
+        text-align: right;
+      }
+      .hi-v--alone{
+        margin-left: auto;
+        min-width: 0;
+        max-width: 100%;
+        flex: 1 1 auto;
+        grid-column: auto;
+      }
+      .hi-delta{
+        flex: 1 1 0;
+        min-width: 0;
+        text-align: right;
+      }
     }
     .kv .k{ opacity: 0.82; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.62rem; }
     .kv .v{ margin-top: 6px; font-weight: 850; font-family: var(--font); }

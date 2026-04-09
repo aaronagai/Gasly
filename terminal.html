@@ -223,19 +223,59 @@
       return (localStorage.getItem('currency') || 'local') === 'usd';
     }
     function fmtTerminalPerL(localSym, n, decimals = 2) {
-      if (!isFinite(n)) return '—';
+      if (!isFinite(n)) return 'Unavailable';
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
         return `USD ${(n * rate).toFixed(3)}/L`;
       }
-      return fmtPerL(localSym, n, decimals);
+      const s = fmtPerL(localSym, n, decimals);
+      return s === '—' ? 'Unavailable' : s;
     }
     function fmtIDR(v) {
-      if (!isFinite(v)) return '—';
+      if (!isFinite(v)) return 'Unavailable';
       if (isTerminalUsd()) {
         return `USD ${(v * USD_RATES.IDR).toFixed(4)}/L`;
       }
       return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
+    }
+
+    /** vs previous history row; '-' if unchanged / no comparison (ASCII hyphen). Respects USD toggle. */
+    function fmtTerminalDeltaPerL(localSym, currentVal, prevVal, decimals = 2) {
+      const cur = parseFloat(currentVal);
+      const prev = parseFloat(prevVal);
+      if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
+      const diff = cur - prev;
+      const rate = USD_RATES[localSym];
+      if (isTerminalUsd() && rate != null) {
+        const dUsd = diff * rate;
+        const mag = Math.abs(dUsd).toFixed(3);
+        if (dUsd > 0) return `+USD ${mag}`;
+        return `-USD ${mag}`;
+      }
+      const mag = Math.abs(diff).toFixed(decimals);
+      if (diff > 0) return `+${localSym} ${mag}`;
+      return `-${localSym} ${mag}`;
+    }
+
+    function fmtTerminalDeltaIDR(currentVal, prevVal) {
+      const cur = parseFloat(currentVal);
+      const prev = parseFloat(prevVal);
+      if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      const a = Math.round(cur);
+      const b = Math.round(prev);
+      if (a === b) return '-';
+      const diff = a - b;
+      const rate = USD_RATES.IDR;
+      if (isTerminalUsd() && rate != null) {
+        const dUsd = diff * rate;
+        const mag = Math.abs(dUsd).toFixed(4);
+        if (dUsd > 0) return `+USD ${mag}`;
+        return `-USD ${mag}`;
+      }
+      const abs = Math.abs(diff).toLocaleString('en-US');
+      if (diff > 0) return `+IDR ${abs}/L`;
+      return `-IDR ${abs}/L`;
     }
 
     function setRightPanel({ kicker, titleA, titleB, subtag, infoTitle, infoSub, infoLines }) {
@@ -290,13 +330,15 @@
           requestAnimationFrame(step);
         };
 
-        // Build (or reuse) rows keyed by label.
+        // Build (or reuse) rows keyed by label (.v inside .v-wrap when deltas are used).
         const existing = new Map();
-        lines.querySelectorAll('.kv').forEach(row => {
+        lines.querySelectorAll('.kv').forEach((row) => {
           const kEl = row.querySelector('.k');
-          const vEl = row.querySelector('.v');
           const key = kEl ? kEl.textContent : null;
-          if (key && vEl) existing.set(key, { row, vEl });
+          const wrap = row.querySelector('.v-wrap');
+          const vEl = wrap ? wrap.querySelector('.v') : row.querySelector('.v');
+          const dEl = wrap ? wrap.querySelector('.v-delta') : null;
+          if (key && vEl) existing.set(key, { row, wrap: wrap || null, vEl, dEl });
         });
 
         // Remove rows that no longer exist.
@@ -305,12 +347,27 @@
           if (!nextKeys.has(key)) row.remove();
         });
 
+        const ensureWrap = (row, vEl) => {
+          let wrap = row.querySelector('.v-wrap');
+          if (!wrap) {
+            wrap = document.createElement('span');
+            wrap.className = 'v-wrap';
+            vEl.replaceWith(wrap);
+            wrap.appendChild(vEl);
+          }
+          return wrap;
+        };
+
         // Upsert rows in order.
-        for (const [kRaw, vRaw] of infoLines) {
-          const k = String(kRaw);
-          const v = String(vRaw);
+        for (const item of infoLines) {
+          const k = String(item[0]);
+          const v = String(item[1]);
+          const d = item.length >= 3 ? String(item[2]) : '';
+
           let row = existing.get(k)?.row || null;
           let vEl = existing.get(k)?.vEl || null;
+          let dEl = existing.get(k)?.dEl || null;
+          let wrap = existing.get(k)?.wrap || null;
 
           if (!row || !vEl) {
             row = document.createElement('div');
@@ -318,26 +375,36 @@
             const kEl = document.createElement('span');
             kEl.className = 'k';
             kEl.textContent = k;
+            wrap = document.createElement('span');
+            wrap.className = 'v-wrap';
             vEl = document.createElement('span');
             vEl.className = 'v';
             const next = parseNumText(v);
             if (next) {
-              // Animate in on first render too (e.g. switching countries/cities).
               vEl.textContent = `${next.prefix}${fmt(0, next.dec)}${next.suffix}`;
               vEl.dataset.num = String(next.n);
-              // Start animation next frame so layout is stable.
               requestAnimationFrame(() => animateNumber(vEl, 0, next.n, next.dec, next.prefix, next.suffix));
             } else {
               vEl.textContent = v;
             }
+            wrap.appendChild(vEl);
+            if (item.length >= 3) {
+              dEl = document.createElement('span');
+              dEl.className = 'v-delta';
+              dEl.textContent = d;
+              wrap.appendChild(dEl);
+            }
             row.appendChild(kEl);
-            row.appendChild(vEl);
+            row.appendChild(wrap);
             lines.appendChild(row);
-            existing.set(k, { row, vEl });
+            existing.set(k, { row, wrap, vEl, dEl: dEl || null });
             continue;
           }
 
-          // Update value with optional counting animation.
+          wrap = wrap || ensureWrap(row, vEl);
+          vEl = wrap.querySelector('.v') || vEl;
+          dEl = wrap.querySelector('.v-delta');
+
           const prev = parseNumText(vEl.textContent);
           const next = parseNumText(v);
           if (prev && next && prev.n !== next.n && prev.prefix === next.prefix && prev.suffix === next.suffix) {
@@ -349,6 +416,20 @@
             if (Number.isFinite(n)) vEl.dataset.num = String(n);
             else delete vEl.dataset.num;
           }
+
+          if (item.length >= 3) {
+            if (!dEl) {
+              dEl = document.createElement('span');
+              dEl.className = 'v-delta';
+              wrap.appendChild(dEl);
+            }
+            dEl.textContent = d;
+          } else if (dEl) {
+            dEl.remove();
+            dEl = null;
+          }
+
+          existing.set(k, { row, wrap, vEl, dEl });
         }
       }
     }
@@ -525,6 +606,7 @@
         setPagerIndex(360, idx);
 
         const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
         const sliceRows = takeLastN(seriesAsc, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const datasets = buildChartSeries(sliceRows, ID_FUELS, labels);
@@ -535,7 +617,11 @@
           subtag: legendHtml(datasets),
           infoTitle: city,
           infoSub: `As of ${fmtDate(rSel.date)} · Indonesia`,
-          infoLines: ID_FUELS.map((f) => [f.label, fmtIDR(parseFloat(rSel[f.key]))]),
+          infoLines: ID_FUELS.map((f) => [
+            f.label,
+            fmtIDR(parseFloat(rSel[f.key])),
+            fmtTerminalDeltaIDR(rSel[f.key], rPrev ? rPrev[f.key] : NaN),
+          ]),
         });
         const idChartMode = isTerminalUsd() ? 'usd' : 'local';
         const idChartKey = `${city}|${idChartMode}`;
@@ -562,6 +648,7 @@
         MY_INDEX = Math.max(0, Math.min(seriesAsc.length - 1, MY_INDEX));
 
         const rSel = seriesAsc[MY_INDEX] || {};
+        const rPrev = MY_INDEX > 0 ? seriesAsc[MY_INDEX - 1] : null;
         // Keep the chart stable (always show the latest window),
         // while the pager changes only the selected-week details.
         const slice = takeLastN(seriesAsc, 13);
@@ -589,10 +676,10 @@
           infoTitle: `${(MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION}`,
           infoSub: `As of ${fmtDate(rSel.date)} · Malaysia`,
           infoLines: [
-            ['BUDI95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95_budi95), 2)],
-            ['RON95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95), 2)],
-            ['RON97', fmtTerminalPerL('MYR', parseFloat(rSel.ron97), 2)],
-            [dieselLabel, fmtTerminalPerL('MYR', parseFloat(rSel[dieselKey]), 2)],
+            ['BUDI95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95_budi95), 2), fmtTerminalDeltaPerL('MYR', rSel.ron95_budi95, rPrev?.ron95_budi95, 2)],
+            ['RON95', fmtTerminalPerL('MYR', parseFloat(rSel.ron95), 2), fmtTerminalDeltaPerL('MYR', rSel.ron95, rPrev?.ron95, 2)],
+            ['RON97', fmtTerminalPerL('MYR', parseFloat(rSel.ron97), 2), fmtTerminalDeltaPerL('MYR', rSel.ron97, rPrev?.ron97, 2)],
+            [dieselLabel, fmtTerminalPerL('MYR', parseFloat(rSel[dieselKey]), 2), fmtTerminalDeltaPerL('MYR', rSel[dieselKey], rPrev?.[dieselKey], 2)],
           ],
         });
         // Don't re-render the chart on pager clicks; keep it visually still (still refresh on currency / diesel key).
@@ -624,6 +711,7 @@
         setPagerIndex(702, idx);
 
         const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
         const provider = resolveSingaporeProviderSelection(_sgAllRows || []) || 'Singapore';
         const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
@@ -632,7 +720,6 @@
           { key: 'ron92', label: 'RON92' },
           { key: 'ron95', label: 'RON95' },
           { key: 'ron98', label: 'RON98' },
-          { key: 'premium', label: 'Premium' },
           { key: 'diesel', label: 'Diesel' },
         ];
         const datasets = buildChartSeries(sliceRows, keys, labels);
@@ -644,11 +731,10 @@
           infoTitle: provider,
           infoSub: `As of ${fmtDate(rSel.date)} · Singapore`,
           infoLines: [
-            ['RON92', fmtTerminalPerL('SGD', parseFloat(rSel.ron92), 2)],
-            ['RON95', fmtTerminalPerL('SGD', parseFloat(rSel.ron95), 2)],
-            ['RON98', fmtTerminalPerL('SGD', parseFloat(rSel.ron98), 2)],
-            ['Premium', fmtTerminalPerL('SGD', parseFloat(rSel.premium), 2)],
-            ['Diesel', fmtTerminalPerL('SGD', parseFloat(rSel.diesel), 2)],
+            ['RON92', fmtTerminalPerL('SGD', parseFloat(rSel.ron92), 2), fmtTerminalDeltaPerL('SGD', rSel.ron92, rPrev?.ron92, 2)],
+            ['RON95', fmtTerminalPerL('SGD', parseFloat(rSel.ron95), 2), fmtTerminalDeltaPerL('SGD', rSel.ron95, rPrev?.ron95, 2)],
+            ['RON98', fmtTerminalPerL('SGD', parseFloat(rSel.ron98), 2), fmtTerminalDeltaPerL('SGD', rSel.ron98, rPrev?.ron98, 2)],
+            ['Diesel', fmtTerminalPerL('SGD', parseFloat(rSel.diesel), 2), fmtTerminalDeltaPerL('SGD', rSel.diesel, rPrev?.diesel, 2)],
           ],
         });
         const sgChartMode = isTerminalUsd() ? 'usd' : 'local';
@@ -678,6 +764,7 @@
         setPagerIndex(96, idx);
 
         const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
         const slice = takeLastN(seriesAsc, 13);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
@@ -696,10 +783,10 @@
           infoTitle: 'Brunei',
           infoSub: `As of ${fmtDate(rSel.date)} · Brunei`,
           infoLines: [
-            ['Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2)],
-            ['Diesel', fmtTerminalPerL('BND', parseFloat(rSel.diesel), 2)],
-            ['V-Power Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.vpower_gasoline), 2)],
-            ['V-Power Diesel', fmtTerminalPerL('BND', parseFloat(rSel.vpower_diesel), 2)],
+            ['Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Diesel', fmtTerminalPerL('BND', parseFloat(rSel.diesel), 2), fmtTerminalDeltaPerL('BND', rSel.diesel, rPrev?.diesel, 2)],
+            ['V-Power Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.vpower_gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
+            ['V-Power Diesel', fmtTerminalPerL('BND', parseFloat(rSel.vpower_diesel), 2), fmtTerminalDeltaPerL('BND', rSel.vpower_diesel, rPrev?.vpower_diesel, 2)],
           ],
         });
         renderRightChart({

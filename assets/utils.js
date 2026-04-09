@@ -164,7 +164,7 @@ function aggregateSingaporeProviderRows(rows) {
     const v = nums.reduce((a, b) => a + b, 0) / nums.length;
     return (Math.round(v * 1000) / 1000).toString();
   }
-  const keys = ['ron92', 'ron95', 'ron98', 'premium', 'diesel'];
+  const keys = ['ron92', 'ron95', 'ron98', 'diesel'];
   const out = [];
   for (const [date, group] of byDate) {
     const row = { date };

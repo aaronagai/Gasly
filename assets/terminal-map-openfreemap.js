@@ -74,7 +74,7 @@
       pitchWithRotate: false,
       touchPitch: false,
       cooperativeGestures: false,
-      attributionControl: true,
+      attributionControl: false,
     });
 
     if (map.keyboard && typeof map.keyboard.disable === 'function') {

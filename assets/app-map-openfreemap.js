@@ -72,7 +72,7 @@
       pitchWithRotate: false,
       touchPitch: false,
       cooperativeGestures: false,
-      attributionControl: true,
+      attributionControl: false,
     });
 
     if (map.keyboard && typeof map.keyboard.disable === 'function') {
@@ -265,9 +265,24 @@
             },
           });
 
+          /** Shift camera target upward so framed area sits above the bottom sheet, not behind it. */
+          function appMapFocusOffset() {
+            const h = map.getContainer().clientHeight;
+            if (!h) return [0, 0];
+            return [0, -Math.round(h * 0.24)];
+          }
+
+          function appMapFitBoundsPadding() {
+            const h = map.getContainer().clientHeight;
+            const side = 72;
+            const bottomExtra = h ? Math.round(h * 0.22) : 120;
+            return { top: side, right: side, bottom: side + bottomExtra, left: side };
+          }
+
           window.APP_ZOOM_TO = function zoomToCountry(countryId, animate) {
             const id = +countryId;
             const dur = animate ? 480 : 0;
+            const off = appMapFocusOffset();
             const f = byNid[id];
             if (id === 360) {
               let city = 'Jakarta Pusat';
@@ -276,7 +291,7 @@
               } catch (_) {}
               const ll = o.ID_CITY_LONLAT[city];
               const c = ll && Number.isFinite(ll[0]) ? [ll[0], ll[1]] : [118, -2.5];
-              map.easeTo({ center: c, zoom: 5.15, duration: dur });
+              map.easeTo({ center: c, zoom: 4.75, duration: dur, offset: off });
               return;
             }
             if (id === 458) {
@@ -286,21 +301,21 @@
                 region = k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
               } catch (_) {}
               const c = region === 'SabahSarawak' ? [115, 4] : [102, 4];
-              map.easeTo({ center: c, zoom: 5.5, duration: dur });
+              map.easeTo({ center: c, zoom: 4.9, duration: dur, offset: off });
               return;
             }
             if (id === 702) {
-              map.easeTo({ center: [103.82, 1.35], zoom: 10.8, duration: dur });
+              map.easeTo({ center: [103.82, 1.35], zoom: 10.2, duration: dur, offset: off });
               return;
             }
             if (id === 96) {
-              map.easeTo({ center: [114.65, 4.55], zoom: 7.8, duration: dur });
+              map.easeTo({ center: [114.65, 4.55], zoom: 7.25, duration: dur, offset: off });
               return;
             }
             if (f && f.geometry) {
               const bb = boundsFromGeometry(f.geometry);
               if (bb) {
-                map.fitBounds(bb, { padding: 52, duration: dur, maxZoom: 7.2 });
+                map.fitBounds(bb, { padding: appMapFitBoundsPadding(), duration: dur, maxZoom: 6.65 });
               }
             }
           };
