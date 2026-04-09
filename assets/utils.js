@@ -378,6 +378,31 @@ async function ensureMalaysiaRows() {
 
 const _sheetCache = new Map();
 
+/**
+ * Turn off basemap text (place names, roads, water labels, route shields).
+ * Symbol layers without text-field (e.g. one-way arrows) stay visible.
+ * Works with OpenFreeMap Positron, Dark, and similar OpenMapTiles styles.
+ */
+function suppressOpenFreeMapTextLabels(map) {
+  if (!map || typeof map.getStyle !== 'function') return;
+  let layers;
+  try {
+    layers = map.getStyle().layers;
+  } catch (_) {
+    return;
+  }
+  if (!layers || !layers.length) return;
+  for (let i = 0; i < layers.length; i++) {
+    const def = layers[i];
+    if (!def || def.type !== 'symbol') continue;
+    const tf = def.layout && def.layout['text-field'];
+    if (tf == null || tf === '') continue;
+    try {
+      if (map.getLayer(def.id)) map.setLayoutProperty(def.id, 'visibility', 'none');
+    } catch (_) {}
+  }
+}
+
 /** Fetch and cache a CSV Google Sheet by URL. */
 async function ensureSheetRows(url) {
   if (_sheetCache.has(url)) return _sheetCache.get(url);

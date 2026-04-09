@@ -215,6 +215,7 @@
       }
 
       map.on('load', () => {
+        suppressOpenFreeMapTextLabels(map);
         map.addSource('countries', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features },

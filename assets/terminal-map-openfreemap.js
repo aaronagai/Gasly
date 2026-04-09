@@ -140,6 +140,7 @@
     }
 
     map.on('load', () => {
+      suppressOpenFreeMapTextLabels(map);
       Promise.all([
         fetch('./assets/countries-110m.json').then((r) => r.json()),
         fetch('./assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
