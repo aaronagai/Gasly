@@ -464,17 +464,12 @@
       padding-right: max(18px, env(safe-area-inset-right, 0px));
       min-width: 0;
     }
-    /* Sticky headline: direct child of sheet-scroll so it stays for the whole sheet scroll */
+    /* Region headline: direct flex child of .sheet (above sheet-scroll) so content never scrolls behind it */
     .sheet-region-sticky{
-      position: sticky;
-      top: 0;
-      z-index: 6;
       flex-shrink: 0;
-      margin: 0 -4px 0 -12px;
+      z-index: 6;
       padding: 0 14px 8px 26px;
-      /* Use the sheet frost fill so scrolled content is hidden behind the sticky header.
-         No backdrop-filter here — .sheet already frosts; adding it caused a peach-band on the map. */
-      background: var(--sheet-frost-fill);
+      background: transparent;
       box-shadow: none;
       transition: box-shadow 0.2s ease;
     }
