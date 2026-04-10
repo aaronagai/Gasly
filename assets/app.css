@@ -8,7 +8,10 @@
       --shadow: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
       --surface: #ffffff;
-      --sticky-bg: #ffffff;
+      /* Pull-up sheet only — same as terminal .left overview glass */
+      --sheet-frost-fill: rgba(255, 255, 255, 0.22);
+      --sheet-frost-stroke: rgba(255, 255, 255, 0.62);
+      --sheet-frost-blur: 44px;
       --glass-stroke: rgba(255, 255, 255, 0.55);
       --glass-fill: rgba(255, 255, 255, 0.38);
       --glass-fill-menu: rgba(255, 255, 255, 0.52);
@@ -59,7 +62,8 @@
         --line: rgba(255, 255, 255, 0.12);
         --shadow: 0 24px 56px rgba(0, 0, 0, 0.55);
         --surface: #1a1a1a;
-        --sticky-bg: #1a1a1a;
+        --sheet-frost-fill: rgba(32, 32, 32, 0.48);
+        --sheet-frost-stroke: rgba(255, 255, 255, 0.18);
         --glass-stroke: rgba(255, 255, 255, 0.12);
         --glass-fill: rgba(42, 42, 42, 0.78);
         --glass-fill-menu: rgba(42, 42, 42, 0.94);
@@ -184,15 +188,11 @@
       gap: 8px;
       padding: 0 14px;
       border-radius: 999px;
-      border: 1px solid var(--glass-stroke);
-      background: var(--glass-fill);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      box-shadow:
-        0 1px 0 var(--glass-inset) inset,
-        0 0 0 0.5px var(--glass-keyline),
-        0 8px 28px var(--glass-shadow-outer),
-        0 2px 8px var(--glass-shadow-outer);
+      border: 1px solid var(--sheet-frost-stroke);
+      background: var(--sheet-frost-fill);
+      backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      box-shadow: var(--shadow);
     }
     .search svg{
       width: 15px;
@@ -357,8 +357,10 @@
       display: flex;
       flex-direction: column;
       border-radius: 26px 26px 36px 36px;
-      border: none;
-      background: var(--surface);
+      border: 1px solid var(--sheet-frost-stroke);
+      background: var(--sheet-frost-fill);
+      backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
       box-shadow: var(--shadow);
       overflow: hidden;
     }
@@ -374,7 +376,7 @@
       z-index: 2;
       border-bottom-left-radius: 36px;
       border-bottom-right-radius: 36px;
-      background: linear-gradient(to bottom, transparent, var(--surface));
+      background: linear-gradient(to bottom, transparent, var(--sheet-frost-fill));
       display: block;
     }
     /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
@@ -470,7 +472,8 @@
       flex-shrink: 0;
       margin: 0 -4px 0 -12px;
       padding: 0 14px 8px 26px;
-      background: var(--sticky-bg);
+      /* Transparent only: own backdrop-filter + saturate() tinted the map (peach band). .sheet already frosts. */
+      background: transparent;
       box-shadow: none;
       transition: box-shadow 0.2s ease;
     }

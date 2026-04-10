@@ -76,6 +76,9 @@
     if (map.keyboard && typeof map.keyboard.disable === 'function') {
       map.keyboard.disable();
     }
+    if (map.touchZoomRotate && typeof map.touchZoomRotate.disableRotation === 'function') {
+      map.touchZoomRotate.disableRotation();
+    }
 
     window.__appOfmMap = map;
 

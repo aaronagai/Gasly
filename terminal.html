@@ -434,7 +434,7 @@
     }
 
     // Right-panel chart
-    function chartThemeOptions() {
+    function chartThemeOptions(countryId) {
       const tick = cssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
       return {
         tooltip: {
@@ -453,7 +453,15 @@
           },
           y: {
             grid: { color: cssVar('--term-chart-grid', 'rgba(0,0,0,0.06)') },
-            ticks: { color: tick, font: { family: 'Inter', size: 11 } },
+            ticks: {
+              color: tick,
+              font: { family: 'Inter', size: 11 },
+              callback(v) {
+                if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
+                const n = Number(v);
+                return Number.isFinite(n) ? String(parseFloat(n.toFixed(6))) : v;
+              },
+            },
           },
         },
       };
@@ -461,7 +469,7 @@
 
     function applyChartTheme(chart) {
       if (!chart?.options?.plugins?.tooltip || !chart?.options?.scales) return;
-      const t = chartThemeOptions();
+      const t = chartThemeOptions(RIGHT_CHART_COUNTRY);
       Object.assign(chart.options.plugins.tooltip, t.tooltip);
       chart.options.scales.x.grid = { ...chart.options.scales.x.grid, ...t.scales.x.grid };
       chart.options.scales.x.ticks = { ...chart.options.scales.x.ticks, ...t.scales.x.ticks };
@@ -545,7 +553,7 @@
       }
 
       destroyRightChart();
-      const themeChart = chartThemeOptions();
+      const themeChart = chartThemeOptions(countryId);
       RIGHT_CHART = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: nextDs },
