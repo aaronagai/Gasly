@@ -217,10 +217,17 @@ function parseCSV(text, options = {}) {
     .filter((obj) => Object.values(obj).some((v) => v != null && String(v).trim() !== ''));
 }
 
-/** Parse a date cell to UTC milliseconds. Handles ISO YYYY-MM-DD, D/M/Y, and Date.parse fallback. */
+/** Parse a date cell to UTC milliseconds. Handles ISO YYYY-MM-DD, D/M/Y, Sheets serial days, and Date.parse fallback. */
 function parseRowDateMs(v) {
   if (v == null || v === '') return NaN;
   const s = String(v).trim();
+  // Google Sheets CSV often exports dates as serial day counts from 1899-12-30 (UTC).
+  if (/^\d{5}(\.\d+)?$/.test(s)) {
+    const n = parseFloat(s);
+    if (n >= 35000 && n <= 65000) {
+      return Date.UTC(1899, 11, 30) + Math.floor(n) * 86400000;
+    }
+  }
   const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return Date.UTC(+iso[1], +iso[2] - 1, +iso[3]);
   const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:\s|$)/);
@@ -241,6 +248,50 @@ function sortRowsByDate(rows) {
     if (Number.isFinite(tb)) return 1;
     return String(a.date).localeCompare(String(b.date));
   });
+}
+
+/**
+ * Pick the highlight row with the latest parseable date (tie: last in array).
+ * Prev is the nearest row with a strictly older date for week-on-week deltas.
+ */
+function selectLatestHighlightRow(sortedAsc) {
+  const rows = sortedAsc || [];
+  if (!rows.length) return { row: {}, prev: null };
+
+  let bestMs = -Infinity;
+  let bestI = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const t = parseRowDateMs(rows[i].date);
+    if (Number.isFinite(t) && t >= bestMs) {
+      bestMs = t;
+      bestI = i;
+    }
+  }
+  if (bestI < 0) {
+    const row = rows[rows.length - 1] || {};
+    return { row, prev: rows.length >= 2 ? rows[rows.length - 2] : null };
+  }
+
+  const row = rows[bestI];
+  let prev = null;
+  for (let j = bestI - 1; j >= 0; j--) {
+    const t = parseRowDateMs(rows[j].date);
+    if (Number.isFinite(t) && t < bestMs) {
+      prev = rows[j];
+      break;
+    }
+  }
+  return { row, prev };
+}
+
+/** Format a row's date for UI; uses parsed instant so Sheets serials match the sheet. */
+function fmtDateFromRow(r) {
+  if (!r || r.date == null || String(r.date).trim() === '') return '—';
+  const t = parseRowDateMs(r.date);
+  if (Number.isFinite(t)) {
+    return new Date(t).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  return fmtDate(r.date);
 }
 
 function fmtDate(d) {
@@ -336,6 +387,33 @@ function takeLastN(arr, n) {
   return arr.slice(Math.max(0, arr.length - n));
 }
 
+/**
+ * From date-sorted ascending rows, keep rows whose date falls within the lookback window
+ * ending at the newest row (see CHART_HISTORY_LOOKBACK_DAYS in config.js, default 90 days).
+ */
+function rowsForPriceChart(sortedAsc) {
+  const rows = sortedAsc || [];
+  if (!rows.length) return [];
+  const days =
+    typeof CHART_HISTORY_LOOKBACK_DAYS === 'number' && CHART_HISTORY_LOOKBACK_DAYS > 0
+      ? CHART_HISTORY_LOOKBACK_DAYS
+      : 90;
+  let endMs = NaN;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const t = parseRowDateMs(rows[i].date);
+    if (Number.isFinite(t)) {
+      endMs = t;
+      break;
+    }
+  }
+  if (!Number.isFinite(endMs)) return rows;
+  const startMs = endMs - days * 86400000;
+  return rows.filter((r) => {
+    const t = parseRowDateMs(r.date);
+    return Number.isFinite(t) && t >= startMs;
+  });
+}
+
 /** Parse a value as a finite number, or return null. */
 function asNum(v) {
   const n = parseFloat(v);
@@ -377,6 +455,8 @@ async function ensureMalaysiaRows() {
 }
 
 const _sheetCache = new Map();
+/** In-memory sheet cache TTL so highlights can pick up newer Google Sheet rows without a full reload. */
+const SHEET_CACHE_TTL_MS = 30 * 1000;
 
 /**
  * Country / state (region) label layers to keep visible when suppressing other map text.
@@ -392,12 +472,16 @@ function openFreeMapKeepCountryRegionLabelLayer(layerId) {
 }
 
 /**
- * Turn off basemap text (roads, water labels, cities, route shields) but keep country + region names.
+ * Turn off basemap text (roads, water labels, cities, route shields).
+ * By default keeps country + admin-region names; set `hideCountryRegionLabels: true` to hide those too
+ * (e.g. index hero map).
  * Symbol layers without text-field (e.g. one-way arrows) stay visible.
  * Works with OpenFreeMap Positron, Dark fork, and similar OpenMapTiles styles.
  */
-function suppressOpenFreeMapTextLabels(map) {
+function suppressOpenFreeMapTextLabels(map, options) {
   if (!map || typeof map.getStyle !== 'function') return;
+  const hideCountryRegion =
+    options && typeof options === 'object' && options.hideCountryRegionLabels === true;
   let layers;
   try {
     layers = map.getStyle().layers;
@@ -410,7 +494,7 @@ function suppressOpenFreeMapTextLabels(map) {
     if (!def || def.type !== 'symbol') continue;
     const tf = def.layout && def.layout['text-field'];
     if (tf == null || tf === '') continue;
-    if (openFreeMapKeepCountryRegionLabelLayer(def.id)) continue;
+    if (!hideCountryRegion && openFreeMapKeepCountryRegionLabelLayer(def.id)) continue;
     try {
       if (map.getLayer(def.id)) map.setLayoutProperty(def.id, 'visibility', 'none');
     } catch (_) {}
@@ -555,7 +639,9 @@ function applyOpenFreeMapOrangeLand(map) {
 
 /** Fetch and cache a CSV Google Sheet by URL. */
 async function ensureSheetRows(url) {
-  if (_sheetCache.has(url)) return _sheetCache.get(url);
+  const now = Date.now();
+  const hit = _sheetCache.get(url);
+  if (hit && now - hit.t < SHEET_CACHE_TTL_MS) return hit.rows;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Sheet fetch ${res.status}`);
   const headerIdx =
@@ -567,6 +653,6 @@ async function ensureSheetRows(url) {
     const norm = normalizeSingaporeSheetRows(rows);
     rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
   }
-  _sheetCache.set(url, rows);
+  _sheetCache.set(url, { rows, t: now });
   return rows;
 }

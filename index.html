@@ -190,7 +190,7 @@
       }
 
       map.on('load', () => {
-        suppressOpenFreeMapTextLabels(map);
+        suppressOpenFreeMapTextLabels(map, { hideCountryRegionLabels: true });
         includeOpenFreeMapMaritimeBoundaries(map);
         applyOpenFreeMapOrangeLand(map);
         map.addSource('countries', {

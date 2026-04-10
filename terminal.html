@@ -131,7 +131,7 @@
 
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
     // Per-country selected index for the highlights pager (all non-Malaysia).
@@ -606,7 +606,7 @@
 
         const rSel = seriesAsc[idx] || {};
         const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
-        const sliceRows = takeLastN(seriesAsc, 13).map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const datasets = buildChartSeries(sliceRows, ID_FUELS, labels);
         setRightPanel({
@@ -650,7 +650,7 @@
         const rPrev = MY_INDEX > 0 ? seriesAsc[MY_INDEX - 1] : null;
         // Keep the chart stable (always show the latest window),
         // while the pager changes only the selected-week details.
-        const slice = takeLastN(seriesAsc, 13);
+        const slice = rowsForPriceChart(seriesAsc);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const isEast = myIsEastMalaysia(MY_REGION);
@@ -714,7 +714,7 @@
         const rSel = seriesAsc[idx] || {};
         const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
         const provider = resolveSingaporeProviderSelection(_sgAllRows || []) || 'Singapore';
-        const slice = takeLastN(seriesAsc, 13);
+        const slice = rowsForPriceChart(seriesAsc);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
@@ -766,7 +766,7 @@
 
         const rSel = seriesAsc[idx] || {};
         const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
-        const slice = takeLastN(seriesAsc, 13);
+        const slice = rowsForPriceChart(seriesAsc);
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [

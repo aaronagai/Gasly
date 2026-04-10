@@ -39,8 +39,13 @@
         </svg>
         <input id="country-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
       </div>
+      <a href="index.html" class="topbar-home" aria-label="Back to home">
+        <img src="assets/appicon.png" alt="" width="44" height="44" decoding="async" />
+      </a>
     </div>
     <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
+
+    <div id="sg-provider-menu" class="sg-provider-menu" role="listbox" aria-label="Singapore petrol provider" aria-hidden="true"></div>
 
     <div class="sheet" id="sheet" aria-label="Details sheet">
       <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
@@ -122,7 +127,7 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
     const MAP_COUNTRY_NAMES = {
@@ -135,7 +140,8 @@
 
     let selected = 458;
     let RIGHT_CHART = null;
-    let APP_ZOOM_TO = null;
+    /** Latest Singapore sheet rows (for provider picker). */
+    let _appSgSheetRows = null;
 
     /** Search suggestions: MY regions from config, live SG providers from sheet, BN, ID cities (matches terminal data model). */
     async function buildSearchRegionsList() {
@@ -235,8 +241,6 @@
     }
 
     // Data fetch helpers — ensureMalaysiaRows / ensureSheetRows come from utils.js
-
-    const APP_CHART_POINTS = 30;
 
     function chartOptions(countryId) {
       const legendColor = cssVar('--chart-legend', 'rgba(0,0,0,0.48)');
@@ -359,11 +363,26 @@
       renderHiRows([['Prices', 'Loading…']]);
     }
 
+    function resetHiTitleInteractivity() {
+      const titleEl = document.getElementById('hi-title');
+      if (!titleEl) return;
+      titleEl.classList.remove('switchable');
+      titleEl.removeAttribute('role');
+      titleEl.removeAttribute('tabindex');
+      titleEl.removeAttribute('aria-haspopup');
+      titleEl.removeAttribute('aria-expanded');
+      titleEl.removeAttribute('aria-controls');
+    }
+
     async function refreshHighlights(cid) {
       const titleEl = document.getElementById('hi-title');
       const subEl = document.getElementById('hi-sub');
       const chartKicker = document.getElementById('chart-kicker');
       const cname = COUNTRIES[cid]?.name || '—';
+      resetHiTitleInteractivity();
+      try {
+        window.__appCloseSgProviderMenu?.();
+      } catch (_) {}
       setHiLoading();
 
       function emptyChart() {
@@ -378,14 +397,13 @@
         if (cid === 458) {
           const rows = await ensureMalaysiaRows();
           const seriesAsc = sortRowsByDate(rows);
-          const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
           const regionKey = getMalaysiaRegion();
           const isEast = regionKey === 'SabahSarawak';
           const dieselKey = isEast ? 'diesel_eastmsia' : 'diesel';
           const dieselLabel = isEast ? 'Diesel (East MY)' : 'Diesel';
           titleEl.textContent = isEast ? 'East Malaysia' : 'Semenanjung';
-          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           renderHiRows([
             ['BUDI95', fmtHiPerL('MYR', rSel.ron95_budi95, 2), fmtDeltaPerL('MYR', rSel.ron95_budi95, rPrev?.ron95_budi95, 2)],
             ['RON95', fmtHiPerL('MYR', rSel.ron95, 2), fmtDeltaPerL('MYR', rSel.ron95, rPrev?.ron95, 2)],
@@ -394,7 +412,7 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron95_budi95', label: 'BUDI95', color: '#9333ea' },
@@ -414,6 +432,7 @@
 
         if (cid === 702) {
           const rows = await ensureSheetRows(SG_SHEET_URL);
+          _appSgSheetRows = rows;
           const hasProviders = sortedSingaporeProviders(rows).length > 0;
           const prov = hasProviders ? resolveSingaporeProviderSelection(rows) : '';
           if (prov) {
@@ -424,10 +443,17 @@
               ? rows.filter((r) => normalizeSheetString(r.provider) === normalizeSheetString(prov))
               : rows,
           );
-          const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
           titleEl.textContent = hasProviders ? prov : 'National';
-          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
+          if (hasProviders) {
+            titleEl.classList.add('switchable');
+            titleEl.setAttribute('role', 'button');
+            titleEl.setAttribute('tabindex', '0');
+            titleEl.setAttribute('aria-haspopup', 'listbox');
+            titleEl.setAttribute('aria-expanded', 'false');
+            titleEl.setAttribute('aria-controls', 'sg-provider-menu');
+          }
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           renderHiRows([
             ['RON92', fmtHiPerL('SGD', rSel.ron92, 2), fmtDeltaPerL('SGD', rSel.ron92, rPrev?.ron92, 2)],
             ['RON95', fmtHiPerL('SGD', rSel.ron95, 2), fmtDeltaPerL('SGD', rSel.ron95, rPrev?.ron95, 2)],
@@ -436,7 +462,7 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'ron92', label: 'RON92' },
@@ -457,10 +483,9 @@
         if (cid === 96) {
           const rows = await ensureSheetRows(BN_SHEET_URL);
           const seriesAsc = sortRowsByDate(rows);
-          const rSel = seriesAsc[seriesAsc.length - 1] || {};
-          const rPrev = seriesAsc.length >= 2 ? seriesAsc[seriesAsc.length - 2] : null;
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
           titleEl.textContent = cname;
-          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           renderHiRows([
             ['Gasoline', fmtHiPerL('BND', rSel.gasoline, 2), fmtDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
             ['Diesel', fmtHiPerL('BND', rSel.diesel, 2), fmtDeltaPerL('BND', rSel.diesel, rPrev?.diesel, 2)],
@@ -469,7 +494,7 @@
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastN(seriesAsc, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
             { key: 'gasoline', label: 'Gasoline' },
@@ -494,10 +519,9 @@
           const cityRows = sortRowsByDate(
             rows.filter((r) => normalizeSheetString(r.city) === cityNorm),
           );
-          const rSel = cityRows[cityRows.length - 1] || {};
-          const rPrev = cityRows.length >= 2 ? cityRows[cityRows.length - 2] : null;
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(cityRows);
           titleEl.textContent = city;
-          subEl.textContent = `As of ${fmtDate(rSel.date)} · ${cname}`;
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           const pairs = ID_FUELS.map((f) => [
             f.label,
             fmtHiIDR(rSel[f.key]),
@@ -506,7 +530,7 @@
           renderHiRows(pairs.length ? pairs : [['Data', 'No rows for this city']]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
 
-          const sliceRows = takeLastN(cityRows, APP_CHART_POINTS).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const sliceRows = rowsForPriceChart(cityRows).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = ID_FUELS.map(f => ({ key: f.key, label: f.label }));
           if (labels.length) {
@@ -558,7 +582,7 @@
       document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
       renderCountryOverview(cid);
       refreshHighlights(cid);
-      if (typeof APP_ZOOM_TO === 'function') APP_ZOOM_TO(cid, true);
+      if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(cid, true);
       if (typeof window.__appMapApplySelection === 'function') {
         try { window.__appMapApplySelection(); } catch (_) {}
       }
@@ -680,6 +704,144 @@
       window.visualViewport?.addEventListener('resize', onViewportResize);
     }
 
+    function initSingaporeProviderMenu() {
+      const menu = document.getElementById('sg-provider-menu');
+      const sticky = document.getElementById('sheet-region-sticky');
+      const scroller = document.getElementById('sheet-scroll');
+      if (!menu) return;
+
+      let open = false;
+
+      function titleEl() {
+        return document.getElementById('hi-title');
+      }
+
+      function closeMenu() {
+        if (!open) return;
+        open = false;
+        menu.classList.remove('open');
+        menu.setAttribute('aria-hidden', 'true');
+        const t = titleEl();
+        if (t) t.setAttribute('aria-expanded', 'false');
+      }
+
+      function positionMenu() {
+        const t = titleEl();
+        if (!t) return;
+        const r = t.getBoundingClientRect();
+        const pad = 12;
+        const maxW = window.innerWidth - pad * 2;
+        const w = Math.min(maxW, Math.max(220, r.width + 80));
+        let left = Math.max(pad, Math.min(r.left, window.innerWidth - pad - w));
+        let top = r.bottom + 8;
+        menu.style.width = `${w}px`;
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+        requestAnimationFrame(() => {
+          const mh = menu.getBoundingClientRect().height;
+          if (top + mh > window.innerHeight - pad) {
+            const above = r.top - 8 - mh;
+            if (above >= pad) menu.style.top = `${above}px`;
+          }
+        });
+      }
+
+      function renderMenu() {
+        const rows = _appSgSheetRows;
+        const providers = sortedSingaporeProviders(rows || []);
+        const cur =
+          rows && rows.length ? resolveSingaporeProviderSelection(rows) : '';
+        const curN = normalizeSheetString(cur);
+        menu.innerHTML = '';
+        providers.forEach((p) => {
+          const div = document.createElement('div');
+          div.className = 'sg-provider-item';
+          if (normalizeSheetString(p) === curN) div.classList.add('active');
+          div.setAttribute('role', 'option');
+          div.setAttribute('aria-selected', normalizeSheetString(p) === curN ? 'true' : 'false');
+          div.dataset.provider = p;
+          div.textContent = p;
+          div.addEventListener('click', () => {
+            try {
+              localStorage.setItem('terminal_sg_provider', p);
+            } catch (_) {}
+            closeMenu();
+            if (selected === 702) refreshHighlights(702).catch(() => {});
+          });
+          menu.appendChild(div);
+        });
+      }
+
+      function openMenu() {
+        if (selected !== 702) return;
+        if (!sortedSingaporeProviders(_appSgSheetRows || []).length) return;
+        open = true;
+        renderMenu();
+        menu.setAttribute('aria-hidden', 'false');
+        menu.classList.add('open');
+        positionMenu();
+        const t = titleEl();
+        if (t) t.setAttribute('aria-expanded', 'true');
+      }
+
+      function toggleMenu() {
+        if (open) closeMenu();
+        else openMenu();
+      }
+
+      sticky?.addEventListener('click', (e) => {
+        const t = titleEl();
+        if (!t?.classList.contains('switchable') || selected !== 702) return;
+        if (!t.contains(e.target)) return;
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      sticky?.addEventListener(
+        'keydown',
+        (e) => {
+          const t = titleEl();
+          if (!t?.classList.contains('switchable') || selected !== 702) return;
+          if (!t.contains(e.target)) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleMenu();
+          }
+        },
+        true,
+      );
+
+      document.addEventListener(
+        'pointerdown',
+        (e) => {
+          if (!open) return;
+          const t = titleEl();
+          if (t?.contains(e.target)) return;
+          if (menu.contains(e.target)) return;
+          closeMenu();
+        },
+        true,
+      );
+
+      document.addEventListener('keydown', (e) => {
+        if (open && e.key === 'Escape') closeMenu();
+      });
+
+      window.addEventListener('resize', () => {
+        if (open) positionMenu();
+      });
+
+      scroller?.addEventListener(
+        'scroll',
+        () => {
+          if (open) closeMenu();
+        },
+        { passive: true },
+      );
+
+      window.__appCloseSgProviderMenu = closeMenu;
+    }
+
     async function initSearch(){
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
@@ -734,6 +896,12 @@
         input.value = '';
         closeMenu();
         e.preventDefault();
+        // Defer so mobile browsers reliably drop focus (and the keyboard) after a suggestion tap.
+        setTimeout(() => {
+          try {
+            input.blur();
+          } catch (_) {}
+        }, 0);
       });
       document.addEventListener('keydown', (e) => {
         const isMacFind = (e.metaKey && !e.ctrlKey && (e.key === 'f' || e.key === 'F'));
@@ -767,7 +935,7 @@
         } catch (_) {}
         window.__appOfmMap = null;
       }
-      APP_ZOOM_TO = null;
+      window.APP_ZOOM_TO = null;
       if (typeof window.__renderAppMapOpenFreeMap !== 'function') {
         console.error('App OpenFreeMap bridge missing');
         return;
@@ -995,6 +1163,7 @@
 
     // Init
     initSheet();
+    initSingaporeProviderMenu();
     void initSearch();
     initExportStoryModal();
     initCardExport();
