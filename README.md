@@ -72,15 +72,6 @@ PetrolPrice.xyz/
 └── README.md
 ```
 
-## Data Sources
-
-| Country | Source |
-|---------|--------|
-| Malaysia | [data.gov.my](https://data.gov.my) — Official Government Open Data |
-| Singapore | Google Sheets (weekly pump prices) |
-| Brunei | Google Sheets |
-| Indonesia | Google Sheets |
-
 ## License
 
 [MIT](LICENSE) — free to use, modify, and distribute.
