@@ -130,7 +130,7 @@
   <div id="my-city-menu" class="city-menu" role="listbox" aria-label="Select Malaysia city"></div>
 
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
@@ -184,6 +184,7 @@
     }
 
     async function ensureBruneiRows()    { return ensureSheetRows(BN_SHEET_URL); }
+    async function ensureThailandRows()  { return ensureSheetRows(TH_SHEET_URL); }
     async function ensureIndonesiaRows() { return ensureSheetRows(ID_SHEET_URL); }
 
     /** Sorted rows for the currently selected Indonesia city (for highlights pager). */
@@ -201,6 +202,7 @@
         return singaporeSortedProviderRows();
       }
       if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
+      if (cid === 764) return sortRowsByDate((await ensureThailandRows()) || []);
       if (cid === 360) {
         await ensureIndonesiaRows();
         return indonesiaSortedCityRows();
@@ -504,7 +506,7 @@
         return grad;
       };
 
-      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND' };
+      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB' };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
         isTerminalUsd() && ccyKey && USD_RATES[ccyKey] != null
@@ -802,6 +804,61 @@
           labels,
           datasets,
           countryId: 96,
+        });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
+
+      // Thailand
+      if (countryId === 764) {
+        const rows = await ensureThailandRows();
+        const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(764, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setPagerIndex(764, 0);
+          setRightPanel({
+            kicker: 'Thailand Petrol Prices History',
+            titleA: 'Thailand',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: 'Thailand',
+            infoSub: 'No price rows in sheet',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
+
+        let idx = getPagerIndex(764);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(764, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const slice = rowsForPriceChart(seriesAsc);
+        const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map(r => r.__label);
+        const datasets = buildChartSeries(sliceRows, TH_FUELS, labels);
+        setRightPanel({
+          kicker: 'Thailand Petrol Prices History',
+          titleA: 'Thailand',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: 'Thailand',
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Thailand`,
+          infoLines: TH_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('THB', parseFloat(rSel[f.key]), 2),
+            fmtTerminalDeltaPerL('THB', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 2),
+          ]),
+        });
+        renderRightChart({
+          labels,
+          datasets,
+          countryId: 764,
         });
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
@@ -1118,6 +1175,7 @@
       702: { name: 'Singapore', url: '/singapore'  },
       96:  { name: 'Brunei',    url: '/brunei'     },
       360: { name: 'Indonesia', url: '/indonesia'  },
+      764: { name: 'Thailand',  url: '/thailand'   },
     };
 
     const NAMES = {
@@ -1293,7 +1351,7 @@
       try {
         const u = new URL(window.location.href);
         const c = parseInt(u.searchParams.get('country') || '', 10);
-        if (Number.isFinite(c)) cid = c;
+        if (Number.isFinite(c) && COUNTRIES[c]) cid = c;
         myRegion = u.searchParams.get('my_region');
       } catch (_) {}
 
@@ -1311,7 +1369,7 @@
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
-      const PAGER_COUNTRIES = new Set([360, 458, 702, 96]); // ID + MY + SG + BN
+      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764]); // ID + MY + SG + BN + TH
 
       function syncPager() {
         const cid = +window.__terminalSelectedCountryId;

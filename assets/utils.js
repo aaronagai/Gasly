@@ -49,6 +49,7 @@ function canonicalFuelHeader(h) {
     'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
     'vpower_gasoline', 'vpower_diesel',
     'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
+    'gasohol_91', 'gasohol_95', 'e20', 'e85',
   ]);
   if (known.has(slug)) return slug;
   if (low === 'premium') return 'premium';
@@ -60,6 +61,7 @@ const FUEL_PRICE_HEADER_KEYS = new Set([
   'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
   'vpower_gasoline', 'vpower_diesel',
   'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
+  'gasohol_91', 'gasohol_95', 'e20', 'e85',
 ]);
 
 /**

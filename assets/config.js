@@ -43,6 +43,7 @@ const MY_API_URL = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-d
 const CHART_HISTORY_LOOKBACK_DAYS = 90;
 const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
 const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
+const TH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Thailand`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
@@ -54,16 +55,17 @@ const SHEET_CSV_HEADER_ROW_INDEX = null;
 /** ISO numeric IDs of Southeast Asian countries shown on the map. */
 const SEA = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
 
-/** Live countries — the four with real price feeds. */
+/** Live countries — sheet- or API-backed price feeds. */
 const COUNTRIES = {
   458: { name: 'Malaysia' },
   702: { name: 'Singapore' },
   96:  { name: 'Brunei' },
   360: { name: 'Indonesia' },
+  764: { name: 'Thailand' },
 };
 
 /** USD conversion rates (multiply local price to get USD). */
-const USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061 };
+const USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061, THB: 0.029 };
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
 
@@ -73,6 +75,15 @@ const ID_FUELS = [
   { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
   { key: 'dexlite',        label: 'Dexlite' },
   { key: 'pertamina_dex',  label: 'Pertamina Dex' },
+];
+
+/** Thailand retail fuels — keys match the `Thailand` sheet tab columns. */
+const TH_FUELS = [
+  { key: 'gasohol_91', label: 'Gasohol 91' },
+  { key: 'gasohol_95', label: 'Gasohol 95' },
+  { key: 'e20', label: 'E20' },
+  { key: 'e85', label: 'E85' },
+  { key: 'diesel', label: 'Diesel' },
 ];
 
 /** Malaysia pricing regions. */
@@ -124,6 +135,16 @@ const COUNTRY_OVERVIEW = {
       [['Refinery Intake', '~1,100,000 bpd'],  null],
       [['Export Value', '~US$465B/year'],     ['Import Value', '~US$515B/year']],
       [['Status', 'Net Importer (refining hub)'], null],
+    ],
+  },
+  764: {
+    oilContext:
+      "Southeast Asia's second-largest oil consumer with very limited domestic reserves; heavily reliant on imports to meet its massive refining and industrial demand despite being a modest producer.",
+    metricRows: [
+      [['BOPD', '417,959'],            ['1P Reserves', '0.24B Barrels']],
+      [['Refinery Intake', '1,372,480'], null],
+      [['Export Value', 'Unavailable'], ['Import Value', 'Unavailable']],
+      [['Status', 'Net Importer'],     null],
     ],
   },
 };

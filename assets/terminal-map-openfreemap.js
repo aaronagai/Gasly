@@ -114,6 +114,12 @@
         applySel();
         return;
       }
+      if (nid === 764 && +window.__terminalSelectedCountryId === 764) {
+        o.updateRightPanelForCountry(764).catch(() => {});
+        applySel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(764, true);
+        return;
+      }
 
       o.setLeftOverview(nid);
       applySel();
@@ -191,6 +197,10 @@
           }
           if (id === 96) {
             map.easeTo({ center: [114.65, 4.55], zoom: 7.8, duration: dur });
+            return;
+          }
+          if (id === 764) {
+            map.easeTo({ center: [100.6, 13.8], zoom: 5.55, duration: dur });
             return;
           }
           if (f && f.geometry) {

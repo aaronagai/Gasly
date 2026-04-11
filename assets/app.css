@@ -346,6 +346,12 @@
 
     /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
     .sheet{
+      /* Horizontal rhythm: sticky headline + .sheet-scroll + .card .pad must match (inherited by children). */
+      --sheet-gutter-x: 8px;
+      --sheet-scroll-pad-left: 12px;
+      --sheet-scroll-pad-right: 4px;
+      --sheet-card-pad-x: 14px;
+      --sheet-text-inset-left: calc(var(--sheet-gutter-x) + var(--sheet-scroll-pad-left) + var(--sheet-card-pad-x));
       position: absolute;
       left: max(10px, env(safe-area-inset-left, 0px));
       right: max(10px, env(safe-area-inset-right, 0px));
@@ -416,8 +422,8 @@
       overflow-y: hidden;
       overscroll-behavior-y: none;
       /* Inset from sheet edges so the scrollbar stops above the rounded bottom corners */
-      margin: 0 8px 16px 8px;
-      padding: 0 4px 16px 12px;
+      margin: 0 var(--sheet-gutter-x) 16px var(--sheet-gutter-x);
+      padding: 0 var(--sheet-scroll-pad-right) 16px var(--sheet-scroll-pad-left);
       display: flex;
       flex-direction: column;
       gap: 0;
@@ -458,7 +464,9 @@
       overflow: visible;
       background: transparent;
     }
-    .card .pad{ padding: 14px; }
+    .card .pad{
+      padding: 14px var(--sheet-card-pad-x, 14px);
+    }
     #card-highlights .pad{
       padding-top: 2px;
       padding-right: max(18px, env(safe-area-inset-right, 0px));
@@ -468,7 +476,8 @@
     .sheet-region-sticky{
       flex-shrink: 0;
       z-index: 6;
-      padding: 0 14px 8px 26px;
+      /* Same left inset as first line of text inside .sheet-scroll > .card .pad (fallback: export clone off-sheet) */
+      padding: 0 14px 8px var(--sheet-text-inset-left, 34px);
       background: transparent;
       box-shadow: none;
       transition: box-shadow 0.2s ease;

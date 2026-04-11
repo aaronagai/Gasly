@@ -6,6 +6,8 @@
   function detectLiveCountryAt(lat, lon) {
     if (lat >= 1.12 && lat <= 1.58 && lon >= 103.5 && lon <= 104.25) return 702;
     if (lat >= 3.95 && lat <= 5.55 && lon >= 113.85 && lon <= 115.45) return 96;
+    /* Thailand before Malaysia so Bangkok resolves ahead of the broad peninsular MY bbox. */
+    if (lat >= 5.5 && lat <= 21.0 && lon >= 97.0 && lon <= 106.0) return 764;
     if (lat >= 0.75 && lat <= 7.85 && lon >= 99.0 && lon <= 119.85) return 458;
     if (lat >= -11.2 && lat <= 6.6 && lon >= 94.8 && lon <= 141.2) return 360;
     return null;
@@ -37,6 +39,7 @@
       702: new mk.Coordinate(1.35, 103.82),
       96: new mk.Coordinate(4.55, 114.65),
       360: new mk.Coordinate(-2.5, 118),
+      764: new mk.Coordinate(13.8, 100.6),
     };
 
     const annotations = [];
@@ -120,6 +123,9 @@
       } else if (id === 96) {
         center = LIVE_CENTER[96];
         span = new mk.CoordinateSpan(2.2, 2.2);
+      } else if (id === 764) {
+        center = LIVE_CENTER[764];
+        span = new mk.CoordinateSpan(9, 9);
       } else {
         return null;
       }

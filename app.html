@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/app.css?v=3" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
@@ -126,7 +126,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -143,7 +143,7 @@
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
 
-    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, ID cities (matches terminal data model). */
+    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, TH, ID cities (matches terminal data model). */
     async function buildSearchRegionsList() {
       const rows = [];
       MY_REGIONS.forEach((r) => {
@@ -154,6 +154,7 @@
         });
       });
       rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
+      rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
 
       let sgRows = [];
       try {
@@ -508,6 +509,41 @@
               labels,
               datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 96,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 764) {
+          const rows = await ensureSheetRows(TH_SHEET_URL);
+          const seriesAsc = sortRowsByDate(rows);
+          if (!seriesAsc.length) {
+            titleEl.textContent = cname;
+            subEl.textContent = 'No price rows in sheet';
+            renderHiRows([['Data', 'No rows yet']]);
+            if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+            emptyChart();
+            return;
+          }
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
+          titleEl.textContent = cname;
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
+          const pairs = TH_FUELS.map((f) => [
+            f.label,
+            fmtHiPerL('THB', rSel[f.key], 2),
+            fmtDeltaPerL('THB', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 2),
+          ]);
+          renderHiRows(pairs);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = TH_FUELS.map(f => ({ key: f.key, label: f.label }));
+          if (labels.length) {
+            updateChart({
+              labels,
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
+              countryId: 764,
             });
           } else emptyChart();
           return;
