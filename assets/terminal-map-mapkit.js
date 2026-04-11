@@ -9,6 +9,8 @@
     /* Thailand before Malaysia so Bangkok resolves ahead of the broad peninsular MY bbox. */
     if (lat >= 5.5 && lat <= 21.0 && lon >= 97.0 && lon <= 106.0) return 764;
     if (lat >= 0.75 && lat <= 7.85 && lon >= 99.0 && lon <= 119.85) return 458;
+    /* After Malaysia so Sabah/Sarawak wins over the Philippines bbox; Luzon/Visayas/Mindanao (excl. Borneo overlap). */
+    if (lat >= 4.5 && lat <= 21.5 && lon >= 117.0 && lon <= 127.5) return 608;
     if (lat >= -11.2 && lat <= 6.6 && lon >= 94.8 && lon <= 141.2) return 360;
     return null;
   }
@@ -40,6 +42,7 @@
       96: new mk.Coordinate(4.55, 114.65),
       360: new mk.Coordinate(-2.5, 118),
       764: new mk.Coordinate(13.8, 100.6),
+      608: new mk.Coordinate(12.2, 122.5),
     };
 
     const annotations = [];
@@ -93,7 +96,7 @@
           localStorage.setItem('terminal_id_city', o.indonesiaCityFromLngLat(lon, lat));
         } catch (_) {}
       }
-      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360)) {
+      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608)) {
         o.updateRightPanelForCountry(id).catch(() => {});
         applyMkSel();
         return;
@@ -126,6 +129,9 @@
       } else if (id === 764) {
         center = LIVE_CENTER[764];
         span = new mk.CoordinateSpan(9, 9);
+      } else if (id === 608) {
+        center = LIVE_CENTER[608];
+        span = new mk.CoordinateSpan(10, 10);
       } else {
         return null;
       }

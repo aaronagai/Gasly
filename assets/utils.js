@@ -46,10 +46,11 @@ function canonicalFuelHeader(h) {
   if (/brunei.*seasonally gasoline/i.test(raw) && !/premium/i.test(raw)) return 'gasoline';
   const slug = low.replace(/\s+/g, '_');
   const known = new Set([
-    'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
+    'ron91', 'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
     'vpower_gasoline', 'vpower_diesel',
     'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
     'gasohol_91', 'gasohol_95', 'e20', 'e85',
+    'kerosene',
   ]);
   if (known.has(slug)) return slug;
   if (low === 'premium') return 'premium';
@@ -58,10 +59,11 @@ function canonicalFuelHeader(h) {
 
 /** Canonical column keys that hold numeric fuel prices (not date/city/provider). */
 const FUEL_PRICE_HEADER_KEYS = new Set([
-  'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
+  'ron91', 'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',
   'vpower_gasoline', 'vpower_diesel',
   'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
   'gasohol_91', 'gasohol_95', 'e20', 'e85',
+  'kerosene',
 ]);
 
 /**

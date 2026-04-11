@@ -126,7 +126,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -143,7 +143,7 @@
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
 
-    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, TH, ID cities (matches terminal data model). */
+    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, TH, PH, ID cities (matches terminal data model). */
     async function buildSearchRegionsList() {
       const rows = [];
       MY_REGIONS.forEach((r) => {
@@ -155,6 +155,7 @@
       });
       rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
       rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
+      rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
 
       let sgRows = [];
       try {
@@ -544,6 +545,41 @@
               labels,
               datasets: buildChartSeries(sliceRows, chartKeys, labels),
               countryId: 764,
+            });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 608) {
+          const rows = await ensureSheetRows(PH_SHEET_URL);
+          const seriesAsc = sortRowsByDate(rows);
+          if (!seriesAsc.length) {
+            titleEl.textContent = cname;
+            subEl.textContent = 'No price rows in sheet';
+            renderHiRows([['Data', 'No rows yet']]);
+            if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+            emptyChart();
+            return;
+          }
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
+          titleEl.textContent = cname;
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
+          const pairs = PH_FUELS.map((f) => [
+            f.label,
+            fmtHiPerL('PHP', rSel[f.key], 2),
+            fmtDeltaPerL('PHP', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 2),
+          ]);
+          renderHiRows(pairs);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = PH_FUELS.map(f => ({ key: f.key, label: f.label }));
+          if (labels.length) {
+            updateChart({
+              labels,
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
+              countryId: 608,
             });
           } else emptyChart();
           return;

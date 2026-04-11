@@ -130,7 +130,7 @@
   <div id="my-city-menu" class="city-menu" role="listbox" aria-label="Select Malaysia city"></div>
 
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
@@ -185,6 +185,7 @@
 
     async function ensureBruneiRows()    { return ensureSheetRows(BN_SHEET_URL); }
     async function ensureThailandRows()  { return ensureSheetRows(TH_SHEET_URL); }
+    async function ensurePhilippinesRows() { return ensureSheetRows(PH_SHEET_URL); }
     async function ensureIndonesiaRows() { return ensureSheetRows(ID_SHEET_URL); }
 
     /** Sorted rows for the currently selected Indonesia city (for highlights pager). */
@@ -203,6 +204,7 @@
       }
       if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
       if (cid === 764) return sortRowsByDate((await ensureThailandRows()) || []);
+      if (cid === 608) return sortRowsByDate((await ensurePhilippinesRows()) || []);
       if (cid === 360) {
         await ensureIndonesiaRows();
         return indonesiaSortedCityRows();
@@ -506,7 +508,7 @@
         return grad;
       };
 
-      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB' };
+      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB', 608: 'PHP' };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
         isTerminalUsd() && ccyKey && USD_RATES[ccyKey] != null
@@ -863,6 +865,61 @@
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
+
+      // Philippines
+      if (countryId === 608) {
+        const rows = await ensurePhilippinesRows();
+        const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(608, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setPagerIndex(608, 0);
+          setRightPanel({
+            kicker: 'Philippines Petrol Prices History',
+            titleA: 'Philippines',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: 'Philippines',
+            infoSub: 'No price rows in sheet',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
+
+        let idx = getPagerIndex(608);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(608, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const slice = rowsForPriceChart(seriesAsc);
+        const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map(r => r.__label);
+        const datasets = buildChartSeries(sliceRows, PH_FUELS, labels);
+        setRightPanel({
+          kicker: 'Philippines Petrol Prices History',
+          titleA: 'Philippines',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: 'Philippines',
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Philippines`,
+          infoLines: PH_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('PHP', parseFloat(rSel[f.key]), 2),
+            fmtTerminalDeltaPerL('PHP', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 2),
+          ]),
+        });
+        renderRightChart({
+          labels,
+          datasets,
+          countryId: 608,
+        });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
     }
 
     function setLeftOverview(countryId) {
@@ -1176,6 +1233,7 @@
       96:  { name: 'Brunei',    url: '/brunei'     },
       360: { name: 'Indonesia', url: '/indonesia'  },
       764: { name: 'Thailand',  url: '/thailand'   },
+      608: { name: 'Philippines', url: '/philippines' },
     };
 
     const NAMES = {
@@ -1369,7 +1427,7 @@
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
-      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764]); // ID + MY + SG + BN + TH
+      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764, 608]); // ID + MY + SG + BN + TH + PH
 
       function syncPager() {
         const cid = +window.__terminalSelectedCountryId;

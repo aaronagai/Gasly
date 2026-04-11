@@ -44,6 +44,7 @@ const CHART_HISTORY_LOOKBACK_DAYS = 90;
 const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
 const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
 const TH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Thailand`;
+const PH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Philippines`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
@@ -62,10 +63,11 @@ const COUNTRIES = {
   96:  { name: 'Brunei' },
   360: { name: 'Indonesia' },
   764: { name: 'Thailand' },
+  608: { name: 'Philippines' },
 };
 
 /** USD conversion rates (multiply local price to get USD). */
-const USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061, THB: 0.029 };
+const USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061, THB: 0.029, PHP: 0.018 };
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
 
@@ -84,6 +86,14 @@ const TH_FUELS = [
   { key: 'e20', label: 'E20' },
   { key: 'e85', label: 'E85' },
   { key: 'diesel', label: 'Diesel' },
+];
+
+/** Philippines retail fuels — keys match the `Philippines` sheet tab columns. */
+const PH_FUELS = [
+  { key: 'ron91', label: 'RON 91' },
+  { key: 'ron95', label: 'RON 95' },
+  { key: 'diesel', label: 'Diesel' },
+  { key: 'kerosene', label: 'Kerosene' },
 ];
 
 /** Malaysia pricing regions. */
@@ -145,6 +155,16 @@ const COUNTRY_OVERVIEW = {
       [['Refinery Intake', '1,372,480'], null],
       [['Export Value', 'Unavailable'], ['Import Value', 'Unavailable']],
       [['Status', 'Net Importer'],     null],
+    ],
+  },
+  608: {
+    oilContext:
+      'Very small upstream producer with limited reserves; almost entirely dependent on imported oil to fuel its growing economy, with domestic production covering only a tiny fraction of demand.',
+    metricRows: [
+      [['BOPD', '14,345'],              ['1P Reserves', '0.14B Barrels']],
+      [['Refinery Intake', '473,464'],  null],
+      [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
+      [['Status', 'Net Importer'],      null],
     ],
   },
 };

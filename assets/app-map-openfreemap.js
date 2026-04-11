@@ -125,6 +125,12 @@
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(764, true);
         return;
       }
+      if (nid === 608 && cur === 608) {
+        o.refreshHighlights(608).catch(() => {});
+        applySel();
+        if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(608, true);
+        return;
+      }
 
       o.setSelected(nid);
       applySel();
@@ -221,6 +227,10 @@
             }
             if (id === 764) {
               map.easeTo({ center: [100.6, 13.8], zoom: 5.35, duration: dur, offset: off });
+              return;
+            }
+            if (id === 608) {
+              map.easeTo({ center: [122.5, 12.2], zoom: 5.45, duration: dur, offset: off });
               return;
             }
             if (f && f.geometry) {
