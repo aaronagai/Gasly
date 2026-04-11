@@ -65,22 +65,6 @@
       font-weight: 600;
     }
 
-    .status-pill {
-      display: flex; align-items: center; gap: 7px;
-      padding: 5px 11px;
-      border: 1px solid rgba(254,94,14,0.25);
-      border-radius: 20px;
-      background: rgba(254,94,14,0.08);
-      font-size: 0.7rem; font-weight: 600;
-      color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
-    }
-
-    .status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent); box-shadow: 0 0 6px rgba(254,94,14,0.5);
-      animation: blink 2s ease-in-out infinite; flex-shrink: 0;
-    }
-
     .try-terminal-btn{
       display: inline-flex;
       align-items: center;
@@ -113,11 +97,6 @@
       display:flex;
       align-items:center;
       gap:10px;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.25; }
     }
 
     /* ── Map ──────────────────────────────────────���─────────── */
@@ -199,18 +178,6 @@
       pointer-events: none;
     }
 
-    /* Centre dot */
-    .ping-dot {
-      fill: #fe5e0e;
-      filter: drop-shadow(0 0 3px rgba(254,94,14,0.6));
-    }
-
-    /* LIVE label */
-    .live-tag {
-      font-family: var(--font-mono); font-weight: 700; fill: #fe5e0e;
-      dominant-baseline: middle; text-anchor: start; letter-spacing: 0.12em;
-    }
-
     /* ── Hero overlay: no card — soft light halos so type stays legible on the map ── */
     .hero-overlay {
       position: absolute;
@@ -256,25 +223,6 @@
       font-size: 0.7rem; color: var(--text-muted);
       letter-spacing: 0.12em; text-transform: uppercase;
       opacity: 0.4; white-space: nowrap;
-    }
-
-    /* Scroll-down nudge */
-    .scroll-nudge {
-      position: absolute; bottom: 14px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 2; pointer-events: none;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      opacity: 0.28;
-      animation: nudgeBounce 2.2s ease-in-out infinite;
-    }
-    .scroll-nudge span {
-      font-size: 0.7rem; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--text-muted);
-    }
-    .scroll-nudge svg { color: var(--text-muted); }
-    @keyframes nudgeBounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(4px); }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -368,42 +316,6 @@
     .footer-social-x:hover { color: var(--footer-muted-hover); }
     .footer-social-x svg { flex-shrink: 0; opacity: 0.9; }
 
-    /* ── Currency toggle ──────────────────────────────────────── */
-    .currency-toggle {
-      display: flex;
-      border: 1px solid var(--border);
-      border-radius: 8px; overflow: hidden;
-    }
-    .curr-opt {
-      background: none; border: none; cursor: pointer;
-      padding: 5px 10px;
-      color: var(--text-muted);
-      font-family: var(--font);
-      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
-      transition: background 0.12s, color 0.12s;
-      white-space: nowrap;
-    }
-    .curr-opt + .curr-opt { border-left: 1px solid var(--border); }
-    .curr-opt.active {
-      background: color-mix(in srgb, var(--text) 8%, transparent);
-      color: var(--text);
-    }
-
-    /* ── Nav links ─────────────────────────────────────────────── */
-    .nav-links {
-      position: absolute; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 44px;
-    }
-    .nav-links a {
-      font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--text-muted); text-decoration: none;
-      transition: color 0.15s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-
-
     /* ── Tooltip ──────────────────────────────────────────────── */
     #tooltip {
       position: fixed; z-index: 500; pointer-events: none;
@@ -437,12 +349,9 @@
       }
 
       .logo-block .site-wordmark { font-size: 0.9rem; }
-      .status-pill  { font-size: 0.7rem; padding: 4px 9px; gap: 5px; }
-      .status-dot   { width: 5px; height: 5px; }
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
       .map-hint    { font-size: 0.7rem; bottom: 38px; }
-      .scroll-nudge { bottom: 10px; }
 
       .site-footer {
         padding: 28px 16px 32px;
@@ -491,8 +400,6 @@
         background: color-mix(in srgb, var(--bg-card) 92%, transparent);
         box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
       }
-
-      .scroll-nudge { opacity: 0.42; }
 
       .hero-headline {
         text-shadow:

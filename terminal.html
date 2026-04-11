@@ -11,17 +11,14 @@
   <link rel="icon" type="image/png" href="assets/appicon.png" />
   <title>PetrolPrice — Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preload" href="./assets/countries-110m.json" as="fetch" crossorigin />
+  <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/terminal.css" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="assets/config.js"></script>
-  <script src="assets/utils.js"></script>
-  <script src="assets/terminal-map-mapkit.js"></script>
-  <script src="assets/terminal-map-openfreemap.js"></script>
   <!-- styles: assets/terminal.css -->
 </head>
 <body>
@@ -129,6 +126,12 @@
   <!-- Malaysia city dropdown -->
   <div id="my-city-menu" class="city-menu" role="listbox" aria-label="Select Malaysia city"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/utils.js"></script>
+  <script src="assets/terminal-map-mapkit.js"></script>
+  <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
@@ -183,11 +186,6 @@
       return sortRowsByDate(rows.filter((r) => normalizeSheetString(r.provider) === pNorm));
     }
 
-    async function ensureBruneiRows()    { return ensureSheetRows(BN_SHEET_URL); }
-    async function ensureThailandRows()  { return ensureSheetRows(TH_SHEET_URL); }
-    async function ensurePhilippinesRows() { return ensureSheetRows(PH_SHEET_URL); }
-    async function ensureIndonesiaRows() { return ensureSheetRows(ID_SHEET_URL); }
-
     /** Sorted rows for the currently selected Indonesia city (for highlights pager). */
     function indonesiaSortedCityRows() {
       if (!_idAllRows) return [];
@@ -202,11 +200,11 @@
         await ensureSingaporeRows();
         return singaporeSortedProviderRows();
       }
-      if (cid === 96) return sortRowsByDate((await ensureBruneiRows()) || []);
-      if (cid === 764) return sortRowsByDate((await ensureThailandRows()) || []);
-      if (cid === 608) return sortRowsByDate((await ensurePhilippinesRows()) || []);
+      if (cid === 96) return sortRowsByDate((await ensureSheetRows(BN_SHEET_URL)) || []);
+      if (cid === 764) return sortRowsByDate((await ensureSheetRows(TH_SHEET_URL)) || []);
+      if (cid === 608) return sortRowsByDate((await ensureSheetRows(PH_SHEET_URL)) || []);
       if (cid === 360) {
-        await ensureIndonesiaRows();
+        await ensureSheetRows(ID_SHEET_URL);
         return indonesiaSortedCityRows();
       }
       return [];
@@ -601,7 +599,7 @@
       };
       // Indonesia: reflect selected city/fuel from city card (pager = history rows for this city)
       if (countryId === 360) {
-        const rows = await ensureIndonesiaRows();
+        const rows = await ensureSheetRows(ID_SHEET_URL);
         _idAllRows = rows;
         const city = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat';
         const cityNorm = normalizeSheetString(city);
@@ -767,7 +765,7 @@
 
       // Brunei
       if (countryId === 96) {
-        const rows = await ensureBruneiRows();
+        const rows = await ensureSheetRows(BN_SHEET_URL);
         const seriesAsc = sortRowsByDate(rows || []);
         LOADED_ROWS.set(96, seriesAsc);
 
@@ -813,7 +811,7 @@
 
       // Thailand
       if (countryId === 764) {
-        const rows = await ensureThailandRows();
+        const rows = await ensureSheetRows(TH_SHEET_URL);
         const seriesAsc = sortRowsByDate(rows || []);
         LOADED_ROWS.set(764, seriesAsc);
 
@@ -868,7 +866,7 @@
 
       // Philippines
       if (countryId === 608) {
-        const rows = await ensurePhilippinesRows();
+        const rows = await ensureSheetRows(PH_SHEET_URL);
         const seriesAsc = sortRowsByDate(rows || []);
         LOADED_ROWS.set(608, seriesAsc);
 

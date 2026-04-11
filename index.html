@@ -36,14 +36,13 @@
   <meta name="twitter:site" content="@aaronagai" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preload" href="./assets/countries-110m.json" as="fetch" crossorigin />
+  <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/index.css" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="assets/config.js"></script>
-  <script src="assets/utils.js"></script>
   <!-- styles: assets/index.css -->
 </head>
 <body>
@@ -102,6 +101,10 @@
     <span class="tt-status"  id="tt-status"></span>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/utils.js"></script>
   <script>
     const LIVE = {
       458: { name: 'Malaysia',  url: '/terminal?country=458&my_region=peninsular' },
