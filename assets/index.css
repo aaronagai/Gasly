@@ -57,14 +57,6 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .logo-block { display: flex; align-items: center; gap: 10px; }
-
-    .logo-block .site-wordmark {
-      font-size: 1.05rem;
-      margin: 0;
-      font-weight: 600;
-    }
-
     .try-terminal-btn{
       display: inline-flex;
       align-items: center;
@@ -359,7 +351,6 @@
         padding: max(12px, env(safe-area-inset-top, 0px)) 16px 12px;
       }
 
-      .logo-block .site-wordmark { font-size: 0.9rem; }
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
       .map-hint    { font-size: 0.7rem; bottom: 38px; }

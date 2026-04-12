@@ -41,3 +41,22 @@ a.site-wordmark-lockup {
   width: auto;
   display: block;
 }
+
+/* Header lockup — index, careers (same size & weight as homepage) */
+header .logo-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+header .logo-block .site-wordmark {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+@media (max-width: 639px) {
+  header .logo-block .site-wordmark {
+    font-size: 0.9rem;
+  }
+}

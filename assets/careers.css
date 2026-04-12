@@ -1,0 +1,247 @@
+/* Careers page — index-aligned header + job content */
+
+:root {
+  --bg:           #fafaf8;
+  --text:         #303030;
+  --text-muted:   #6b6b6b;
+  --careers-list: #454545;
+  --border:       #e2dedd;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+
+  :root {
+    --bg:           #131314;
+    --text:         #ebebee;
+    --text-muted:   rgba(235, 235, 238, 0.55);
+    --careers-list: rgba(235, 235, 238, 0.72);
+    --border:       rgba(255, 255, 255, 0.12);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  line-height: 1.58;
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px clamp(16px, 4vw, 32px);
+  padding-top: max(14px, env(safe-area-inset-top, 0px));
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-page-label {
+  font-family: 'DM Sans', var(--font);
+  font-weight: 500;
+  font-size: 0.92rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.careers-main {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 2.75rem clamp(16px, 4vw, 32px) 4.5rem;
+}
+
+.careers-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.28rem, 3.4vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+.careers-page-lede {
+  margin: 0 0 1.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
+}
+
+.careers-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.careers-role {
+  margin: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.careers-role-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  font-size: 0.9375rem;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.careers-role-summary::-webkit-details-marker {
+  display: none;
+}
+
+.careers-role-summary-inner {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.careers-role-summary::after {
+  content: '';
+  flex-shrink: 0;
+  width: 0.38rem;
+  height: 0.38rem;
+  margin-top: 0.06rem;
+  border-right: 1px solid var(--text-muted);
+  border-bottom: 1px solid var(--text-muted);
+  opacity: 0.42;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.careers-role[open] > .careers-role-summary::after {
+  transform: rotate(-135deg);
+  margin-top: 0.22rem;
+  opacity: 0.55;
+}
+
+.careers-role-summary-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.careers-role-summary-meta {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.careers-role-summary:hover {
+  opacity: 0.88;
+}
+
+.careers-role-summary:hover::after {
+  opacity: 0.58;
+}
+
+.careers-role-body {
+  padding: 0 0 1.5rem;
+  border: none;
+}
+
+.careers-intro p {
+  margin: 0 0 1.125rem;
+}
+
+.careers-intro p:last-child {
+  margin-bottom: 0;
+}
+
+.careers-rule {
+  margin: 2rem 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.careers-section-title {
+  margin: 0 0 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.careers-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.careers-list li {
+  position: relative;
+  padding-left: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--careers-list);
+}
+
+.careers-list li:last-child {
+  margin-bottom: 0;
+}
+
+.careers-list li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--careers-list);
+}
+
+.careers-compensation p {
+  margin: 0;
+}
+
+.careers-apply {
+  margin: 0;
+}
+
+.careers-apply a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
