@@ -52,12 +52,17 @@ const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 
 /**
  * Country overview copy + metrics (same workbook). Tab name must match `sheet=`.
- * Create a tab named **Overviews** with row 1 = headers (no preamble rows), then one data row per `country_id`.
+ * Row 1 = headers only, then one data row per live country in `COUNTRIES`.
  *
- * Required / optional columns (snake_case; spaces in Sheet headers become underscores in CSV keys):
- * - `country_id` — ISO numeric (458, 96, 360, …)
- * - `oil_context` — paragraph for the overview card
- * - `row1_left_k`, `row1_left_v`, `row1_right_k`, `row1_right_v` … through **row4_*** — metric grid (leave both k+v empty to omit a cell)
+ * **Recommended layout (8 columns)** — one row per country; headers use snake_case (or spaces → underscores in CSV):
+ * | `country_name` | `oil_context` | `bopd` | `1p_reserves` | `ref_intake` | `export_value` | `import_value` | `status` |
+ * - **`country_name`** — must match `COUNTRIES[].name` (case-insensitive), e.g. `Malaysia`, `Singapore`.
+ * - **`oil_context`** — long paragraph for the overview card (empty = use code fallback for text).
+ * - **Metric cells** — plain values; labels in the UI are fixed (BOPD, 1P Reserves, …). Leave a cell empty to omit that metric.
+ * - Optional aliases: `refinery_intake` or `refinery_capacity` instead of `ref_intake` (capacity uses label “Refinery Capacity”).
+ * - **`country_id`** (optional) — numeric id instead of name if you prefer.
+ *
+ * **Legacy layout** — if none of `bopd`, `1p_reserves`, … are set, the parser still accepts `row1_left_k` / `row1_left_v` / … `row4_*`.
  */
 const OVERVIEW_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Overviews`;
 

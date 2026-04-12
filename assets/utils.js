@@ -502,22 +502,95 @@ function overviewPairFromRow(row, kKey, vKey) {
 }
 
 /**
+ * Resolve numeric `COUNTRIES` id from an Overviews row: `country_id` if set, else match `country_name` / `country`.
+ */
+function resolveOverviewCountryId(row) {
+  const rawId = overviewCell(row, 'country_id') || overviewCell(row, 'id');
+  if (rawId) {
+    const id = parseInt(rawId, 10);
+    if (Number.isFinite(id) && id > 0 && typeof COUNTRIES !== 'undefined' && COUNTRIES[id]) return id;
+  }
+  const nameRaw =
+    overviewCell(row, 'country_name') ||
+    overviewCell(row, 'country') ||
+    overviewCell(row, 'name');
+  if (!nameRaw || typeof COUNTRIES === 'undefined') return null;
+  const want = normalizeSheetString(nameRaw);
+  for (const [idStr, meta] of Object.entries(COUNTRIES)) {
+    const id = +idStr;
+    if (!Number.isFinite(id) || !meta?.name) continue;
+    if (normalizeSheetString(meta.name) === want) return id;
+  }
+  return null;
+}
+
+/** True when the row uses the flat `bopd` / `1p_reserves` / … sheet shape (vs legacy `row1_left_k`). */
+function hasFlatOverviewShape(row) {
+  const keys = ['bopd', '1p_reserves', 'ref_intake', 'export_value', 'import_value', 'status'];
+  return keys.some((k) => !!overviewCell(row, k));
+}
+
+/**
+ * Map flat sheet columns to the same `metricRows` grid as `COUNTRY_OVERVIEW_FALLBACK` (two columns × up to four bands).
+ */
+function metricRowsFromFlatOverviewRow(row) {
+  const pair = (keys, label) => {
+    for (let i = 0; i < keys.length; i++) {
+      const v = overviewCell(row, keys[i]);
+      if (v) return [label, v];
+    }
+    return null;
+  };
+
+  const refineryMiddle = () => {
+    const cap = overviewCell(row, 'refinery_capacity');
+    if (cap) return ['Refinery Capacity', cap];
+    const v =
+      overviewCell(row, 'ref_intake') ||
+      overviewCell(row, 'refinery_intake');
+    if (v) return ['Refinery Intake', v];
+    return null;
+  };
+
+  const out = [];
+  const r1l = pair(['bopd'], 'BOPD');
+  const r1r = pair(['1p_reserves'], '1P Reserves');
+  if (r1l || r1r) out.push([r1l, r1r]);
+
+  const r2l = refineryMiddle();
+  if (r2l) out.push([r2l, null]);
+
+  const r3l = pair(['export_value'], 'Export Value');
+  const r3r = pair(['import_value'], 'Import Value');
+  if (r3l || r3r) out.push([r3l, r3r]);
+
+  const r4l = pair(['status'], 'Status');
+  if (r4l) out.push([r4l, null]);
+
+  return out;
+}
+
+/**
  * Build `Map<countryId, { oilContext, metricRows }>` from `Overviews` tab rows (see OVERVIEW_SHEET_URL in config).
- * Expects `parseCSV` keys from row 0 headers: `country_id`, `oil_context`, `row1_left_k`, …
+ * Supports flat columns (`bopd`, …) or legacy `row1_left_k` / `row1_left_v` / …
  */
 function parseCountryOverviewSheetRows(rows) {
   const byId = new Map();
   for (const r of rows || []) {
-    const raw = overviewCell(r, 'country_id') || overviewCell(r, 'id');
-    const id = parseInt(raw, 10);
-    if (!Number.isFinite(id) || id <= 0) continue;
+    const id = resolveOverviewCountryId(r);
+    if (id == null) continue;
     const oilContext = overviewCell(r, 'oil_context');
-    const metricRows = [];
-    for (let i = 1; i <= 4; i++) {
-      const left = overviewPairFromRow(r, `row${i}_left_k`, `row${i}_left_v`);
-      const right = overviewPairFromRow(r, `row${i}_right_k`, `row${i}_right_v`);
-      if (!left && !right) continue;
-      metricRows.push([left, right]);
+    let metricRows;
+    if (hasFlatOverviewShape(r)) {
+      metricRows = metricRowsFromFlatOverviewRow(r);
+    } else {
+      metricRows = [];
+      for (let i = 1; i <= 4; i++) {
+        const left = overviewPairFromRow(r, `row${i}_left_k`, `row${i}_left_v`);
+        const right = overviewPairFromRow(r, `row${i}_right_k`, `row${i}_right_v`);
+        if (!left && !right) continue;
+        metricRows.push([left, right]);
+      }
     }
     byId.set(id, { oilContext, metricRows });
   }
