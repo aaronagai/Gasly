@@ -1152,7 +1152,20 @@
 
     const APP_STORY_W = 1080;
     const APP_STORY_H = 1920;
-    const APP_STORY_PAD = 72;
+    /** Side margins on the 9:16 canvas (tighter = slightly larger content). */
+    const APP_STORY_PAD = 52;
+    /** Bottom band for logo + domain (must be ≥ APP_STORY_PAD so content never overlaps). */
+    const APP_STORY_FOOTER_H = Math.max(APP_STORY_PAD, 136);
+    /** Empty band at the top of story exports (Instagram-safe headroom). */
+    const APP_STORY_TOP_DEAD = 250;
+    /** Surface gap between orange header and snapshot (px). */
+    const APP_STORY_SNAPSHOT_TOP_GAP = 22;
+    /** Gap between snapshot bottom and footer strip so chart/legend never touches the logo (px). */
+    const APP_STORY_SNAPSHOT_FOOT_GAP = 40;
+    /** Capture width for off-screen clones (wider = less pillar + less side letterbox when composing). */
+    const APP_EXPORT_CAPTURE_W = 540;
+    /** Taller chart block in highlight export vs in-app 210px — reads better on 9:16 stories. */
+    const APP_EXPORT_CHART_WRAP_HEIGHT = 260;
 
     let _exportStoryBlob = null;
     let _exportStoryObjectUrl = null;
@@ -1246,25 +1259,105 @@
       return 'export';
     }
 
-    function appComposeStoryPng(snapCanvas) {
+    function loadImageForStoryExport(url) {
+      return new Promise((resolve) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => resolve(null);
+        im.src = url;
+      });
+    }
+
+    async function appComposeStoryPng(snapCanvas) {
       const out = document.createElement('canvas');
       out.width = APP_STORY_W;
       out.height = APP_STORY_H;
       const ctx = out.getContext('2d');
-      ctx.fillStyle = cssVar('--surface', '#ffffff');
+      const surface = cssVar('--surface', '#ffffff');
+      ctx.fillStyle = surface;
       ctx.fillRect(0, 0, APP_STORY_W, APP_STORY_H);
+      const px = APP_STORY_PAD;
+      const headerH = APP_STORY_TOP_DEAD;
+      const contentPad = headerH + APP_STORY_SNAPSHOT_TOP_GAP;
+      if (headerH > 0) {
+        const orange = cssVar('--orange', '#ff6a00');
+        const cx = APP_STORY_W * 0.5;
+        const cy = 0;
+        const r1 = Math.hypot(APP_STORY_W * 0.5, headerH) * 1.12;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r1);
+        g.addColorStop(0, '#ffe0c2');
+        g.addColorStop(0.18, '#ffb366');
+        g.addColorStop(0.45, orange);
+        g.addColorStop(0.72, 'rgba(255, 106, 0, 0.35)');
+        g.addColorStop(1, surface);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, APP_STORY_W, headerH);
+      }
       const maxW = APP_STORY_W - APP_STORY_PAD * 2;
-      const maxH = APP_STORY_H - APP_STORY_PAD * 2;
+      const maxH =
+        APP_STORY_H - contentPad - APP_STORY_FOOTER_H - APP_STORY_SNAPSHOT_FOOT_GAP;
       const sw = snapCanvas.width;
       const sh = snapCanvas.height;
+
+      async function stampFooter() {
+        const footTop = APP_STORY_H - APP_STORY_FOOTER_H;
+        const logoSrc = new URL('assets/appicon.png', window.location.href).href;
+        const logo = await loadImageForStoryExport(logoSrc);
+        const logoSize = 44;
+        const gap = 14;
+        const label = 'petrolprice.xyz';
+        ctx.save();
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = cssVar('--text', '#141414');
+        ctx.font = '600 30px Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        const textW = ctx.measureText(label).width;
+        const blockW = (logo && logo.naturalWidth ? logoSize + gap : 0) + textW;
+        let x = Math.round((APP_STORY_W - blockW) / 2);
+        /* Centre in footer strip (snapshot ends above footTop thanks to SNAPSHOT_FOOT_GAP). */
+        const yMid = Math.round(footTop + APP_STORY_FOOTER_H / 2);
+        if (logo && logo.naturalWidth) {
+          ctx.drawImage(logo, x, Math.round(yMid - logoSize / 2), logoSize, logoSize);
+          x += logoSize + gap;
+        }
+        ctx.fillText(label, x, yMid);
+        ctx.restore();
+      }
+
+      if (sw <= 0 || sh <= 0) {
+        await stampFooter();
+        return out;
+      }
+      const slotAspect = maxW / maxH;
+      const snapAspect = sw / sh;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      /**
+       * Narrow/tall snapshot: scale to full usable width; if too tall, crop from the bottom only so the
+       * region title at the top of the capture is never clipped (center-crop used to cut "Semenanjung").
+       * Wider snapshot: uniform "contain" scale — never side-crop (that was clipping titles and prices).
+       */
+      if (snapAspect < slotAspect) {
+        const sc = maxW / sw;
+        const dh = sh * sc;
+        if (dh > maxH) {
+          const srcH = maxH / sc;
+          const sy = 0;
+          ctx.drawImage(snapCanvas, 0, sy, sw, srcH, px, contentPad, maxW, maxH);
+        } else {
+          const dhR = Math.round(dh);
+          const dy = Math.round(contentPad + (maxH - dhR) / 2);
+          ctx.drawImage(snapCanvas, 0, 0, sw, sh, px, dy, maxW, dhR);
+        }
+        await stampFooter();
+        return out;
+      }
       const sc = Math.min(maxW / sw, maxH / sh);
       const dw = Math.round(sw * sc);
       const dh = Math.round(sh * sc);
       const dx = Math.round((APP_STORY_W - dw) / 2);
-      const dy = Math.round((APP_STORY_H - dh) / 2);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      const dy = Math.round(contentPad + (maxH - dh) / 2);
       ctx.drawImage(snapCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
+      await stampFooter();
       return out;
     }
 
@@ -1284,22 +1377,77 @@
         root?.querySelectorAll('.card-export').forEach((n) => n.remove());
       };
 
+      /** Chart.js only draws on the live canvas — copy pixels onto a cloned card for html2canvas. */
+      function copyCanvasesFromLiveToClone(liveRoot, cloneRoot) {
+        if (!liveRoot || !cloneRoot) return;
+        const liveCanvases = liveRoot.querySelectorAll('canvas');
+        const cloneCanvases = cloneRoot.querySelectorAll('canvas');
+        const n = Math.min(liveCanvases.length, cloneCanvases.length);
+        for (let i = 0; i < n; i++) {
+          const src = liveCanvases[i];
+          const dst = cloneCanvases[i];
+          try {
+            dst.width = src.width;
+            dst.height = src.height;
+            dst.getContext('2d').drawImage(src, 0, 0);
+          } catch (_) {}
+        }
+      }
+
+      function stripIdsForExport(root) {
+        root?.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+      }
+
       let snap;
       if (cardId === 'card-highlights') {
-        const wrap = document.createElement('div');
-        wrap.style.cssText =
-          `position:fixed;left:-16000px;top:0;width:960px;background:${exportBg};padding:48px 44px;box-sizing:border-box;`;
-        const st = document.getElementById('sheet-region-sticky')?.cloneNode(true);
-        const cd = document.getElementById('card-highlights')?.cloneNode(true);
-        stripExports(st);
-        stripExports(cd);
-        if (st) wrap.appendChild(st);
-        if (cd) wrap.appendChild(cd);
-        document.body.appendChild(wrap);
+        const histLive = document.getElementById('card-history');
+        const liveCw = histLive?.querySelector('.chart-wrap');
+        const prevH = liveCw ? liveCw.style.height : '';
+        const prevMin = liveCw ? liveCw.style.minHeight : '';
         try {
-          snap = await html2canvas(wrap, h2cOpts);
+          if (liveCw) {
+            liveCw.style.height = `${APP_EXPORT_CHART_WRAP_HEIGHT}px`;
+            liveCw.style.minHeight = `${APP_EXPORT_CHART_WRAP_HEIGHT}px`;
+            try {
+              RIGHT_CHART?.resize();
+            } catch (_) {}
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          }
+          const wrap = document.createElement('div');
+          wrap.style.cssText =
+            `position:fixed;left:-16000px;top:0;width:${APP_EXPORT_CAPTURE_W}px;max-width:100%;background:${exportBg};padding:36px 16px 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px;align-items:stretch;`;
+          /* Off-sheet clones are not under .sheet — vars fall back to 34px vs 14px pad and misalign the title. */
+          wrap.style.setProperty('--sheet-gutter-x', '0px');
+          wrap.style.setProperty('--sheet-scroll-pad-left', '0px');
+          wrap.style.setProperty('--sheet-card-pad-x', '14px');
+          wrap.style.setProperty('--sheet-text-inset-left', '14px');
+          const st = document.getElementById('sheet-region-sticky')?.cloneNode(true);
+          const hi = document.getElementById('card-highlights')?.cloneNode(true);
+          const hist = histLive?.cloneNode(true);
+          stripExports(st);
+          stripExports(hi);
+          stripExports(hist);
+          stripIdsForExport(st);
+          stripIdsForExport(hi);
+          stripIdsForExport(hist);
+          copyCanvasesFromLiveToClone(histLive, hist);
+          if (st) wrap.appendChild(st);
+          if (hi) wrap.appendChild(hi);
+          if (hist) wrap.appendChild(hist);
+          document.body.appendChild(wrap);
+          try {
+            snap = await html2canvas(wrap, h2cOpts);
+          } finally {
+            wrap.remove();
+          }
         } finally {
-          wrap.remove();
+          if (liveCw) {
+            liveCw.style.height = prevH;
+            liveCw.style.minHeight = prevMin;
+            try {
+              RIGHT_CHART?.resize();
+            } catch (_) {}
+          }
         }
       } else if (cardId === 'card-history') {
         const live = document.getElementById('card-history');
@@ -1313,9 +1461,10 @@
       } else if (cardId === 'card-overview') {
         const wrap = document.createElement('div');
         wrap.style.cssText =
-          `position:fixed;left:-16000px;top:0;width:960px;background:${exportBg};padding:48px 44px;box-sizing:border-box;`;
+          `position:fixed;left:-16000px;top:0;width:${APP_EXPORT_CAPTURE_W}px;max-width:100%;background:${exportBg};padding:36px 16px 48px;box-sizing:border-box;`;
         const cd = document.getElementById('card-overview')?.cloneNode(true);
         stripExports(cd);
+        stripIdsForExport(cd);
         if (cd) wrap.appendChild(cd);
         document.body.appendChild(wrap);
         try {
@@ -1326,7 +1475,7 @@
       } else return;
 
       if (!snap) return;
-      const story = appComposeStoryPng(snap);
+      const story = await appComposeStoryPng(snap);
       const blob = await new Promise((resolve, reject) => {
         story.toBlob((b) => (b ? resolve(b) : reject(new Error('Story export failed'))), 'image/png', 0.95);
       });
