@@ -484,6 +484,106 @@ const _sheetCache = new Map();
 /** In-memory sheet cache TTL so highlights can pick up newer Google Sheet rows without a full reload. */
 const SHEET_CACHE_TTL_MS = 30 * 1000;
 
+let _overviewByIdCache = null;
+let _overviewByIdCacheT = 0;
+
+function overviewCell(row, key) {
+  if (!row || !key) return '';
+  const v = row[key];
+  if (v == null) return '';
+  return String(v).replace(/^\ufeff/g, '').trim();
+}
+
+function overviewPairFromRow(row, kKey, vKey) {
+  const k = overviewCell(row, kKey);
+  const v = overviewCell(row, vKey);
+  if (!k && !v) return null;
+  return [k || '—', v || '—'];
+}
+
+/**
+ * Build `Map<countryId, { oilContext, metricRows }>` from `Overviews` tab rows (see OVERVIEW_SHEET_URL in config).
+ * Expects `parseCSV` keys from row 0 headers: `country_id`, `oil_context`, `row1_left_k`, …
+ */
+function parseCountryOverviewSheetRows(rows) {
+  const byId = new Map();
+  for (const r of rows || []) {
+    const raw = overviewCell(r, 'country_id') || overviewCell(r, 'id');
+    const id = parseInt(raw, 10);
+    if (!Number.isFinite(id) || id <= 0) continue;
+    const oilContext = overviewCell(r, 'oil_context');
+    const metricRows = [];
+    for (let i = 1; i <= 4; i++) {
+      const left = overviewPairFromRow(r, `row${i}_left_k`, `row${i}_left_v`);
+      const right = overviewPairFromRow(r, `row${i}_right_k`, `row${i}_right_v`);
+      if (!left && !right) continue;
+      metricRows.push([left, right]);
+    }
+    byId.set(id, { oilContext, metricRows });
+  }
+  return byId;
+}
+
+function mergeCountryOverview(fallback, sheet) {
+  const fb = fallback || { oilContext: '—', metricRows: [] };
+  if (!sheet) return fb;
+  const oilFromSheet = sheet.oilContext != null && String(sheet.oilContext).trim() !== ''
+    ? String(sheet.oilContext).trim()
+    : '';
+  const oilContext = oilFromSheet || fb.oilContext;
+  const sheetRows = Array.isArray(sheet.metricRows) ? sheet.metricRows : [];
+  const hasAnyMetric = sheetRows.some((row) => {
+    if (!Array.isArray(row)) return false;
+    const hasCell = (cell) => {
+      if (!cell) return false;
+      const a = cell[0] != null && String(cell[0]).trim() !== '';
+      const b = cell[1] != null && String(cell[1]).trim() !== '';
+      return a || b;
+    };
+    return hasCell(row[0]) || hasCell(row[1]);
+  });
+  const metricRows = hasAnyMetric ? sheetRows : (fb.metricRows || []);
+  return { oilContext, metricRows };
+}
+
+/** Fetch + parse the `Overviews` sheet; row 0 must be headers. Cached with same TTL as price sheets. */
+async function ensureCountryOverviewMapFromSheet() {
+  const now = Date.now();
+  if (_overviewByIdCache && now - _overviewByIdCacheT < SHEET_CACHE_TTL_MS) {
+    return _overviewByIdCache;
+  }
+  const url = typeof OVERVIEW_SHEET_URL === 'string' ? OVERVIEW_SHEET_URL.trim() : '';
+  if (!url) {
+    _overviewByIdCache = new Map();
+    _overviewByIdCacheT = now;
+    return _overviewByIdCache;
+  }
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Overview sheet ${res.status}`);
+  const rows = parseCSV(await res.text(), { headerRowIndex: 0 });
+  const map = parseCountryOverviewSheetRows(rows);
+  _overviewByIdCache = map;
+  _overviewByIdCacheT = now;
+  return map;
+}
+
+/**
+ * Overview for one country: merges `Overviews` sheet row with `COUNTRY_OVERVIEW_FALLBACK` from config.
+ */
+async function getCountryOverview(countryId) {
+  const id = +countryId;
+  const fb =
+    (typeof COUNTRY_OVERVIEW_FALLBACK !== 'undefined' && COUNTRY_OVERVIEW_FALLBACK[id]) ||
+    { oilContext: '—', metricRows: [] };
+  try {
+    const m = await ensureCountryOverviewMapFromSheet();
+    const sheet = m.get(id);
+    return mergeCountryOverview(fb, sheet);
+  } catch (_) {
+    return fb;
+  }
+}
+
 /**
  * Country / state (region) label layers to keep visible when suppressing other map text.
  * Positron (remote): label_country_*, label_state. Dark fork: place_country_*, place_state.

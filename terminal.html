@@ -133,7 +133,7 @@
   <script src="assets/terminal-map-mapkit.js"></script>
   <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA fuels — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA fuels — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
@@ -1143,6 +1143,23 @@
       }
     }
 
+    function applyTerminalLeftOverview(ov, oilEl, metricsEl) {
+      if (oilEl) oilEl.textContent = ov?.oilContext || '—';
+      if (metricsEl) {
+        const rowData = ov?.metricRows;
+        const cellHtml = (m) => m
+          ? `<div class="metric"><div class="k">${m[0]}</div><div class="v">${m[1]}</div></div>`
+          : '<div class="overview-metric-empty" aria-hidden="true"></div>';
+        metricsEl.innerHTML = Array.isArray(rowData) && rowData.length
+          ? rowData.map((pair) => {
+              const left = pair[0];
+              const right = pair[1];
+              return `<div class="overview-row">${cellHtml(left)}${cellHtml(right)}</div>`;
+            }).join('')
+          : '';
+      }
+    }
+
     function setLeftOverview(countryId) {
       const meta = COUNTRIES[countryId];
       if (!meta) return;
@@ -1163,21 +1180,14 @@
         const topRow = subEl.closest('.card-topline-row');
         if (topRow) topRow.style.display = showSub ? '' : 'none';
       }
-      const ov = COUNTRY_OVERVIEW[countryId];
-      if (oilEl) oilEl.textContent = ov?.oilContext || '—';
-      if (metricsEl) {
-        const rowData = ov?.metricRows;
-        const cellHtml = (m) => m
-          ? `<div class="metric"><div class="k">${m[0]}</div><div class="v">${m[1]}</div></div>`
-          : '<div class="overview-metric-empty" aria-hidden="true"></div>';
-        metricsEl.innerHTML = Array.isArray(rowData) && rowData.length
-          ? rowData.map((pair) => {
-              const left = pair[0];
-              const right = pair[1];
-              return `<div class="overview-row">${cellHtml(left)}${cellHtml(right)}</div>`;
-            }).join('')
-          : '';
-      }
+      const fb = COUNTRY_OVERVIEW_FALLBACK[countryId] || { oilContext: '—', metricRows: [] };
+      applyTerminalLeftOverview(fb, oilEl, metricsEl);
+      const cidForOverview = countryId;
+      getCountryOverview(cidForOverview).then((ov) => {
+        if (+window.__terminalSelectedCountryId !== +cidForOverview) return;
+        applyTerminalLeftOverview(ov, oilEl, metricsEl);
+      }).catch(() => {});
+
       if (hiTitle && countryId === 458) {
         const label = (MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION;
         hiTitle.textContent = `${label}`;

@@ -129,7 +129,7 @@
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/LA fuels — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/LA fuels — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -737,8 +737,7 @@
       }
     }
 
-    function renderCountryOverview(cid) {
-      const ov = COUNTRY_OVERVIEW[cid];
+    function applyAppCountryOverview(ov) {
       const oilEl = document.getElementById('overview-text');
       const metricsEl = document.getElementById('overview-metrics');
       if (oilEl) oilEl.textContent = ov?.oilContext || '—';
@@ -757,10 +756,20 @@
       }
     }
 
+    async function renderCountryOverview(cid) {
+      const fb = COUNTRY_OVERVIEW_FALLBACK[cid] || { oilContext: '—', metricRows: [] };
+      applyAppCountryOverview(fb);
+      try {
+        const ov = await getCountryOverview(cid);
+        if (selected !== cid) return;
+        applyAppCountryOverview(ov);
+      } catch (_) {}
+    }
+
     function setSelected(cid){
       selected = cid;
       document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
-      renderCountryOverview(cid);
+      void renderCountryOverview(cid).catch(() => {});
       refreshHighlights(cid);
       if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(cid, true);
       if (typeof window.__appMapApplySelection === 'function') {

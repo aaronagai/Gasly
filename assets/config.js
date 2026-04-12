@@ -51,6 +51,17 @@ const MM_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
+ * Country overview copy + metrics (same workbook). Tab name must match `sheet=`.
+ * Create a tab named **Overviews** with row 1 = headers (no preamble rows), then one data row per `country_id`.
+ *
+ * Required / optional columns (snake_case; spaces in Sheet headers become underscores in CSV keys):
+ * - `country_id` — ISO numeric (458, 96, 360, …)
+ * - `oil_context` — paragraph for the overview card
+ * - `row1_left_k`, `row1_left_v`, `row1_right_k`, `row1_right_v` … through **row4_*** — metric grid (leave both k+v empty to omit a cell)
+ */
+const OVERVIEW_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Overviews`;
+
+/**
  * If set to a non-negative integer, use that CSV line as the header row.
  * Otherwise the parser auto-detects the header (handles preamble rows).
  */
@@ -139,10 +150,10 @@ const MY_REGIONS = [
 ];
 
 /**
- * Oil industry context and key metrics per country.
- * Shared by app.html (overview card) and terminal.html (left panel).
+ * Fallback when the `Overviews` sheet is missing, empty, or fetch fails.
+ * Live copy is merged from the sheet via `getCountryOverview` in utils.js.
  */
-const COUNTRY_OVERVIEW = {
+const COUNTRY_OVERVIEW_FALLBACK = {
   458: {
     oilContext:
       'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
