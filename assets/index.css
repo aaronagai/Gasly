@@ -112,6 +112,17 @@
       z-index: 0;
     }
 
+    /* Placeholder until MapLibre + tiles load (faster first paint / LCP on text). */
+    .index-hero-map.index-hero-map--loading {
+      background: linear-gradient(165deg, #edecea 0%, #e4e1de 45%, #dcd8d4 100%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .index-hero-map.index-hero-map--loading {
+        background: linear-gradient(165deg, #1a1a1e 0%, #151517 50%, #121214 100%);
+      }
+    }
+
     .map-wrap .maplibregl-map,
     .map-wrap .maplibregl-canvas-container {
       position: absolute !important;
