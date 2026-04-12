@@ -41,12 +41,12 @@
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
   <link
     rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
     media="print"
     onload="this.media='all'"
   />
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" />
   </noscript>
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/index.css" />
@@ -55,10 +55,12 @@
 <body>
   <header>
     <div class="logo-block">
-      <h1 class="site-wordmark site-wordmark-lockup">
-        <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
-        <span>petrolprice.xyz</span>
-      </h1>
+      <div class="logo-block-lockup-row">
+        <h1 class="site-wordmark site-wordmark-lockup">
+          <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
+          <span>petrolprice.xyz</span>
+        </h1>
+      </div>
     </div>
 
     <div class="header-actions">
@@ -74,7 +76,7 @@
       <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
       <div class="map-hint">Tap a country with live data to view prices</div>
       <div class="hero-overlay">
-        <h2 class="hero-headline">Live fuel prices across Southeast Asia.</h2>
+        <h2 class="hero-headline">Live petrol prices across Southeast Asia <span class="hero-headline-light">and beyond.</span></h2>
         <p class="hero-subhead">Track petrol and diesel prices in Malaysia, Singapore, Brunei, Indonesia, Thailand, and the Philippines.</p>
       </div>
     </div>
@@ -85,11 +87,9 @@
     <div class="footer-row footer-row-top">
       <div class="footer-brand site-wordmark">petrolprice.xyz</div>
       <nav class="footer-nav-primary" aria-label="Footer">
-        <a href="#">About</a>
-        <a href="#">Features</a>
-        <a href="careers.html">Careers</a>
-        <a href="#">Investors</a>
-        <a href="#">FAQ</a>
+        <a href="about/">About</a>
+        <a href="careers/">Careers</a>
+        <a href="faq/">FAQ</a>
       </nav>
     </div>
     <div class="footer-divider" aria-hidden="true"></div>

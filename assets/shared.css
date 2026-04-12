@@ -2,6 +2,11 @@
 :root {
   --font:      'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'DM Mono', 'Fira Code', monospace;
+  /* Header wordmark + " | About" — one size everywhere (index + About/Careers/FAQ) */
+  --header-lockup-font-size: 1rem;
+  --header-lockup-font-size-sm: 1rem;
+  --header-lockup-logo-height: 1.25rem;
+  --header-lockup-logo-height-sm: 1.125rem;
 }
 
 /* Wordmark — DM Sans Semibold (600); load DM Sans on each page via Google Fonts */
@@ -42,21 +47,290 @@ a.site-wordmark-lockup {
   display: block;
 }
 
-/* Header lockup — index, careers (same size & weight as homepage) */
+/* Site header — same bar height as index (inner row matches CTA button height) */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px clamp(16px, 4vw, 32px);
+  padding-top: max(14px, env(safe-area-inset-top, 0px));
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+}
+
 header .logo-block {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 34px;
 }
 
-header .logo-block .site-wordmark {
-  font-size: 1.05rem;
+/* Subpage header: "petrolprice.xyz | About" — one line-height + even gaps so flex centering is true */
+.logo-block-lockup-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.header-context-sep {
+  flex-shrink: 0;
+  /* Same face/size as wordmark so the pipe shares cap height and centers cleanly */
+  font-family: 'DM Sans', var(--font);
+  font-weight: 400;
+  font-size: var(--header-lockup-font-size);
+  line-height: 1;
+  color: inherit;
+  opacity: 0.42;
+  user-select: none;
+}
+
+.header-context-label {
+  flex-shrink: 0;
+  /* DM Sans like the wordmark so cap/x-height matches at the same font-size; 400 reads lighter than 600 */
+  font-family: 'DM Sans', var(--font);
+  font-weight: 400;
+  font-size: var(--header-lockup-font-size);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: inherit;
+}
+
+/* Explicit lockup + tag so UA `h1` sizing (e.g. 2em) never wins over class-only rules */
+header .logo-block h1.site-wordmark.site-wordmark-lockup,
+header .logo-block a.site-wordmark.site-wordmark-lockup {
+  font-size: var(--header-lockup-font-size);
   margin: 0;
   font-weight: 600;
+  /* Tighter than default .site-wordmark so row items share one vertical band */
+  line-height: 1;
+}
+
+header .logo-block .site-wordmark-logo {
+  height: var(--header-lockup-logo-height);
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Span text must match lockup size (don’t rely on inherit vs UA h1) */
+header .logo-block .site-wordmark-lockup > span {
+  font-size: var(--header-lockup-font-size);
+  font-weight: 600;
+  line-height: 1;
 }
 
 @media (max-width: 639px) {
-  header .logo-block .site-wordmark {
-    font-size: 0.9rem;
+  header {
+    padding: max(12px, env(safe-area-inset-top, 0px)) 16px 12px;
+  }
+
+  header .logo-block {
+    min-height: 30px;
+  }
+
+  header .logo-block h1.site-wordmark.site-wordmark-lockup,
+  header .logo-block a.site-wordmark.site-wordmark-lockup {
+    font-size: var(--header-lockup-font-size-sm);
+  }
+
+  header .logo-block .site-wordmark-lockup > span {
+    font-size: var(--header-lockup-font-size-sm);
+  }
+
+  header .logo-block .site-wordmark-logo {
+    height: var(--header-lockup-logo-height-sm);
+  }
+
+  .header-context-sep,
+  .header-context-label {
+    font-size: var(--header-lockup-font-size-sm);
+  }
+
+  .site-footer {
+    padding: 28px 16px 32px;
+  }
+
+  .footer-row-top,
+  .footer-row-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .footer-nav-primary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .footer-divider {
+    margin: 22px 0 20px;
+  }
+
+  .footer-legal {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .footer-legal-sep {
+    display: none;
+  }
+
+  .footer-copyright-break {
+    display: inline;
+  }
+
+  .footer-contact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Site footer — landing + About / Careers / FAQ
+   ═══════════════════════════════════════════════════════════ */
+.site-footer {
+  position: relative;
+  z-index: 2;
+  padding: 40px 28px 36px;
+  background: var(--bg);
+  width: 100%;
+  /* Softer gray than body --text-muted for secondary footer copy */
+  --footer-muted: #a8a8a8;
+  --footer-muted-hover: #7a7a7a;
+  --footer-rule: color-mix(in srgb, var(--border) 72%, var(--bg));
+}
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px 28px;
+}
+
+.footer-row-top .footer-brand.site-wordmark {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.footer-nav-primary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(16px, 3vw, 36px);
+}
+
+.footer-nav-primary a {
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--footer-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-nav-primary a:hover {
+  color: var(--footer-muted-hover);
+}
+
+.footer-divider {
+  height: 1px;
+  background: var(--footer-rule);
+  margin: 28px 0 24px;
+}
+
+.footer-legal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 0.8125rem;
+  color: var(--footer-muted);
+  line-height: 1.5;
+}
+
+.footer-copyright {
+  color: var(--footer-muted);
+}
+
+.footer-copyright-break {
+  display: none;
+}
+
+.footer-legal-sep {
+  color: var(--footer-muted);
+  opacity: 0.45;
+  user-select: none;
+  pointer-events: none;
+}
+
+.footer-legal a {
+  color: var(--footer-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-legal a:hover {
+  color: var(--footer-muted-hover);
+}
+
+.footer-contact {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px 28px;
+  font-size: 0.8125rem;
+}
+
+.footer-contact > a:first-child {
+  color: var(--footer-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-contact > a:first-child:hover {
+  color: var(--footer-muted-hover);
+}
+
+.footer-social-x {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--footer-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-social-x:hover {
+  color: var(--footer-muted-hover);
+}
+
+.footer-social-x svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-footer {
+    --footer-muted: rgba(255, 255, 255, 0.48);
+    --footer-muted-hover: rgba(255, 255, 255, 0.78);
   }
 }

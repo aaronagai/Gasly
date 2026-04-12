@@ -42,21 +42,6 @@
       height: 80svh;
     }
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      width: 100%;
-      padding: 14px clamp(16px, 4vw, 32px);
-      padding-top: max(14px, env(safe-area-inset-top, 0px));
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-    }
-
     .try-terminal-btn{
       display: inline-flex;
       align-items: center;
@@ -85,10 +70,13 @@
       box-shadow: 0 10px 22px rgba(254,94,14,0.22);
     }
 
-    .header-actions{
-      display:flex;
-      align-items:center;
-      gap:10px;
+    .header-actions {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     /* ── Map ──────────────────────────────────────���─────────── */
@@ -200,6 +188,11 @@
         0 0 28px rgba(255, 255, 255, 0.45),
         0 0 10px rgba(255, 255, 255, 0.35);
     }
+
+    .hero-headline .hero-headline-light {
+      font-weight: 300;
+      letter-spacing: -0.02em;
+    }
     .hero-subhead {
       font-size: 0.875rem;
       color: color-mix(in srgb, var(--text) 68%, var(--text-muted));
@@ -227,97 +220,6 @@
       letter-spacing: 0.12em; text-transform: uppercase;
       opacity: 0.4; white-space: nowrap;
     }
-
-    /* ═══════════════════════════════════════════════════════════
-       FOOTER
-    ═══════════════════════════════════════════════════════════ */
-    .site-footer {
-      position: relative; z-index: 2;
-      padding: 40px 28px 36px;
-      background: var(--bg);
-      width: 100%;
-      /* Everything except the wordmark uses a softer gray than body --text-muted */
-      --footer-muted: #a8a8a8;
-      --footer-muted-hover: #7a7a7a;
-      --footer-rule: color-mix(in srgb, var(--border) 72%, var(--bg));
-    }
-    .footer-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px 28px;
-    }
-    .footer-row-top .footer-brand.site-wordmark {
-      font-size: 1rem;
-      color: var(--text);
-    }
-    .footer-nav-primary {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: clamp(16px, 3vw, 36px);
-    }
-    .footer-nav-primary a {
-      font-size: 0.875rem;
-      font-weight: 400;
-      letter-spacing: 0.01em;
-      color: var(--footer-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-nav-primary a:hover { color: var(--footer-muted-hover); }
-    .footer-divider {
-      height: 1px;
-      background: var(--footer-rule);
-      margin: 28px 0 24px;
-    }
-    .footer-legal {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px 8px;
-      font-size: 0.8125rem;
-      color: var(--footer-muted);
-      line-height: 1.5;
-    }
-    .footer-copyright { color: var(--footer-muted); }
-    .footer-copyright-break { display: none; }
-    .footer-legal-sep {
-      color: var(--footer-muted);
-      opacity: 0.45;
-      user-select: none;
-      pointer-events: none;
-    }
-    .footer-legal a {
-      color: var(--footer-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-legal a:hover { color: var(--footer-muted-hover); }
-    .footer-contact {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 20px 28px;
-      font-size: 0.8125rem;
-    }
-    .footer-contact > a:first-child {
-      color: var(--footer-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-contact > a:first-child:hover { color: var(--footer-muted-hover); }
-    .footer-social-x {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--footer-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .footer-social-x:hover { color: var(--footer-muted-hover); }
-    .footer-social-x svg { flex-shrink: 0; opacity: 0.9; }
 
     /* ── Tooltip ──────────────────────────────────────────────── */
     #tooltip {
@@ -347,57 +249,14 @@
        MOBILE  (< 640px)
     ══════════════════════════════════════���════════════════════ */
     @media (max-width: 639px) {
-      header {
-        padding: max(12px, env(safe-area-inset-top, 0px)) 16px 12px;
-      }
-
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
       .map-hint    { font-size: 0.7rem; bottom: 38px; }
 
-      .site-footer {
-        padding: 28px 16px 32px;
-      }
-      .footer-row-top,
-      .footer-row-bottom {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 18px;
-        width: 100%;
-      }
-      .footer-nav-primary {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-      .footer-divider { margin: 22px 0 20px; }
-      .footer-legal {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        width: 100%;
-      }
-      .footer-legal-sep {
-        display: none;
-      }
-      .footer-copyright-break {
-        display: inline;
-      }
-      .footer-contact {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-        width: 100%;
-      }
     }
 
     /* Dark system UI: tokens above switch :root; below tweaks map + chrome that sit on the dark basemap. */
     @media (prefers-color-scheme: dark) {
-      .site-footer {
-        --footer-muted: rgba(255, 255, 255, 0.48);
-        --footer-muted-hover: rgba(255, 255, 255, 0.78);
-      }
-
       #tooltip {
         background: color-mix(in srgb, var(--bg-card) 92%, transparent);
         box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);

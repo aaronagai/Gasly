@@ -1,4 +1,4 @@
-/* Careers page — index-aligned header + job content */
+/* Careers, About, FAQ — shared simple layout (index-aligned header + column typography) */
 
 :root {
   --bg:           #fafaf8;
@@ -37,6 +37,8 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font);
   font-size: 0.875rem;
   line-height: 1.58;
@@ -45,35 +47,14 @@ body {
   overflow-x: hidden;
 }
 
-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  padding: 14px clamp(16px, 4vw, 32px);
-  padding-top: max(14px, env(safe-area-inset-top, 0px));
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+/* Pin footer to viewport bottom when content is short */
+body > header,
+body > .site-footer {
+  flex-shrink: 0;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-page-label {
-  font-family: 'DM Sans', var(--font);
-  font-weight: 500;
-  font-size: 0.92rem;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: var(--text);
-  white-space: nowrap;
+body > .site-footer {
+  margin-top: auto;
 }
 
 .careers-main {
@@ -194,6 +175,12 @@ header {
   margin-bottom: 0;
 }
 
+.careers-intro a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .careers-rule {
   margin: 2rem 0;
   border: none;
@@ -244,4 +231,14 @@ header {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 0.15em;
+}
+
+.careers-apply + .careers-apply {
+  margin-top: 0.65rem;
+}
+
+.careers-list a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
