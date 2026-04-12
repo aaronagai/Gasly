@@ -515,11 +515,11 @@ function resolveOverviewCountryId(row) {
     overviewCell(row, 'country') ||
     overviewCell(row, 'name');
   if (!nameRaw || typeof COUNTRIES === 'undefined') return null;
-  const want = normalizeSheetString(nameRaw);
+  const want = normalizeSheetString(nameRaw).toLowerCase();
   for (const [idStr, meta] of Object.entries(COUNTRIES)) {
     const id = +idStr;
     if (!Number.isFinite(id) || !meta?.name) continue;
-    if (normalizeSheetString(meta.name) === want) return id;
+    if (normalizeSheetString(meta.name).toLowerCase() === want) return id;
   }
   return null;
 }
@@ -553,8 +553,13 @@ function metricRowsFromFlatOverviewRow(row) {
   };
 
   const out = [];
-  const r1l = pair(['bopd'], 'BOPD');
-  const r1r = pair(['1p_reserves'], '1P Reserves');
+  // Match the Overviews sheet convention (ASCII hyphen) when padding an empty BOPD / 1P cell.
+  const emptyMetric = '-';
+  let r1l = pair(['bopd'], 'BOPD');
+  let r1r = pair(['1p_reserves'], '1P Reserves');
+  // Stable two-up grid: blank sheet cell → same placeholder editors use in the sheet.
+  if (r1r && !r1l) r1l = ['BOPD', emptyMetric];
+  if (r1l && !r1r) r1r = ['1P Reserves', emptyMetric];
   if (r1l || r1r) out.push([r1l, r1r]);
 
   const r2l = refineryMiddle();

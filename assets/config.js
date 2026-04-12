@@ -59,7 +59,7 @@ const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
  * - **`country_name`** — must match `COUNTRIES[].name` (case-insensitive), e.g. `Malaysia`, `Singapore`.
  * - **`oil_context`** — long overview paragraph only (not the country name; column A already identifies the country).
  *   Leave empty to keep the code fallback text for that country.
- * - **Metric cells** — plain values; labels in the UI are fixed (BOPD, 1P Reserves, …). Leave a cell empty to omit that metric.
+ * - **Metric cells** — plain values; fixed labels in the UI. Use `-` for no figure; if only one of BOPD / 1P is set, the other shows `-` when left blank.
  * - Optional aliases: `refinery_intake` or `refinery_capacity` instead of `ref_intake` (capacity uses label “Refinery Capacity”).
  * - **`country_id`** (optional) — numeric id instead of name if you prefer.
  *
@@ -177,39 +177,39 @@ const COUNTRY_OVERVIEW_FALLBACK = {
     oilContext:
       'Mid-sized upstream producer with an economy shaped by oil & gas; exports some crude and petroleum products, while still importing certain grades/volumes to meet refinery and fuel demand.',
     metricRows: [
-      [['BOPD', '570,000'],          ['1P Reserves', '2.7B Barrels']],
-      [['Refinery Intake', '747,000'], null],
-      [['Export Value', 'RM6.2bil'],  ['Import Value', 'RM13.6bil']],
-      [['Status', 'Net Importer'],    null],
+      [['BOPD', '570,000'], ['1P Reserves', '2.7B Barrels']],
+      [['Refinery Intake', '747000 bpd'], null],
+      [['Export Value', 'MYR 6.2bil'], ['Import Value', 'MYR 13.6bil']],
+      [['Status', 'Net Importer'], null],
     ],
   },
   96: {
     oilContext:
       'Small, wealthy upstream producer with an economy almost entirely dependent on oil & gas; exports the vast majority of its crude and refined products, with domestic consumption representing only a tiny fraction of production.',
     metricRows: [
-      [['BOPD', '102,677'],               ['1P Reserves', '1.1B Barrels']],
-      [['Refinery Intake', '16,338'],       null],
-      [['Export Value', 'BND 13.45bil'],   ['Import Value', 'BND 8.62bil']],
-      [['Status', 'Net Exporter'],          null],
+      [['BOPD', '102,677'], ['1P Reserves', '1.1B Barrels']],
+      [['Refinery Intake', '16338 bpd'], null],
+      [['Export Value', 'BND 13.45bil'], ['Import Value', 'BND 8.62bil']],
+      [['Status', 'Net Exporter'], null],
     ],
   },
   360: {
     oilContext:
       "Southeast Asia's largest economy and a former OPEC member; production has declined significantly from its peak, forcing the country to rely heavily on imported refined products despite still being a notable crude oil producer.",
     metricRows: [
-      [['BOPD', '608,100'],             ['1P Reserves', '2.41B Barrels']],
-      [['Refinery Capacity', '~1.22M bpd'], null],
-      [['Export Value', 'US$13.07bil'], ['Import Value', 'US$32.77bil']],
-      [['Status', 'Net Importer'],       null],
+      [['BOPD', '608,100'], ['1P Reserves', '2.41B Barrels']],
+      [['Refinery Intake', '~1.22M bpd'], null],
+      [['Export Value', 'USD 13.07bil'], ['Import Value', 'USD 32.77bil']],
+      [['Status', 'Net Importer'], null],
     ],
   },
   702: {
     oilContext:
       'Global refining and trading hub with no domestic oil production; imports massive volumes of crude for refining into high-value petroleum products, most of which are re-exported.',
     metricRows: [
-      [['BOPD', '-'],                          ['1P Reserves', '- barrels']],
-      [['Refinery Intake', '~1,100,000 bpd'],  null],
-      [['Export Value', '~US$465B/year'],     ['Import Value', '~US$515B/year']],
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refinery Intake', '~1,100,000 bpd'], null],
+      [['Export Value', 'USD 465bil'], ['Import Value', 'USD 515bil']],
       [['Status', 'Net Importer (refining hub)'], null],
     ],
   },
@@ -217,29 +217,29 @@ const COUNTRY_OVERVIEW_FALLBACK = {
     oilContext:
       "Southeast Asia's second-largest oil consumer with very limited domestic reserves; heavily reliant on imports to meet its massive refining and industrial demand despite being a modest producer.",
     metricRows: [
-      [['BOPD', '417,959'],            ['1P Reserves', '0.24B Barrels']],
+      [['BOPD', '417,959'], ['1P Reserves', '0.24B Barrels']],
       [['Refinery Intake', '1,372,480'], null],
-      [['Export Value', 'Unavailable'], ['Import Value', 'Unavailable']],
-      [['Status', 'Net Importer'],     null],
+      [['Export Value', '-'], ['Import Value', '-']],
+      [['Status', 'Net Importer'], null],
     ],
   },
   608: {
     oilContext:
       'Very small upstream producer with limited reserves; almost entirely dependent on imported oil to fuel its growing economy, with domestic production covering only a tiny fraction of demand.',
     metricRows: [
-      [['BOPD', '14,345'],              ['1P Reserves', '0.14B Barrels']],
-      [['Refinery Intake', '473,464'],  null],
-      [['Export Value', 'Not specified in available data'], ['Import Value', 'Not specified in available data']],
-      [['Status', 'Net Importer'],      null],
+      [['BOPD', '14,345'], ['1P Reserves', '0.14B Barrels']],
+      [['Refinery Intake', '473,464'], null],
+      [['Export Value', '-'], ['Import Value', '-']],
+      [['Status', 'Net Importer'], null],
     ],
   },
   116: {
     oilContext:
       'Modest domestic production with no significant refining depth; transport and power demand are met overwhelmingly by imported fuels as the economy and vehicle fleet grow.',
     metricRows: [
-      [['BOPD', '—'], ['1P Reserves', '—']],
-      [['Refinery Intake', '—'], null],
-      [['Export Value', '—'], ['Import Value', '—']],
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refinery Intake', '-'], null],
+      [['Export Value', '-'], ['Import Value', '-']],
       [['Status', 'Net Importer'], null],
     ],
   },
@@ -247,9 +247,9 @@ const COUNTRY_OVERVIEW_FALLBACK = {
     oilContext:
       'Landlocked with no coastal refining; entirely dependent on imported refined products via neighbours and river corridors, with demand rising from transport and hydropower-related logistics.',
     metricRows: [
-      [['BOPD', '—'], ['1P Reserves', '—']],
-      [['Refinery Intake', '—'], null],
-      [['Export Value', '—'], ['Import Value', '—']],
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refinery Intake', '-'], null],
+      [['Export Value', '-'], ['Import Value', '-']],
       [['Status', 'Net Importer'], null],
     ],
   },
@@ -257,9 +257,9 @@ const COUNTRY_OVERVIEW_FALLBACK = {
     oilContext:
       'Long-standing producer with uneven sanctions-era trade; domestic crude is modest relative to demand, so transport and industry still lean heavily on fuel imports and informal cross-border flows.',
     metricRows: [
-      [['BOPD', '—'], ['1P Reserves', '—']],
-      [['Refinery Intake', '—'], null],
-      [['Export Value', '—'], ['Import Value', '—']],
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refinery Intake', '-'], null],
+      [['Export Value', '-'], ['Import Value', '-']],
       [['Status', 'Net Importer'], null],
     ],
   },
