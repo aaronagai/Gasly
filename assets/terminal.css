@@ -452,7 +452,8 @@
       display: none;
     }
     .search-menu.open{ display: block; }
-    .search-item{
+    /* Scope + normal weight: Inter “500” still reads bold; map chrome must not inherit heavy faces */
+    #country-search-menu .search-item{
       display: flex;
       flex-direction: column;
       gap: 1px;
@@ -460,19 +461,27 @@
       border-radius: 0;
       cursor: pointer;
       user-select: none;
-      color: var(--term-fg-strong);
+      color: var(--term-fg-secondary);
+      font-family: var(--font);
+      font-weight: 400;
+      font-synthesis: none;
+      font-size: 0.9375rem;
+      line-height: 1.35;
     }
-    .search-item:hover,
-    .search-item.active{
+    #country-search-menu .search-item:hover,
+    #country-search-menu .search-item.active{
       background: var(--term-row-hover);
     }
-    .search-item .label{
-      font-weight: 700;
+    #country-search-menu .search-item .label{
+      font-weight: 400;
+      font-synthesis: none;
       letter-spacing: 0.01em;
     }
-    .search-item .sub{
+    #country-search-menu .search-item .sub{
       font-size: 0.83rem;
       color: var(--term-fg-tertiary);
+      font-weight: 400;
+      font-synthesis: none;
     }
     .search-empty{
       padding: 12px 10px;
@@ -480,12 +489,13 @@
       font-size: 0.9rem;
     }
     #info-title {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      text-decoration-thickness: 1px;
+      text-decoration: none;
     }
     #info-title.switchable {
       cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
     }
     .city-menu{
       position: fixed;
@@ -501,7 +511,8 @@
       display: none;
     }
     .city-menu.open{ display: block; }
-    .city-item{
+    /* Region / city / provider picker under #info-title — match country search list weight */
+    #terminal-switcher-menu .city-item{
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -509,12 +520,26 @@
       padding: 9px 10px;
       cursor: pointer;
       user-select: none;
-      color: var(--term-fg-strong);
+      color: var(--term-fg-secondary);
+      font-family: var(--font);
+      font-weight: 400;
+      font-synthesis: none;
+      font-size: 0.9375rem;
+      line-height: 1.35;
     }
-    .city-item:hover{ background: var(--term-row-hover-2); }
-    .city-item.active{ background: rgba(255,106,0,0.10); }
-    .city-item .label{ font-weight: 700; letter-spacing: 0.01em; }
-    .city-item .sub{ font-size: 0.82rem; color: var(--term-fg-tertiary); }
+    #terminal-switcher-menu .city-item:hover{ background: var(--term-row-hover-2); }
+    #terminal-switcher-menu .city-item.active{ background: rgba(255,106,0,0.10); }
+    #terminal-switcher-menu .city-item .label{
+      font-weight: 400;
+      font-synthesis: none;
+      letter-spacing: 0.01em;
+    }
+    #terminal-switcher-menu .city-item .sub{
+      font-size: 0.82rem;
+      color: var(--term-fg-tertiary);
+      font-weight: 400;
+      font-synthesis: none;
+    }
     .spacer { flex: 1; }
     .zoom {
       display: inline-flex;

@@ -876,7 +876,8 @@
           setSnap((snap + 1) % 3);
         }
       });
-      setSnap(1);
+      /* Default: smallest sheet stop (~¼ viewport) so the map stays visible on first open. */
+      setSnap(0);
       scroller.addEventListener('scroll', syncHiStickyShadow, { passive: true });
       syncHiStickyShadow();
       const onViewportResize = () => setSnap(snap);

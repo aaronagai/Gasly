@@ -215,6 +215,126 @@
             return { top: side, right: side, bottom: side + bottomExtra, left: side };
           }
 
+          function readAppSheetHeightPx() {
+            try {
+              const raw = getComputedStyle(document.documentElement).getPropertyValue('--sheetH').trim();
+              const m = /^(\d+(?:\.\d+)?)px$/.exec(raw);
+              if (m) return Math.round(Number(m[1]));
+            } catch (_) {}
+            return 0;
+          }
+
+          /**
+           * Bottom inset for SEA overview. Uses --sheetH (reliable) and optionally a measured band only
+           * when the sheet rect looks sane — bad first-frame rects caused huge padding and a camera
+           * over the Southern Ocean.
+           */
+          function appMapSeaOverviewPadding() {
+            const h = Math.max(1, map.getContainer().clientHeight);
+            const side = 72;
+            const sheetH = readAppSheetHeightPx();
+            let bottomReserve = sheetH > 0 ? sheetH + 22 : Math.round(h * 0.22);
+
+            const sheetEl = document.getElementById('sheet');
+            if (sheetEl && typeof sheetEl.getBoundingClientRect === 'function') {
+              const r = sheetEl.getBoundingClientRect();
+              const host = map.getContainer().getBoundingClientRect();
+              if (
+                r.height >= 64 &&
+                r.top > 80 &&
+                host.height > 200 &&
+                r.top < host.bottom - 120
+              ) {
+                const measured = Math.round(host.bottom - r.top + 2);
+                if (measured >= 120 && measured <= host.height * 0.52) {
+                  bottomReserve = measured;
+                }
+              }
+            }
+
+            const innerMin = 260;
+            const maxReserve = Math.max(140, h - side - innerMin);
+            const reserved = Math.min(Math.max(bottomReserve, 120), maxReserve);
+
+            return { top: side, right: side, bottom: side + reserved, left: side };
+          }
+
+          function seaBoundsLookSane(bb) {
+            if (!bb || !bb[0] || !bb[1]) return false;
+            const [w, s] = bb[0];
+            const [e, n] = bb[1];
+            const lonSpan = e - w;
+            const latSpan = n - s;
+            return (
+              lonSpan > 2 &&
+              lonSpan < 60 &&
+              latSpan > 2 &&
+              latSpan < 40 &&
+              s > -14 &&
+              n < 35 &&
+              w > 80 &&
+              e < 155
+            );
+          }
+
+          /** Union of map feature bounds for SEA ids (first paint: whole region above the sheet). */
+          function boundsForSeaIds() {
+            const ids = Array.isArray(o.SEA_IDS) ? o.SEA_IDS : [];
+            let west = Infinity;
+            let south = Infinity;
+            let east = -Infinity;
+            let north = -Infinity;
+            for (let i = 0; i < ids.length; i++) {
+              const f = byNid[+ids[i]];
+              if (!f || !f.geometry) continue;
+              const bb = boundsFromGeometry(f.geometry);
+              if (!bb) continue;
+              west = Math.min(west, bb[0][0]);
+              south = Math.min(south, bb[0][1]);
+              east = Math.max(east, bb[1][0]);
+              north = Math.max(north, bb[1][1]);
+            }
+            if (!(west < east && south < north)) return null;
+            /* Clip extreme southern tails (e.g. deep IN outer isles) without hiding Timor (~-9.3). */
+            const southClamp = -10.75;
+            south = Math.max(south, southClamp);
+            if (!(south < north)) return null;
+            return [
+              [west, south],
+              [east, north],
+            ];
+          }
+
+          function fitSeaOverview(animate) {
+            const run = () => {
+              try {
+                map.resize();
+              } catch (_) {}
+              const dur = animate ? 520 : 0;
+              const h = Math.max(1, map.getContainer().clientHeight);
+              const off = [0, -Math.round(h * 0.22)];
+              const seaBb = boundsForSeaIds();
+              if (seaBb && seaBoundsLookSane(seaBb)) {
+                map.fitBounds(seaBb, {
+                  padding: appMapSeaOverviewPadding(),
+                  duration: dur,
+                  maxZoom: 6.45,
+                });
+                const z = map.getZoom();
+                if (Number.isFinite(z)) {
+                  map.setZoom(Math.min(z + 0.48, 6.45));
+                }
+                /* Nudge northwest: slightly higher latitude, slightly lower longitude. */
+                const c = map.getCenter();
+                map.setCenter([c.lng - 1.05, c.lat + 0.72]);
+                return;
+              }
+              map.easeTo({ center: [113.9, 5.35], zoom: 4.75, duration: dur, offset: off });
+            };
+            if (animate) run();
+            else requestAnimationFrame(() => requestAnimationFrame(run));
+          }
+
           window.APP_ZOOM_TO = function zoomToCountry(countryId, animate) {
             const id = +countryId;
             const dur = animate ? 480 : 0;
@@ -302,8 +422,7 @@
             handleCountryPick(nid, e.lngLat);
           });
 
-          const initialId = o.getSelected() ?? 458;
-          window.APP_ZOOM_TO(initialId, false);
+          fitSeaOverview(false);
           applySel();
         })
         .catch((err) => {

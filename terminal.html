@@ -76,7 +76,7 @@
               <circle cx="11" cy="11" r="7.5"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries" autocomplete="off" spellcheck="false" />
+            <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries and regions" autocomplete="off" spellcheck="false" />
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@
           <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
         </div>
       </div>
-      <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country results"></div>
+      <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
     </main>
 
     <div class="gutter gutter-right" id="gutter-right" role="separator" aria-label="Resize right panel" aria-orientation="vertical" tabindex="0"></div>
@@ -123,8 +123,8 @@
     <span class="tt-status"  id="tt-status"></span>
   </div>
 
-  <!-- Malaysia city dropdown -->
-  <div id="my-city-menu" class="city-menu" role="listbox" aria-label="Select Malaysia city"></div>
+  <!-- Region / city / provider switcher (Malaysia, Indonesia, Singapore, Laos) -->
+  <div id="terminal-switcher-menu" class="city-menu" role="listbox" aria-label="Options"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -291,6 +291,49 @@
       return `-IDR ${abs}/L`;
     }
 
+    function terminalSwitcherHasOptions(cid) {
+      const c = +cid;
+      if (c === 458) return MY_REGIONS.length > 1;
+      if (c === 360) return Object.keys(ID_CITY_LONLAT || {}).length > 1;
+      if (c === 702) return sortedSingaporeProviders(_sgAllRows || []).length > 1;
+      if (c === 418) return Object.keys(LA_PROVINCE_LONLAT || {}).length > 1;
+      return false;
+    }
+
+    function syncTerminalInfoTitleSwitchable() {
+      const hiTitle = document.getElementById('info-title');
+      const menu = document.getElementById('terminal-switcher-menu');
+      if (!hiTitle) return;
+      const cid = +window.__terminalSelectedCountryId;
+      const on = terminalSwitcherHasOptions(cid);
+      const menuOpen = !!(menu && menu.classList.contains('open'));
+      hiTitle.classList.toggle('switchable', on);
+      if (on) {
+        hiTitle.removeAttribute('aria-disabled');
+        hiTitle.tabIndex = 0;
+        hiTitle.setAttribute('role', 'button');
+        hiTitle.setAttribute('aria-haspopup', 'listbox');
+        hiTitle.setAttribute('aria-controls', 'terminal-switcher-menu');
+        if (!menuOpen) hiTitle.setAttribute('aria-expanded', 'false');
+        const tips = {
+          458: 'Choose Malaysia pricing region',
+          360: 'Choose Indonesia city',
+          702: 'Choose Singapore fuel provider',
+          418: 'Choose Laos province',
+        };
+        hiTitle.title = tips[cid] || 'Choose option';
+      } else {
+        if (menu) menu.classList.remove('open');
+        hiTitle.setAttribute('aria-expanded', 'false');
+        hiTitle.setAttribute('aria-disabled', 'true');
+        hiTitle.tabIndex = -1;
+        hiTitle.removeAttribute('role');
+        hiTitle.removeAttribute('aria-haspopup');
+        hiTitle.removeAttribute('aria-controls');
+        hiTitle.removeAttribute('title');
+      }
+    }
+
     function setRightPanel({ kicker, titleA, titleB, subtag, infoTitle, infoSub, infoLines }) {
       window.__terminalRightPanelState = { kicker, titleA, titleB, subtag, infoTitle, infoSub, infoLines };
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -454,6 +497,7 @@
           if (match) lines.appendChild(match);
         }
       }
+      syncTerminalInfoTitleSwitchable();
     }
 
     // Right-panel chart
@@ -1134,17 +1178,9 @@
             }).join('')
           : '';
       }
-      if (hiTitle) {
-        const isMY = countryId === 458;
-        hiTitle.classList.toggle('switchable', isMY);
-        hiTitle.setAttribute('aria-disabled', isMY ? 'false' : 'true');
-        hiTitle.tabIndex = isMY ? 0 : -1;
-        if (isMY) {
-          hiTitle.title = 'Pick a region (Semenanjung vs East Malaysia)';
-          const label = (MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION;
-          hiTitle.textContent = `${label}`;
-        }
-        else hiTitle.removeAttribute('title');
+      if (hiTitle && countryId === 458) {
+        const label = (MY_REGIONS.find(r => r.key === MY_REGION)?.label) || MY_REGION;
+        hiTitle.textContent = `${label}`;
       }
 
       // Reset/keep paging state based on country
@@ -1155,52 +1191,140 @@
       }
     }
 
-    // Malaysia region dropdown (click the underlined title)
-    (function initMalaysiaRegionMenu(){
+    // Region / city / provider dropdown (#info-title when .switchable)
+    (function initTerminalSwitcherMenu(){
       const titleEl = document.getElementById('info-title');
-      const menu = document.getElementById('my-city-menu');
+      const menu = document.getElementById('terminal-switcher-menu');
       if (!titleEl || !menu) return;
 
       let open = false;
 
-      function closeMenu(){
+      function closeMenu() {
         if (!open) return;
         open = false;
         menu.classList.remove('open');
         titleEl.setAttribute('aria-expanded', 'false');
       }
 
-      function positionMenu(){
+      function positionMenu() {
         const r = titleEl.getBoundingClientRect();
         const left = Math.min(Math.max(12, r.left), window.innerWidth - 12);
-        const top  = Math.min(r.bottom + 8, window.innerHeight - 12);
+        const top = Math.min(r.bottom + 8, window.innerHeight - 12);
         menu.style.left = `${left}px`;
-        menu.style.top  = `${top}px`;
+        menu.style.top = `${top}px`;
       }
 
-      function renderMenu(){
-        const cur = MY_REGION;
-        menu.innerHTML = MY_REGIONS.map(r => `
-          <div class="city-item ${r.key === cur ? 'active' : ''}" role="option" aria-selected="${r.key === cur ? 'true' : 'false'}" data-region="${r.key}">
-            <div style="display:flex;flex-direction:column;gap:1px;">
-              <div class="label">${r.label}</div>
-            </div>
-            <div style="font-size:0.9rem;opacity:${r.key === cur ? '0.85' : '0'}">✓</div>
-          </div>
-        `).join('');
-
-        menu.querySelectorAll('.city-item').forEach(el => {
-          el.addEventListener('click', () => {
-            const region = el.getAttribute('data-region');
-            setMalaysiaRegion(region);
-            if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
-            closeMenu();
-          });
+      function appendOptionRow({ labelText, active, onPick }) {
+        const row = document.createElement('div');
+        row.className = 'city-item' + (active ? ' active' : '');
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', active ? 'true' : 'false');
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-direction:column;gap:1px';
+        const lab = document.createElement('div');
+        lab.className = 'label';
+        lab.textContent = labelText;
+        wrap.appendChild(lab);
+        const tick = document.createElement('div');
+        tick.style.cssText = `font-size:0.9rem;opacity:${active ? '0.85' : '0'}`;
+        tick.textContent = '✓';
+        row.appendChild(wrap);
+        row.appendChild(tick);
+        row.addEventListener('click', () => {
+          onPick();
+          closeMenu();
         });
+        menu.appendChild(row);
       }
 
-      function openMenu(){
+      function renderMenu() {
+        const cid = +window.__terminalSelectedCountryId;
+        menu.textContent = '';
+
+        if (cid === 458) {
+          menu.setAttribute('aria-label', 'Select Malaysia region');
+          const cur = MY_REGION;
+          MY_REGIONS.forEach((r) => {
+            appendOptionRow({
+              labelText: r.label,
+              active: r.key === cur,
+              onPick: () => {
+                setMalaysiaRegion(r.key);
+                if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(458, true);
+              },
+            });
+          });
+          return;
+        }
+
+        if (cid === 360) {
+          menu.setAttribute('aria-label', 'Select Indonesia city');
+          let cur = '';
+          try { cur = localStorage.getItem('terminal_id_city') || 'Jakarta Pusat'; } catch (_) { cur = 'Jakarta Pusat'; }
+          Object.keys(ID_CITY_LONLAT || {})
+            .sort((a, b) => a.localeCompare(b))
+            .forEach((city) => {
+              appendOptionRow({
+                labelText: city,
+                active: city === cur,
+                onPick: () => {
+                  try { localStorage.setItem('terminal_id_city', city); } catch (_) {}
+                  delete PAGER_INDEX[360];
+                  updateRightPanelForCountry(360).catch(() => {});
+                  if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+                  if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
+                },
+              });
+            });
+          return;
+        }
+
+        if (cid === 702) {
+          menu.setAttribute('aria-label', 'Select Singapore provider');
+          const providers = sortedSingaporeProviders(_sgAllRows || []);
+          const cur = resolveSingaporeProviderSelection(_sgAllRows || []) || '';
+          const curN = normalizeSheetString(cur);
+          providers.forEach((p) => {
+            appendOptionRow({
+              labelText: p,
+              active: normalizeSheetString(p) === curN,
+              onPick: () => {
+                try { localStorage.setItem('terminal_sg_provider', p); } catch (_) {}
+                delete PAGER_INDEX[702];
+                updateRightPanelForCountry(702).catch(() => {});
+                if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+              },
+            });
+          });
+          return;
+        }
+
+        if (cid === 418) {
+          menu.setAttribute('aria-label', 'Select Laos province');
+          const cur = getLaosProvince();
+          Object.keys(LA_PROVINCE_LONLAT || {})
+            .sort((a, b) => a.localeCompare(b))
+            .forEach((prov) => {
+              appendOptionRow({
+                labelText: prov,
+                active: prov === cur,
+                onPick: () => {
+                  try { localStorage.setItem('terminal_la_province', prov); } catch (_) {}
+                  delete PAGER_INDEX[418];
+                  updateRightPanelForCountry(418).catch(() => {});
+                  if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+                  if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(418, true);
+                },
+              });
+            });
+        }
+      }
+
+      async function openMenu() {
         if (open) return;
+        const cid = +window.__terminalSelectedCountryId;
+        if (!titleEl.classList.contains('switchable') || !terminalSwitcherHasOptions(cid)) return;
+        if (cid === 702) await ensureSingaporeRows();
         open = true;
         renderMenu();
         positionMenu();
@@ -1208,23 +1332,23 @@
         titleEl.setAttribute('aria-expanded', 'true');
       }
 
-      titleEl.setAttribute('role', 'button');
-      titleEl.setAttribute('tabindex', '0');
-      titleEl.setAttribute('aria-haspopup', 'listbox');
-      titleEl.setAttribute('aria-expanded', 'false');
-
-      titleEl.addEventListener('click', e => {
-        if (window.__terminalSelectedCountryId !== 458) return;
+      titleEl.addEventListener('click', (e) => {
+        if (!titleEl.classList.contains('switchable')) return;
         e.stopPropagation();
-        open ? closeMenu() : openMenu();
+        if (open) closeMenu();
+        else openMenu().catch(() => {});
       });
-      titleEl.addEventListener('keydown', e => {
-        if (window.__terminalSelectedCountryId !== 458) return;
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open ? closeMenu() : openMenu(); }
-        if (e.key === 'Escape') { closeMenu(); }
+      titleEl.addEventListener('keydown', (e) => {
+        if (!titleEl.classList.contains('switchable')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (open) closeMenu();
+          else openMenu().catch(() => {});
+        }
+        if (e.key === 'Escape') closeMenu();
       });
 
-      document.addEventListener('click', e => {
+      document.addEventListener('click', (e) => {
         if (!open) return;
         if (e.target === titleEl || titleEl.contains(e.target)) return;
         if (e.target === menu || menu.contains(e.target)) return;
@@ -1232,20 +1356,81 @@
       });
       window.addEventListener('resize', () => { if (open) positionMenu(); });
       window.addEventListener('scroll', () => { if (open) closeMenu(); }, { passive: true });
-      document.addEventListener('keydown', e => { if (open && e.key === 'Escape') closeMenu(); });
+      document.addEventListener('keydown', (e) => { if (open && e.key === 'Escape') closeMenu(); });
     })();
 
-    // Country search dropdown
-    (function initCountrySearch(){
+    /** Search rows: `Country - Region` / provider / city / province (aligned with app.html). */
+    async function buildTerminalSearchRegionsList() {
+      const rows = [];
+      MY_REGIONS.forEach((r) => {
+        rows.push({
+          id: 458,
+          label: `${COUNTRIES[458].name} - ${r.label}`,
+          myRegion: r.key,
+        });
+      });
+      rows.push({ id: 96, label: `${COUNTRIES[96].name} - National` });
+      rows.push({ id: 764, label: `${COUNTRIES[764].name} - National` });
+      rows.push({ id: 608, label: `${COUNTRIES[608].name} - National` });
+      rows.push({ id: 116, label: `${COUNTRIES[116].name} - National` });
+      rows.push({ id: 104, label: `${COUNTRIES[104].name} - National` });
+
+      let sgRows = [];
+      try {
+        sgRows = await ensureSheetRows(SG_SHEET_URL);
+      } catch (_) {
+        sgRows = [];
+      }
+      const sgProvs = sortedSingaporeProviders(sgRows);
+      if (sgProvs.length) {
+        sgProvs.forEach((p) => {
+          rows.push({ id: 702, label: `${COUNTRIES[702].name} - ${p}`, sgProvider: p });
+        });
+      } else {
+        rows.push({ id: 702, label: `${COUNTRIES[702].name} - National` });
+      }
+
+      Object.keys(LA_PROVINCE_LONLAT || {})
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((prov) => {
+          rows.push({ id: 418, label: `${COUNTRIES[418].name} - ${prov}`, laProvince: prov });
+        });
+      Object.keys(ID_CITY_LONLAT || {})
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((city) => {
+          rows.push({ id: 360, label: `${COUNTRIES[360].name} - ${city}`, idCity: city });
+        });
+      return rows.sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    // Country / region search dropdown
+    (async function initCountrySearch() {
       const input = document.getElementById('country-search');
-      const menu  = document.getElementById('country-search-menu');
+      const menu = document.getElementById('country-search-menu');
       if (!input || !menu) return;
 
-      const all = Object.entries(COUNTRIES).map(([id, meta]) => ({
-        id: +id,
-        name: meta.name,
-        subtitle: meta.subtitle || ''
-      })).sort((a, b) => a.name.localeCompare(b.name));
+      let all = [];
+      try {
+        all = await buildTerminalSearchRegionsList();
+      } catch (_) {
+        all = Object.entries(COUNTRIES).map(([id, meta]) => ({
+          id: +id,
+          label: meta.name,
+        }));
+      }
+
+      function escAttr(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;');
+      }
+      function escHtml(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/"/g, '&quot;');
+      }
 
       let isOpen = false;
       let activeIndex = -1;
@@ -1260,21 +1445,21 @@
         menu.style.maxWidth = `${w}px`;
       }
 
-      function openMenu(){
+      function openMenu() {
         if (isOpen) return;
         isOpen = true;
         menu.classList.add('open');
         input.setAttribute('aria-expanded', 'true');
         positionSearchMenu();
       }
-      function closeMenu(){
+      function closeMenu() {
         if (!isOpen) return;
         isOpen = false;
         activeIndex = -1;
         menu.classList.remove('open');
         input.setAttribute('aria-expanded', 'false');
       }
-      function setActive(idx){
+      function setActive(idx) {
         activeIndex = idx;
         const items = Array.from(menu.querySelectorAll('.search-item'));
         items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
@@ -1282,17 +1467,44 @@
           items[activeIndex].scrollIntoView({ block: 'nearest' });
         }
       }
-      function selectCountry(id){
-        const meta = COUNTRIES[id];
-        if (!meta) return;
-        input.value = meta.name;
+
+      function applySearchPick(el) {
+        if (!el) return;
+        const id = +el.getAttribute('data-id');
+        if (!COUNTRIES[id]) return;
+        const mr = el.getAttribute('data-my-region') || '';
+        const ic = el.getAttribute('data-id-city') || '';
+        const laProv = el.getAttribute('data-la-province') || '';
+        const sgProv = el.getAttribute('data-sg-provider') || '';
+        const displayLabel = el.getAttribute('data-label') || '';
+
+        if (id === 458 && mr) setMalaysiaRegion(mr);
+        else if (mr) {
+          try { localStorage.setItem('terminal_my_region', mr); } catch (_) {}
+        }
+        if (ic) {
+          try { localStorage.setItem('terminal_id_city', ic); } catch (_) {}
+          delete PAGER_INDEX[360];
+        }
+        if (laProv) {
+          try { localStorage.setItem('terminal_la_province', laProv); } catch (_) {}
+          delete PAGER_INDEX[418];
+        }
+        if (id === 702) {
+          try {
+            if (sgProv) localStorage.setItem('terminal_sg_provider', sgProv);
+            else localStorage.removeItem('terminal_sg_provider');
+          } catch (_) {}
+          delete PAGER_INDEX[702];
+        }
+
+        input.value = displayLabel || COUNTRIES[id].name;
         setLeftOverview(id);
-        // Keep map selection highlight in sync when chosen from dropdown
-        document.querySelectorAll('.country.live').forEach(el => {
+        document.querySelectorAll('.country.live').forEach((el) => {
           const did = el && el.__data__ ? +el.__data__.id : NaN;
           el.classList.toggle('selected', did === +id);
         });
-        document.querySelectorAll('.border-live').forEach(el => {
+        document.querySelectorAll('.border-live').forEach((el) => {
           const did = el && el.__data__ ? +el.__data__.id : NaN;
           el.classList.toggle('selected', did === +id);
         });
@@ -1301,29 +1513,31 @@
         input.blur();
       }
 
-      function render(list){
+      function render(list) {
         if (!list.length) {
           menu.innerHTML = `<div class="search-empty">No matches</div>`;
           return;
         }
         menu.innerHTML = list.map((c, idx) => `
-          <div class="search-item" role="option" data-id="${c.id}" data-idx="${idx}">
-            <div class="label">${c.name}</div>
-            <div class="sub">${c.subtitle}</div>
+          <div class="search-item" role="option" data-idx="${idx}"
+            data-id="${c.id}"
+            data-label="${escAttr(c.label)}"
+            data-my-region="${escAttr(c.myRegion ?? '')}"
+            data-id-city="${escAttr(c.idCity ?? '')}"
+            data-la-province="${escAttr(c.laProvince ?? '')}"
+            data-sg-provider="${c.sgProvider != null ? escAttr(c.sgProvider) : ''}">
+            <div class="label">${escHtml(c.label)}</div>
           </div>
         `).join('');
       }
 
-      function getFiltered(){
+      function getFiltered() {
         const q = (input.value || '').trim().toLowerCase();
         if (!q) return all;
-        return all.filter(c =>
-          c.name.toLowerCase().includes(q) ||
-          c.subtitle.toLowerCase().includes(q)
-        );
+        return all.filter((c) => c.label.toLowerCase().includes(q));
       }
 
-      function refresh(){
+      function refresh() {
         const filtered = getFiltered();
         render(filtered);
         setActive(filtered.length ? 0 : -1);
@@ -1341,8 +1555,8 @@
       input.setAttribute('aria-expanded', 'false');
 
       input.addEventListener('focus', () => { openMenu(); refresh(); });
-      input.addEventListener('click',  () => { openMenu(); refresh(); });
-      input.addEventListener('input',  () => { openMenu(); refresh(); });
+      input.addEventListener('click', () => { openMenu(); refresh(); });
+      input.addEventListener('input', () => { openMenu(); refresh(); });
       input.addEventListener('keydown', (e) => {
         if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
           openMenu();
@@ -1358,8 +1572,7 @@
         if (e.key === 'ArrowUp') { setActive(Math.max(0, activeIndex - 1)); e.preventDefault(); return; }
         if (e.key === 'Enter') {
           const el = items[activeIndex];
-          const id = el ? +el.getAttribute('data-id') : null;
-          if (id) selectCountry(id);
+          if (el) applySearchPick(el);
           e.preventDefault();
         }
       });
@@ -1371,23 +1584,19 @@
         if (Number.isFinite(idx)) setActive(idx);
       });
       menu.addEventListener('mousedown', (e) => {
-        // Use mousedown so selection happens before input blur.
         const item = e.target.closest('.search-item');
         if (!item) return;
-        const id = +item.getAttribute('data-id');
-        if (id) selectCountry(id);
+        applySearchPick(item);
         e.preventDefault();
       });
 
-      function onDocPointerDown(e){
+      function onDocPointerDown(e) {
         if (!isOpen) return;
         const inside = menu.contains(e.target) || input.contains(e.target);
         if (!inside) closeMenu();
       }
-      // Use capture so D3 zoom/map handlers can't swallow the event.
       document.addEventListener('pointerdown', onDocPointerDown, true);
 
-      // Cmd+F (or Ctrl+F) opens this search + suggestions
       document.addEventListener('keydown', (e) => {
         const isMacFind = (e.metaKey && !e.ctrlKey && (e.key === 'f' || e.key === 'F'));
         const isWinFind = (e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F'));
@@ -1398,7 +1607,6 @@
         openMenu();
         refresh();
         input.focus();
-        // Select existing text to make it easy to overwrite
         try { input.select(); } catch (_) {}
       }, true);
     })();
