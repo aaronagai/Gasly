@@ -57,7 +57,8 @@ const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
  * **Recommended layout (8 columns)** — one row per country; headers use snake_case (or spaces → underscores in CSV):
  * | `country_name` | `oil_context` | `bopd` | `1p_reserves` | `ref_intake` | `export_value` | `import_value` | `status` |
  * - **`country_name`** — must match `COUNTRIES[].name` (case-insensitive), e.g. `Malaysia`, `Singapore`.
- * - **`oil_context`** — long paragraph for the overview card (empty = use code fallback for text).
+ * - **`oil_context`** — long overview paragraph only (not the country name; column A already identifies the country).
+ *   Leave empty to keep the code fallback text for that country.
  * - **Metric cells** — plain values; labels in the UI are fixed (BOPD, 1P Reserves, …). Leave a cell empty to omit that metric.
  * - Optional aliases: `refinery_intake` or `refinery_capacity` instead of `ref_intake` (capacity uses label “Refinery Capacity”).
  * - **`country_id`** (optional) — numeric id instead of name if you prefer.
