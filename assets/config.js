@@ -64,8 +64,21 @@ const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
  * - **`country_id`** (optional) — numeric id instead of name if you prefer.
  *
  * **Legacy layout** — if none of `bopd`, `1p_reserves`, … are set, the parser still accepts `row1_left_k` / `row1_left_v` / … `row4_*`.
+ *
+ * If the sheet cannot be fetched, has no row for a country, or that row has no text/metrics, the UI uses
+ * **`COUNTRY_OVERVIEW_UNAVAILABLE`** (paragraph + metrics show “Unavailable”) instead of the in-code fallback.
  */
 const OVERVIEW_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Overviews`;
+
+/**
+ * Shown when the Overviews sheet fails to load, has no row for this country, or the row has no usable cells.
+ */
+const COUNTRY_OVERVIEW_UNAVAILABLE = Object.freeze({
+  oilContext: 'Unavailable',
+  metricRows: [
+    [['Metrics', 'Unavailable'], null],
+  ],
+});
 
 /**
  * If set to a non-negative integer, use that CSV line as the header row.
@@ -156,8 +169,8 @@ const MY_REGIONS = [
 ];
 
 /**
- * Fallback when the `Overviews` sheet is missing, empty, or fetch fails.
- * Live copy is merged from the sheet via `getCountryOverview` in utils.js.
+ * Merged with sheet rows when the sheet has at least one field for that country (`getCountryOverview` in utils.js).
+ * Not used for the whole card when the sheet is missing / empty for that row — then `COUNTRY_OVERVIEW_UNAVAILABLE` is shown instead.
  */
 const COUNTRY_OVERVIEW_FALLBACK = {
   458: {

@@ -641,19 +641,46 @@ async function ensureCountryOverviewMapFromSheet() {
 }
 
 /**
- * Overview for one country: merges `Overviews` sheet row with `COUNTRY_OVERVIEW_FALLBACK` from config.
+ * Overview for one country: merges sheet + `COUNTRY_OVERVIEW_FALLBACK` when the sheet has data;
+ * otherwise returns `COUNTRY_OVERVIEW_UNAVAILABLE` (fetch error, no row, or empty row).
  */
 async function getCountryOverview(countryId) {
   const id = +countryId;
-  const fb =
-    (typeof COUNTRY_OVERVIEW_FALLBACK !== 'undefined' && COUNTRY_OVERVIEW_FALLBACK[id]) ||
-    { oilContext: '—', metricRows: [] };
+  const unav =
+    typeof COUNTRY_OVERVIEW_UNAVAILABLE !== 'undefined'
+      ? COUNTRY_OVERVIEW_UNAVAILABLE
+      : { oilContext: 'Unavailable', metricRows: [[['Metrics', 'Unavailable'], null]] };
+
+  function sheetHasUsableContent(sheet) {
+    if (!sheet) return false;
+    const hasOil = sheet.oilContext != null && String(sheet.oilContext).trim() !== '';
+    const rows = sheet.metricRows;
+    const hasMetrics =
+      Array.isArray(rows) &&
+      rows.some((row) => {
+        if (!Array.isArray(row)) return false;
+        const hasCell = (cell) => {
+          if (!cell) return false;
+          const a = cell[0] != null && String(cell[0]).trim() !== '';
+          const b = cell[1] != null && String(cell[1]).trim() !== '';
+          return a || b;
+        };
+        return hasCell(row[0]) || hasCell(row[1]);
+      });
+    return hasOil || hasMetrics;
+  }
+
   try {
     const m = await ensureCountryOverviewMapFromSheet();
     const sheet = m.get(id);
+    if (!sheetHasUsableContent(sheet)) return unav;
+
+    const fb =
+      (typeof COUNTRY_OVERVIEW_FALLBACK !== 'undefined' && COUNTRY_OVERVIEW_FALLBACK[id]) ||
+      { oilContext: '—', metricRows: [] };
     return mergeCountryOverview(fb, sheet);
   } catch (_) {
-    return fb;
+    return unav;
   }
 }
 
