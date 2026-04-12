@@ -36,9 +36,9 @@
 
     window.__terminalMkMap = map;
 
-    const seaCenter = new mk.Coordinate(5, 115);
-    const seaSpan = new mk.CoordinateSpan(28, 28);
-    map.region = new mk.CoordinateRegion(seaCenter, seaSpan);
+    const seaCenter = new mk.Coordinate(4.5, 115);
+    const seaSpanWide = new mk.CoordinateSpan(36, 42);
+    map.region = new mk.CoordinateRegion(seaCenter, seaSpanWide);
 
     const LIVE_CENTER = {
       458: new mk.Coordinate(4.2, 108),
@@ -209,7 +209,9 @@
     }
 
     const initialId = window.__terminalSelectedCountryId ?? 458;
-    window.__terminalZoomToCountry(initialId, false);
+    if (window.__terminalMapDeepLinkCountry) {
+      window.__terminalZoomToCountry(initialId, false);
+    }
     applyMkSel();
   };
 })();

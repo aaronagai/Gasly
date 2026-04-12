@@ -1809,10 +1809,14 @@
     (function initFromURL() {
       let cid = 458;
       let myRegion = null;
+      let mapDeepLinkCountry = false;
       try {
         const u = new URL(window.location.href);
         const c = parseInt(u.searchParams.get('country') || '', 10);
-        if (Number.isFinite(c) && COUNTRIES[c]) cid = c;
+        if (u.searchParams.has('country') && Number.isFinite(c) && COUNTRIES[c]) {
+          cid = c;
+          mapDeepLinkCountry = true;
+        }
         myRegion = u.searchParams.get('my_region');
         const laProv = u.searchParams.get('la_province');
         if (laProv && String(laProv).trim()) {
@@ -1820,13 +1824,17 @@
         }
       } catch (_) {}
 
+      window.__terminalMapDeepLinkCountry = mapDeepLinkCountry;
+
       if (cid === 458 && myRegion) {
         const norm = String(myRegion).toLowerCase();
         if (norm === 'peninsular' || norm === 'semenanjung') setMalaysiaRegion('Semenanjung');
         if (norm === 'east' || norm === 'sabahsarawak') setMalaysiaRegion('SabahSarawak');
       }
       setLeftOverview(cid);
-      if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(cid, false);
+      if (mapDeepLinkCountry && typeof window.__terminalZoomToCountry === 'function') {
+        window.__terminalZoomToCountry(cid, false);
+      }
     })();
     // Orange-panel pager (highlights timeline)
     (function initPager() {

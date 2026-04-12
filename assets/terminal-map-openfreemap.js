@@ -62,8 +62,8 @@
     const map = new maplibregl.Map({
       container: root,
       style: styleUrl,
-      center: [115, 3],
-      zoom: 4.35,
+      center: [115, 3.5],
+      zoom: 3.45,
       minZoom: 2.4,
       maxZoom: 14,
       maxPitch: 0,
@@ -314,8 +314,28 @@
           o.showTip(t, nid);
         });
 
+          function zoomTerminalSeaOverview(animate) {
+            const d = animate ? 420 : 0;
+            try {
+              map.fitBounds(
+                [[92, -11], [132, 22]],
+                {
+                  padding: { top: 44, right: 44, bottom: 72, left: 44 },
+                  duration: d,
+                  maxZoom: 3.9,
+                },
+              );
+            } catch (_) {
+              map.easeTo({ center: [115, 3.5], zoom: 3.4, duration: d });
+            }
+          }
+
           const initialId = window.__terminalSelectedCountryId ?? 458;
-          window.__terminalZoomToCountry(initialId, false);
+          if (window.__terminalMapDeepLinkCountry) {
+            window.__terminalZoomToCountry(initialId, false);
+          } else {
+            zoomTerminalSeaOverview(false);
+          }
           applySel();
         })
         .catch((err) => {
