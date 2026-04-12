@@ -45,6 +45,9 @@ const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
 const TH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Thailand`;
 const PH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Philippines`;
+const KH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Cambodia`;
+const LA_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Laos`;
+const MM_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Myanmar`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
@@ -64,10 +67,23 @@ const COUNTRIES = {
   360: { name: 'Indonesia' },
   764: { name: 'Thailand' },
   608: { name: 'Philippines' },
+  116: { name: 'Cambodia' },
+  418: { name: 'Laos' },
+  104: { name: 'Myanmar' },
 };
 
 /** USD conversion rates (multiply local price to get USD). */
-const USD_RATES = { MYR: 0.22, SGD: 0.74, BND: 0.74, IDR: 0.000061, THB: 0.029, PHP: 0.018 };
+const USD_RATES = {
+  MYR: 0.22,
+  SGD: 0.74,
+  BND: 0.74,
+  IDR: 0.000061,
+  THB: 0.029,
+  PHP: 0.018,
+  KHR: 0.00025,
+  LAK: 0.000048,
+  MMK: 0.00048,
+};
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
 
@@ -94,6 +110,26 @@ const PH_FUELS = [
   { key: 'ron95', label: 'RON 95' },
   { key: 'diesel', label: 'Diesel' },
   { key: 'kerosene', label: 'Kerosene' },
+];
+
+/** Cambodia — national sheet (`date`, `ron92`, `diesel`). Prices in KHR/L. */
+const KH_FUELS = [
+  { key: 'ron92', label: 'RON 92' },
+  { key: 'diesel', label: 'Diesel' },
+];
+
+/** Myanmar — national sheet (`date`, `ron92`, `ron95`, `diesel`). Prices in MMK/L. */
+const MM_FUELS = [
+  { key: 'ron92', label: 'RON 92' },
+  { key: 'ron95', label: 'RON 95' },
+  { key: 'diesel', label: 'Diesel' },
+];
+
+/** Laos — per `province` (`date`, `province`, `gasoline`, `gasoline_95`, `diesel`). Prices in LAK/L. */
+const LA_FUELS = [
+  { key: 'gasoline', label: 'Gasoline' },
+  { key: 'gasoline_95', label: 'Gasoline 95' },
+  { key: 'diesel', label: 'Diesel' },
 ];
 
 /** Malaysia pricing regions. */
@@ -167,6 +203,36 @@ const COUNTRY_OVERVIEW = {
       [['Status', 'Net Importer'],      null],
     ],
   },
+  116: {
+    oilContext:
+      'Modest domestic production with no significant refining depth; transport and power demand are met overwhelmingly by imported fuels as the economy and vehicle fleet grow.',
+    metricRows: [
+      [['BOPD', '—'], ['1P Reserves', '—']],
+      [['Refinery Intake', '—'], null],
+      [['Export Value', '—'], ['Import Value', '—']],
+      [['Status', 'Net Importer'], null],
+    ],
+  },
+  418: {
+    oilContext:
+      'Landlocked with no coastal refining; entirely dependent on imported refined products via neighbours and river corridors, with demand rising from transport and hydropower-related logistics.',
+    metricRows: [
+      [['BOPD', '—'], ['1P Reserves', '—']],
+      [['Refinery Intake', '—'], null],
+      [['Export Value', '—'], ['Import Value', '—']],
+      [['Status', 'Net Importer'], null],
+    ],
+  },
+  104: {
+    oilContext:
+      'Long-standing producer with uneven sanctions-era trade; domestic crude is modest relative to demand, so transport and industry still lean heavily on fuel imports and informal cross-border flows.',
+    metricRows: [
+      [['BOPD', '—'], ['1P Reserves', '—']],
+      [['Refinery Intake', '—'], null],
+      [['Export Value', '—'], ['Import Value', '—']],
+      [['Status', 'Net Importer'], null],
+    ],
+  },
 };
 
 /**
@@ -194,4 +260,29 @@ const ID_CITY_LONLAT = {
   Pekanbaru:          [101.45,    0.51],
   Denpasar:           [115.22,   -8.65],
   Makassar:           [119.43,   -5.15],
+};
+
+/**
+ * [lon, lat] centroids for Lao provinces (matched to `province` in the Google Sheet).
+ * Shared by app.html and terminal.html.
+ */
+const LA_PROVINCE_LONLAT = {
+  Attapeu: [107.2, 14.8],
+  Bokeo: [100.6, 20.27],
+  Bolikhamxai: [104.8, 18.4],
+  Champasak: [105.87, 14.88],
+  Houaphan: [104.04, 20.42],
+  Khammouan: [104.9, 17.4],
+  Louangnamtha: [101.4, 20.95],
+  Luangprabang: [102.14, 19.88],
+  Oudomxai: [101.9, 20.69],
+  Phongsaly: [102.1, 21.68],
+  Salavan: [106.42, 15.72],
+  Savannakhet: [104.77, 16.56],
+  'Vientiane Capital': [102.63, 17.96],
+  Vientiane: [102.42, 18.25],
+  Xaisomboun: [103.1, 18.9],
+  Xayyabouly: [101.75, 19.25],
+  Xekong: [106.72, 15.32],
+  Xiengkhouang: [103.36, 19.58],
 };

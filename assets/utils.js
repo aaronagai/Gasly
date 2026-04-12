@@ -42,6 +42,7 @@ function canonicalFuelHeader(h) {
   const low = raw.toLowerCase();
   if (/country varies|changes date|\bdate\b/i.test(raw) && !/update/i.test(raw)) return 'date';
   if (/indonesia.*city|region.*city/i.test(raw)) return 'city';
+  if (/^province$/i.test(raw)) return 'province';
   if (/provider$/i.test(raw) || /daily provider/i.test(raw)) return 'provider';
   if (/brunei.*seasonally gasoline/i.test(raw) && !/premium/i.test(raw)) return 'gasoline';
   const slug = low.replace(/\s+/g, '_');
@@ -51,6 +52,7 @@ function canonicalFuelHeader(h) {
     'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
     'gasohol_91', 'gasohol_95', 'e20', 'e85',
     'kerosene',
+    'gasoline_95',
   ]);
   if (known.has(slug)) return slug;
   if (low === 'premium') return 'premium';
@@ -64,6 +66,7 @@ const FUEL_PRICE_HEADER_KEYS = new Set([
   'pertalite', 'pertamax', 'pertamax_turbo', 'dexlite', 'pertamina_dex',
   'gasohol_91', 'gasohol_95', 'e20', 'e85',
   'kerosene',
+  'gasoline_95',
 ]);
 
 /**
@@ -341,6 +344,25 @@ function indonesiaCityFromLngLat(lon, lat) {
     const dy = lat - ll[1];
     const d = dx * dx + dy * dy;
     if (d < bestD) { bestD = d; best = city; }
+  }
+  return best;
+}
+
+/**
+ * Nearest Lao province name for map clicks. Requires LA_PROVINCE_LONLAT from config.js.
+ */
+function laosProvinceFromLngLat(lon, lat) {
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return 'Vientiane Capital';
+  let best = 'Vientiane Capital';
+  let bestD = Infinity;
+  for (const [prov, ll] of Object.entries(LA_PROVINCE_LONLAT)) {
+    const dx = lon - ll[0];
+    const dy = lat - ll[1];
+    const d = dx * dx + dy * dy;
+    if (d < bestD) {
+      bestD = d;
+      best = prov;
+    }
   }
   return best;
 }

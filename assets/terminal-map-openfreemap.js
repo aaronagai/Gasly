@@ -126,6 +126,29 @@
         if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(608, true);
         return;
       }
+      if (nid === 418) {
+        try {
+          localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
+        } catch (_) {}
+        if (+window.__terminalSelectedCountryId === 418) {
+          o.updateRightPanelForCountry(418).catch(() => {});
+          applySel();
+          if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(418, true);
+          return;
+        }
+      }
+      if (nid === 116 && +window.__terminalSelectedCountryId === 116) {
+        o.updateRightPanelForCountry(116).catch(() => {});
+        applySel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(116, true);
+        return;
+      }
+      if (nid === 104 && +window.__terminalSelectedCountryId === 104) {
+        o.updateRightPanelForCountry(104).catch(() => {});
+        applySel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(104, true);
+        return;
+      }
 
       o.setLeftOverview(nid);
       applySel();
@@ -211,6 +234,24 @@
           }
           if (id === 608) {
             map.easeTo({ center: [122.5, 12.2], zoom: 5.65, duration: dur });
+            return;
+          }
+          if (id === 116) {
+            map.easeTo({ center: [104.9, 12.55], zoom: 6.15, duration: dur });
+            return;
+          }
+          if (id === 104) {
+            map.easeTo({ center: [96.0, 19.8], zoom: 5.25, duration: dur });
+            return;
+          }
+          if (id === 418) {
+            let prov = 'Vientiane Capital';
+            try {
+              prov = localStorage.getItem('terminal_la_province') || 'Vientiane Capital';
+            } catch (_) {}
+            const ll = (o.LA_PROVINCE_LONLAT && o.LA_PROVINCE_LONLAT[prov]) || [103.8, 18.2];
+            const c = ll && Number.isFinite(ll[0]) ? [ll[0], ll[1]] : [103.8, 18.2];
+            map.easeTo({ center: c, zoom: 6.35, duration: dur });
             return;
           }
           if (f && f.geometry) {

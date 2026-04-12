@@ -131,6 +131,29 @@
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(608, true);
         return;
       }
+      if (nid === 418) {
+        try {
+          localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
+        } catch (_) {}
+        if (cur === 418) {
+          o.refreshHighlights(418).catch(() => {});
+          applySel();
+          if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(418, true);
+          return;
+        }
+      }
+      if (nid === 116 && cur === 116) {
+        o.refreshHighlights(116).catch(() => {});
+        applySel();
+        if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(116, true);
+        return;
+      }
+      if (nid === 104 && cur === 104) {
+        o.refreshHighlights(104).catch(() => {});
+        applySel();
+        if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(104, true);
+        return;
+      }
 
       o.setSelected(nid);
       applySel();
@@ -231,6 +254,24 @@
             }
             if (id === 608) {
               map.easeTo({ center: [122.5, 12.2], zoom: 5.45, duration: dur, offset: off });
+              return;
+            }
+            if (id === 116) {
+              map.easeTo({ center: [104.9, 12.55], zoom: 5.95, duration: dur, offset: off });
+              return;
+            }
+            if (id === 104) {
+              map.easeTo({ center: [96.0, 19.8], zoom: 5.05, duration: dur, offset: off });
+              return;
+            }
+            if (id === 418) {
+              let prov = 'Vientiane Capital';
+              try {
+                prov = localStorage.getItem('terminal_la_province') || 'Vientiane Capital';
+              } catch (_) {}
+              const ll = (o.LA_PROVINCE_LONLAT && o.LA_PROVINCE_LONLAT[prov]) || [103.8, 18.2];
+              const c = ll && Number.isFinite(ll[0]) ? [ll[0], ll[1]] : [103.8, 18.2];
+              map.easeTo({ center: c, zoom: 6.05, duration: dur, offset: off });
               return;
             }
             if (f && f.geometry) {

@@ -107,7 +107,7 @@
         <div class="hint" id="info-sub">Click a country to compare</div>
         <div class="lines" aria-label="Highlights" id="info-lines">
           <div class="kv"><span class="k">Status</span><span class="v">Live</span></div>
-          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region, city, or SG provider · ←/→ date · [ ] date · +/− map zoom</span></div>
+          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region, city, SG provider, or Lao province · ←/→ date · [ ] date · +/− map zoom</span></div>
         </div>
         <div class="pager" aria-label="Highlights date history">
           <button type="button" id="pager-prev" aria-label="Previous">&lt;</button>
@@ -133,7 +133,7 @@
   <script src="assets/terminal-map-mapkit.js"></script>
   <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA fuels — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
@@ -141,7 +141,16 @@
     const PAGER_INDEX = Object.create(null);
     const LOADED_ROWS = new Map();
     let _idAllRows = null;
+    let _laAllRows = null;
     let _sgAllRows = null;
+
+    function getLaosProvince() {
+      try {
+        return localStorage.getItem('terminal_la_province') || 'Vientiane Capital';
+      } catch (_) {
+        return 'Vientiane Capital';
+      }
+    }
     function getPagerIndex(countryId) {
       if (+countryId === 458) return MY_INDEX;
       return PAGER_INDEX[+countryId] ?? null;
@@ -194,6 +203,12 @@
       return sortRowsByDate(_idAllRows.filter(r => normalizeSheetString(r.city) === cn));
     }
 
+    function laosSortedProvinceRows() {
+      if (!_laAllRows) return [];
+      const pn = normalizeSheetString(getLaosProvince());
+      return sortRowsByDate(_laAllRows.filter((r) => normalizeSheetString(r.province) === pn));
+    }
+
     async function pagerSeries(cid) {
       if (cid === 458) return sortRowsByDate((await ensureMalaysiaRows()) || []);
       if (cid === 702) {
@@ -203,9 +218,15 @@
       if (cid === 96) return sortRowsByDate((await ensureSheetRows(BN_SHEET_URL)) || []);
       if (cid === 764) return sortRowsByDate((await ensureSheetRows(TH_SHEET_URL)) || []);
       if (cid === 608) return sortRowsByDate((await ensureSheetRows(PH_SHEET_URL)) || []);
+      if (cid === 116) return sortRowsByDate((await ensureSheetRows(KH_SHEET_URL)) || []);
+      if (cid === 104) return sortRowsByDate((await ensureSheetRows(MM_SHEET_URL)) || []);
       if (cid === 360) {
-        await ensureSheetRows(ID_SHEET_URL);
+        _idAllRows = await ensureSheetRows(ID_SHEET_URL);
         return indonesiaSortedCityRows();
+      }
+      if (cid === 418) {
+        _laAllRows = await ensureSheetRows(LA_SHEET_URL);
+        return laosSortedProvinceRows();
       }
       return [];
     }
@@ -460,6 +481,13 @@
               font: { family: 'Inter', size: 11 },
               callback(v) {
                 if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
+                if (countryId === 116 || countryId === 418 || countryId === 104) {
+                  const n = Number(v);
+                  if (!Number.isFinite(n)) return v;
+                  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+                  if (Math.abs(n) >= 1000) return `${Math.round(n / 1000)}k`;
+                  return String(Math.round(n));
+                }
                 const n = Number(v);
                 return Number.isFinite(n) ? String(parseFloat(n.toFixed(6))) : v;
               },
@@ -491,6 +519,7 @@
       RIGHT_CHART_MY_DIESEL_KEY = null;
       window.__terminalIndonesiaChartKey = null;
       window.__terminalSingaporeChartKey = null;
+      window.__terminalLaosChartKey = null;
     }
 
     function renderRightChart({ labels, datasets, countryId, animate = true }) {
@@ -506,7 +535,10 @@
         return grad;
       };
 
-      const CHART_CCY = { 360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB', 608: 'PHP' };
+      const CHART_CCY = {
+        360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB', 608: 'PHP',
+        116: 'KHR', 418: 'LAK', 104: 'MMK',
+      };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
         isTerminalUsd() && ccyKey && USD_RATES[ccyKey] != null
@@ -918,6 +950,153 @@
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
+
+      // Cambodia
+      if (countryId === 116) {
+        const rows = await ensureSheetRows(KH_SHEET_URL);
+        const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(116, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setPagerIndex(116, 0);
+          setRightPanel({
+            kicker: 'Cambodia Petrol Prices History',
+            titleA: 'Cambodia',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: 'Cambodia',
+            infoSub: 'No price rows in sheet',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
+
+        let idx = getPagerIndex(116);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(116, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const slice = rowsForPriceChart(seriesAsc);
+        const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map(r => r.__label);
+        const datasets = buildChartSeries(sliceRows, KH_FUELS, labels);
+        setRightPanel({
+          kicker: 'Cambodia Petrol Prices History',
+          titleA: 'Cambodia',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: 'Cambodia',
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Cambodia`,
+          infoLines: KH_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('KHR', parseFloat(rSel[f.key]), 0),
+            fmtTerminalDeltaPerL('KHR', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
+          ]),
+        });
+        renderRightChart({ labels, datasets, countryId: 116 });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
+
+      // Myanmar
+      if (countryId === 104) {
+        const rows = await ensureSheetRows(MM_SHEET_URL);
+        const seriesAsc = sortRowsByDate(rows || []);
+        LOADED_ROWS.set(104, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setPagerIndex(104, 0);
+          setRightPanel({
+            kicker: 'Myanmar Petrol Prices History',
+            titleA: 'Myanmar',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: 'Myanmar',
+            infoSub: 'No price rows in sheet',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
+
+        let idx = getPagerIndex(104);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(104, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const slice = rowsForPriceChart(seriesAsc);
+        const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map(r => r.__label);
+        const datasets = buildChartSeries(sliceRows, MM_FUELS, labels);
+        setRightPanel({
+          kicker: 'Myanmar Petrol Prices History',
+          titleA: 'Myanmar',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: 'Myanmar',
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Myanmar`,
+          infoLines: MM_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('MMK', parseFloat(rSel[f.key]), 0),
+            fmtTerminalDeltaPerL('MMK', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
+          ]),
+        });
+        renderRightChart({ labels, datasets, countryId: 104 });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
+
+      // Laos (per province)
+      if (countryId === 418) {
+        const rows = await ensureSheetRows(LA_SHEET_URL);
+        _laAllRows = rows;
+        const province = getLaosProvince();
+        const pn = normalizeSheetString(province);
+        const seriesAsc = sortRowsByDate(
+          rows.filter((r) => normalizeSheetString(r.province) === pn),
+        );
+        LOADED_ROWS.set(418, seriesAsc);
+
+        let idx = getPagerIndex(418);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        if (seriesAsc.length) idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        else idx = 0;
+        setPagerIndex(418, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map(r => r.__label);
+        const datasets = buildChartSeries(sliceRows, LA_FUELS, labels);
+        setRightPanel({
+          kicker: 'Laos Petrol Prices History',
+          titleA: 'Laos',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: province,
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Laos`,
+          infoLines: LA_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('LAK', parseFloat(rSel[f.key]), 0),
+            fmtTerminalDeltaPerL('LAK', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
+          ]),
+        });
+        const laChartMode = isTerminalUsd() ? 'usd' : 'local';
+        const laChartKey = `${province}|${laChartMode}`;
+        if (RIGHT_CHART_COUNTRY !== 418 || window.__terminalLaosChartKey !== laChartKey) {
+          renderRightChart({ labels, datasets, countryId: 418, animate: true });
+          window.__terminalLaosChartKey = laChartKey;
+        }
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
     }
 
     function setLeftOverview(countryId) {
@@ -1232,6 +1411,9 @@
       360: { name: 'Indonesia', url: '/indonesia'  },
       764: { name: 'Thailand',  url: '/thailand'   },
       608: { name: 'Philippines', url: '/philippines' },
+      116: { name: 'Cambodia', url: '/terminal?country=116' },
+      418: { name: 'Laos', url: '/terminal?country=418' },
+      104: { name: 'Myanmar', url: '/terminal?country=104' },
     };
 
     const NAMES = {
@@ -1323,7 +1505,9 @@
         updateRightPanelForCountry,
         malaysiaRegionFromLngLat,
         indonesiaCityFromLngLat,
+        laosProvinceFromLngLat,
         ID_CITY_LONLAT,
+        LA_PROVINCE_LONLAT,
         showTip,
         hideTip,
       });
@@ -1369,10 +1553,13 @@
             setMalaysiaRegion,
             updateRightPanelForCountry,
             getIndonesiaCity,
+            getLaosProvince,
             getMalaysiaRegion,
             malaysiaRegionFromLngLat,
             indonesiaCityFromLngLat,
+            laosProvinceFromLngLat,
             ID_CITY_LONLAT,
+            LA_PROVINCE_LONLAT,
           });
         })
         .catch((err) => {
@@ -1409,6 +1596,10 @@
         const c = parseInt(u.searchParams.get('country') || '', 10);
         if (Number.isFinite(c) && COUNTRIES[c]) cid = c;
         myRegion = u.searchParams.get('my_region');
+        const laProv = u.searchParams.get('la_province');
+        if (laProv && String(laProv).trim()) {
+          try { localStorage.setItem('terminal_la_province', String(laProv).trim()); } catch (_) {}
+        }
       } catch (_) {}
 
       if (cid === 458 && myRegion) {
@@ -1425,7 +1616,7 @@
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
-      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764, 608]); // ID + MY + SG + BN + TH + PH
+      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764, 608, 116, 104, 418]);
 
       function syncPager() {
         const cid = +window.__terminalSelectedCountryId;
@@ -1518,6 +1709,22 @@
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(360, true);
     }
 
+    function cycleLaosProvince(step) {
+      const provinces = Object.keys(LA_PROVINCE_LONLAT).sort((a, b) => a.localeCompare(b));
+      if (!provinces.length) return;
+      let cur = '';
+      try { cur = localStorage.getItem('terminal_la_province') || ''; } catch (_) {}
+      let i = provinces.indexOf(cur);
+      if (i < 0) i = provinces.indexOf('Vientiane Capital');
+      if (i < 0) i = 0;
+      const n = (i + step + provinces.length) % provinces.length;
+      try { localStorage.setItem('terminal_la_province', provinces[n]); } catch (_) {}
+      delete PAGER_INDEX[418];
+      updateRightPanelForCountry(418).catch(() => {});
+      if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+      if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(418, true);
+    }
+
     async function cycleSingaporeProvider(step) {
       await ensureSingaporeRows();
       const providers = sortedSingaporeProviders(_sgAllRows || []);
@@ -1583,6 +1790,11 @@
               cycleSingaporeProvider(-1).catch(() => {});
               return;
             }
+            if (cid === 418) {
+              stopForTerminalMapKeys(e);
+              cycleLaosProvince(-1);
+              return;
+            }
             const z = document.getElementById('zoom-in');
             if (!z || typeof z.onclick !== 'function') return;
             stopForTerminalMapKeys(e);
@@ -1603,6 +1815,11 @@
             if (cid === 702) {
               stopForTerminalMapKeys(e);
               cycleSingaporeProvider(1).catch(() => {});
+              return;
+            }
+            if (cid === 418) {
+              stopForTerminalMapKeys(e);
+              cycleLaosProvince(1);
               return;
             }
             const z = document.getElementById('zoom-out');

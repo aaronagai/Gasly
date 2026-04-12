@@ -6,6 +6,10 @@
   function detectLiveCountryAt(lat, lon) {
     if (lat >= 1.12 && lat <= 1.58 && lon >= 103.5 && lon <= 104.25) return 702;
     if (lat >= 3.95 && lat <= 5.55 && lon >= 113.85 && lon <= 115.45) return 96;
+    if (lat >= 9.2 && lat <= 14.75 && lon >= 102.0 && lon <= 107.95) return 116;
+    if (lat >= 14.1 && lat <= 22.85 && lon >= 100.05 && lon <= 107.95) return 418;
+    if (lat >= 9 && lat <= 28.5 && lon >= 92 && lon <= 96.5) return 104;
+    if (lat >= 9 && lat <= 15 && lon > 96.5 && lon <= 101.5) return 104;
     /* Thailand before Malaysia so Bangkok resolves ahead of the broad peninsular MY bbox. */
     if (lat >= 5.5 && lat <= 21.0 && lon >= 97.0 && lon <= 106.0) return 764;
     if (lat >= 0.75 && lat <= 7.85 && lon >= 99.0 && lon <= 119.85) return 458;
@@ -43,6 +47,9 @@
       360: new mk.Coordinate(-2.5, 118),
       764: new mk.Coordinate(13.8, 100.6),
       608: new mk.Coordinate(12.2, 122.5),
+      116: new mk.Coordinate(12.55, 104.9),
+      104: new mk.Coordinate(19.8, 96.0),
+      418: new mk.Coordinate(18.2, 103.8),
     };
 
     const annotations = [];
@@ -96,7 +103,12 @@
           localStorage.setItem('terminal_id_city', o.indonesiaCityFromLngLat(lon, lat));
         } catch (_) {}
       }
-      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608)) {
+      if (id === 418) {
+        try {
+          localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
+        } catch (_) {}
+      }
+      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608 || id === 116 || id === 104 || id === 418)) {
         o.updateRightPanelForCountry(id).catch(() => {});
         applyMkSel();
         return;
@@ -132,6 +144,19 @@
       } else if (id === 608) {
         center = LIVE_CENTER[608];
         span = new mk.CoordinateSpan(10, 10);
+      } else if (id === 116) {
+        center = LIVE_CENTER[116];
+        span = new mk.CoordinateSpan(5.5, 5.5);
+      } else if (id === 104) {
+        center = LIVE_CENTER[104];
+        span = new mk.CoordinateSpan(11, 9);
+      } else if (id === 418) {
+        const prov = o.getLaosProvince();
+        const ll = o.LA_PROVINCE_LONLAT[prov];
+        center = ll && Number.isFinite(ll[0])
+          ? new mk.Coordinate(ll[1], ll[0])
+          : LIVE_CENTER[418];
+        span = new mk.CoordinateSpan(5.2, 5.2);
       } else {
         return null;
       }
