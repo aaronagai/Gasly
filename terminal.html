@@ -1526,7 +1526,7 @@
       document.addEventListener('keydown', (e) => { if (open && e.key === 'Escape') closeMenu(); });
     })();
 
-    /** Search rows: `Country - Region` / provider / city / province (aligned with app.html). */
+    /** Search rows: `Country - Region` / provider / city / province / VN area / MM station (aligned with app.html; refetched when search opens). */
     async function buildTerminalSearchRegionsList() {
       const rows = [];
       MY_REGIONS.forEach((r) => {
@@ -1612,14 +1612,17 @@
       if (!input || !menu) return;
 
       let all = [];
-      try {
-        all = await buildTerminalSearchRegionsList();
-      } catch (_) {
-        all = Object.entries(COUNTRIES).map(([id, meta]) => ({
-          id: +id,
-          label: meta.name,
-        }));
+      async function rebuildAll() {
+        try {
+          all = await buildTerminalSearchRegionsList();
+        } catch (_) {
+          all = Object.entries(COUNTRIES).map(([id, meta]) => ({
+            id: +id,
+            label: meta.name,
+          }));
+        }
       }
+      await rebuildAll();
 
       function escAttr(s) {
         return String(s ?? '')
@@ -1768,13 +1771,25 @@
       input.setAttribute('aria-controls', 'country-search-menu');
       input.setAttribute('aria-expanded', 'false');
 
-      input.addEventListener('focus', () => { openMenu(); refresh(); });
-      input.addEventListener('click', () => { openMenu(); refresh(); });
+      input.addEventListener('focus', () => {
+        void rebuildAll().then(() => {
+          openMenu();
+          refresh();
+        });
+      });
+      input.addEventListener('click', () => {
+        void rebuildAll().then(() => {
+          openMenu();
+          refresh();
+        });
+      });
       input.addEventListener('input', () => { openMenu(); refresh(); });
       input.addEventListener('keydown', (e) => {
         if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-          openMenu();
-          refresh();
+          void rebuildAll().then(() => {
+            openMenu();
+            refresh();
+          });
           e.preventDefault();
           return;
         }
@@ -1818,10 +1833,12 @@
 
         e.preventDefault();
         e.stopPropagation();
-        openMenu();
-        refresh();
-        input.focus();
-        try { input.select(); } catch (_) {}
+        void rebuildAll().then(() => {
+          openMenu();
+          refresh();
+          input.focus();
+          try { input.select(); } catch (_) {}
+        });
       }, true);
     })();
 

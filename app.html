@@ -146,7 +146,7 @@
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
 
-    /** Search suggestions: MY regions from config, live SG providers from sheet, BN, TH, PH, KH, MM, LA provinces, ID cities (matches terminal data model). */
+    /** Search suggestions: MY regions, BN/TH/PH/KH national, VN areas + MM stations from sheets, SG providers, LA provinces, ID cities (matches terminal; list refetched when search opens). */
     async function buildSearchRegionsList() {
       const rows = [];
       MY_REGIONS.forEach((r) => {
@@ -1125,7 +1125,15 @@
     async function initSearch(){
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
-      const list = await buildSearchRegionsList();
+      let list = [];
+      async function rebuildList() {
+        try {
+          list = await buildSearchRegionsList();
+        } catch (_) {
+          list = [];
+        }
+      }
+      await rebuildList();
       let open = false;
       const openMenu = () => { open=true; menu.classList.add('open'); };
       const closeMenu = () => { open=false; menu.classList.remove('open'); };
@@ -1146,7 +1154,12 @@
         const items = !q ? list : list.filter((x) => x.label.toLowerCase().includes(q));
         render(items);
       };
-      input.addEventListener('focus', () => { openMenu(); filter(); });
+      input.addEventListener('focus', () => {
+        void rebuildList().then(() => {
+          openMenu();
+          filter();
+        });
+      });
       input.addEventListener('input', () => { openMenu(); filter(); });
       document.addEventListener('pointerdown', (e) => {
         if (!open) return;
@@ -1200,10 +1213,12 @@
         const isWinFind = (e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F'));
         if (!isMacFind && !isWinFind) return;
         e.preventDefault();
-        openMenu();
-        filter();
-        input.focus();
-        try { input.select(); } catch (_) {}
+        void rebuildList().then(() => {
+          openMenu();
+          filter();
+          input.focus();
+          try { input.select(); } catch (_) {}
+        });
       }, true);
     }
 
