@@ -50,6 +50,7 @@
       116: { name: 'Cambodia', url: '/terminal?country=116' },
       418: { name: 'Laos', url: '/terminal?country=418' },
       104: { name: 'Myanmar', url: '/terminal?country=104' },
+      704: { name: 'Vietnam', url: '/terminal?country=704' },
     };
 
     const NAMES = {

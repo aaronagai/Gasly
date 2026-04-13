@@ -16,6 +16,8 @@
     /* After Malaysia so Sabah/Sarawak wins over the Philippines bbox; Luzon/Visayas/Mindanao (excl. Borneo overlap). */
     if (lat >= 4.5 && lat <= 21.5 && lon >= 117.0 && lon <= 127.5) return 608;
     if (lat >= -11.2 && lat <= 6.6 && lon >= 94.8 && lon <= 141.2) return 360;
+    /* Eastern Vietnam (after mainland neighbours to reduce bbox clashes). */
+    if (lat >= 10 && lat <= 23.5 && lon > 106.5 && lon <= 110.5) return 704;
     return null;
   }
 
@@ -49,6 +51,7 @@
       608: new mk.Coordinate(12.2, 122.5),
       116: new mk.Coordinate(12.55, 104.9),
       104: new mk.Coordinate(19.8, 96.0),
+      704: new mk.Coordinate(14.2, 108.3),
       418: new mk.Coordinate(18.2, 103.8),
     };
 
@@ -108,7 +111,7 @@
           localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
         } catch (_) {}
       }
-      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608 || id === 116 || id === 104 || id === 418)) {
+      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608 || id === 116 || id === 104 || id === 704 || id === 418)) {
         o.updateRightPanelForCountry(id).catch(() => {});
         applyMkSel();
         return;
@@ -150,6 +153,9 @@
       } else if (id === 104) {
         center = LIVE_CENTER[104];
         span = new mk.CoordinateSpan(11, 9);
+      } else if (id === 704) {
+        center = LIVE_CENTER[704];
+        span = new mk.CoordinateSpan(12, 10);
       } else if (id === 418) {
         const prov = o.getLaosProvince();
         const ll = o.LA_PROVINCE_LONLAT[prov];

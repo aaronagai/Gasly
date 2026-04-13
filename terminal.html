@@ -143,6 +143,8 @@
     let _idAllRows = null;
     let _laAllRows = null;
     let _sgAllRows = null;
+    let _mmAllRows = null;
+    let _vnAllRows = null;
 
     function getLaosProvince() {
       try {
@@ -151,6 +153,30 @@
         return 'Vientiane Capital';
       }
     }
+
+    function getMyanmarRegion() {
+      try {
+        const s = localStorage.getItem('terminal_mm_region');
+        if (s && String(s).trim()) return String(s).trim();
+      } catch (_) {}
+      return 'Thuwanna';
+    }
+
+    function getVietnamArea() {
+      try {
+        const s = localStorage.getItem('terminal_vn_area');
+        if (s && String(s).trim()) return String(s).trim();
+      } catch (_) {}
+      return 'area_1';
+    }
+
+    function labelVietnamArea(areaKey) {
+      const a = normalizeSheetString(areaKey).toLowerCase();
+      const m = /^area[_-]?(\d+)$/.exec(a);
+      if (m) return `Area ${m[1]}`;
+      return normalizeSheetString(areaKey) || 'Area 1';
+    }
+
     function getPagerIndex(countryId) {
       if (+countryId === 458) return MY_INDEX;
       return PAGER_INDEX[+countryId] ?? null;
@@ -209,6 +235,18 @@
       return sortRowsByDate(_laAllRows.filter((r) => normalizeSheetString(r.province) === pn));
     }
 
+    function myanmarSortedRegionRows() {
+      if (!_mmAllRows) return [];
+      const reg = normalizeSheetString(getMyanmarRegion());
+      return sortRowsByDate(_mmAllRows.filter((r) => normalizeSheetString(r.region) === reg));
+    }
+
+    function vietnamSortedAreaRows() {
+      if (!_vnAllRows) return [];
+      const a = normalizeSheetString(getVietnamArea());
+      return sortRowsByDate(_vnAllRows.filter((r) => normalizeSheetString(r.area) === a));
+    }
+
     async function pagerSeries(cid) {
       if (cid === 458) return sortRowsByDate((await ensureMalaysiaRows()) || []);
       if (cid === 702) {
@@ -219,7 +257,14 @@
       if (cid === 764) return sortRowsByDate((await ensureSheetRows(TH_SHEET_URL)) || []);
       if (cid === 608) return sortRowsByDate((await ensureSheetRows(PH_SHEET_URL)) || []);
       if (cid === 116) return sortRowsByDate((await ensureSheetRows(KH_SHEET_URL)) || []);
-      if (cid === 104) return sortRowsByDate((await ensureSheetRows(MM_SHEET_URL)) || []);
+      if (cid === 104) {
+        _mmAllRows = await ensureSheetRows(MM_SHEET_URL);
+        return myanmarSortedRegionRows();
+      }
+      if (cid === 704) {
+        _vnAllRows = await ensureSheetRows(VN_SHEET_URL);
+        return vietnamSortedAreaRows();
+      }
       if (cid === 360) {
         _idAllRows = await ensureSheetRows(ID_SHEET_URL);
         return indonesiaSortedCityRows();
@@ -236,12 +281,13 @@
       return (localStorage.getItem('currency') || 'local') === 'usd';
     }
     function fmtTerminalPerL(localSym, n, decimals = 2) {
-      if (!isFinite(n)) return 'Unavailable';
+      const x = typeof n === 'number' && Number.isFinite(n) ? n : parseFloat(String(n).replace(/,/g, '').trim());
+      if (!Number.isFinite(x)) return 'Unavailable';
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
-        return `USD ${(n * rate).toFixed(3)}/L`;
+        return `USD ${(x * rate).toFixed(3)}/L`;
       }
-      const s = fmtPerL(localSym, n, decimals);
+      const s = fmtPerL(localSym, x, decimals);
       return s === '—' ? 'Unavailable' : s;
     }
     function fmtIDR(v) {
@@ -254,8 +300,8 @@
 
     /** vs previous history row; '-' if unchanged / no comparison (ASCII hyphen). Respects USD toggle. */
     function fmtTerminalDeltaPerL(localSym, currentVal, prevVal, decimals = 2) {
-      const cur = parseFloat(currentVal);
-      const prev = parseFloat(prevVal);
+      const cur = parseFloat(String(currentVal).replace(/,/g, ''));
+      const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
       if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
       const diff = cur - prev;
@@ -297,6 +343,14 @@
       if (c === 360) return Object.keys(ID_CITY_LONLAT || {}).length > 1;
       if (c === 702) return sortedSingaporeProviders(_sgAllRows || []).length > 1;
       if (c === 418) return Object.keys(LA_PROVINCE_LONLAT || {}).length > 1;
+      if (c === 104) {
+        const regs = new Set((_mmAllRows || []).map((r) => normalizeSheetString(r.region)).filter(Boolean));
+        return regs.size > 1;
+      }
+      if (c === 704) {
+        const areas = new Set((_vnAllRows || []).map((r) => normalizeSheetString(r.area)).filter(Boolean));
+        return areas.size > 1;
+      }
       return false;
     }
 
@@ -320,6 +374,8 @@
           360: 'Choose Indonesia city',
           702: 'Choose Singapore fuel provider',
           418: 'Choose Laos province',
+          104: 'Choose Myanmar station',
+          704: 'Choose Vietnam pricing area',
         };
         hiTitle.title = tips[cid] || 'Choose option';
       } else {
@@ -525,7 +581,7 @@
               font: { family: 'Inter', size: 11 },
               callback(v) {
                 if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
-                if (countryId === 116 || countryId === 418 || countryId === 104) {
+                if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
                   const n = Number(v);
                   if (!Number.isFinite(n)) return v;
                   if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
@@ -581,7 +637,7 @@
 
       const CHART_CCY = {
         360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB', 608: 'PHP',
-        116: 'KHR', 418: 'LAK', 104: 'MMK',
+        116: 'KHR', 418: 'LAK', 104: 'MMK', 704: 'VND',
       };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
@@ -1046,10 +1102,10 @@
         return;
       }
 
-      // Myanmar
+      // Myanmar (per station / region; sheet forward-fills `date`)
       if (countryId === 104) {
-        const rows = await ensureSheetRows(MM_SHEET_URL);
-        const seriesAsc = sortRowsByDate(rows || []);
+        _mmAllRows = await ensureSheetRows(MM_SHEET_URL);
+        const seriesAsc = myanmarSortedRegionRows();
         LOADED_ROWS.set(104, seriesAsc);
 
         if (!seriesAsc.length) {
@@ -1059,7 +1115,7 @@
             titleA: 'Myanmar',
             titleB: 'Overview',
             subtag: '',
-            infoTitle: 'Myanmar',
+            infoTitle: getMyanmarRegion(),
             infoSub: 'No price rows in sheet',
             infoLines: [['Data', 'Unavailable', '-']],
           });
@@ -1084,15 +1140,66 @@
           titleA: 'Myanmar',
           titleB: 'Overview',
           subtag: legendHtml(datasets),
-          infoTitle: 'Myanmar',
+          infoTitle: getMyanmarRegion(),
           infoSub: `As of ${fmtDateFromRow(rSel)} · Myanmar`,
           infoLines: MM_FUELS.map((f) => [
             f.label,
-            fmtTerminalPerL('MMK', parseFloat(rSel[f.key]), 0),
+            fmtTerminalPerL('MMK', rSel[f.key], 0),
             fmtTerminalDeltaPerL('MMK', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
           ]),
         });
         renderRightChart({ labels, datasets, countryId: 104 });
+        if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+        return;
+      }
+
+      // Vietnam (per `area` column)
+      if (countryId === 704) {
+        _vnAllRows = await ensureSheetRows(VN_SHEET_URL);
+        const seriesAsc = vietnamSortedAreaRows();
+        LOADED_ROWS.set(704, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setPagerIndex(704, 0);
+          setRightPanel({
+            kicker: 'Vietnam Petrol Prices History',
+            titleA: 'Vietnam',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: labelVietnamArea(getVietnamArea()),
+            infoSub: 'No price rows in sheet',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
+
+        let idx = getPagerIndex(704);
+        if (idx == null) idx = Math.max(0, seriesAsc.length - 1);
+        idx = Math.max(0, Math.min(seriesAsc.length - 1, idx));
+        setPagerIndex(704, idx);
+
+        const rSel = seriesAsc[idx] || {};
+        const rPrev = idx > 0 ? seriesAsc[idx - 1] : null;
+        const slice = rowsForPriceChart(seriesAsc);
+        const sliceRows = slice.map((r) => ({ ...r, __label: fmtDate(r.date) }));
+        const labels = sliceRows.map((r) => r.__label);
+        const datasets = buildChartSeries(sliceRows, VN_FUELS, labels);
+        setRightPanel({
+          kicker: 'Vietnam Petrol Prices History',
+          titleA: 'Vietnam',
+          titleB: 'Overview',
+          subtag: legendHtml(datasets),
+          infoTitle: labelVietnamArea(getVietnamArea()),
+          infoSub: `As of ${fmtDateFromRow(rSel)} · Vietnam`,
+          infoLines: VN_FUELS.map((f) => [
+            f.label,
+            fmtTerminalPerL('VND', rSel[f.key], 0),
+            fmtTerminalDeltaPerL('VND', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
+          ]),
+        });
+        renderRightChart({ labels, datasets, countryId: 704 });
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
@@ -1327,6 +1434,50 @@
                 },
               });
             });
+          return;
+        }
+
+        if (cid === 104) {
+          menu.setAttribute('aria-label', 'Select Myanmar station');
+          const cur = getMyanmarRegion();
+          const curN = normalizeSheetString(cur);
+          const regs = [...new Set((_mmAllRows || []).map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
+            a.localeCompare(b),
+          );
+          regs.forEach((reg) => {
+            appendOptionRow({
+              labelText: reg,
+              active: normalizeSheetString(reg) === curN,
+              onPick: () => {
+                try { localStorage.setItem('terminal_mm_region', reg); } catch (_) {}
+                delete PAGER_INDEX[104];
+                updateRightPanelForCountry(104).catch(() => {});
+                if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+              },
+            });
+          });
+          return;
+        }
+
+        if (cid === 704) {
+          menu.setAttribute('aria-label', 'Select Vietnam pricing area');
+          const cur = getVietnamArea();
+          const curN = normalizeSheetString(cur);
+          const areas = [...new Set((_vnAllRows || []).map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+            a.localeCompare(b),
+          );
+          areas.forEach((ar) => {
+            appendOptionRow({
+              labelText: labelVietnamArea(ar),
+              active: normalizeSheetString(ar) === curN,
+              onPick: () => {
+                try { localStorage.setItem('terminal_vn_area', ar); } catch (_) {}
+                delete PAGER_INDEX[704];
+                updateRightPanelForCountry(704).catch(() => {});
+                if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+              },
+            });
+          });
         }
       }
 
@@ -1335,6 +1486,12 @@
         const cid = +window.__terminalSelectedCountryId;
         if (!titleEl.classList.contains('switchable') || !terminalSwitcherHasOptions(cid)) return;
         if (cid === 702) await ensureSingaporeRows();
+        if (cid === 104) {
+          _mmAllRows = await ensureSheetRows(MM_SHEET_URL);
+        }
+        if (cid === 704) {
+          _vnAllRows = await ensureSheetRows(VN_SHEET_URL);
+        }
         open = true;
         renderMenu();
         positionMenu();
@@ -1382,8 +1539,43 @@
       rows.push({ id: 96, label: `${COUNTRIES[96].name} - National` });
       rows.push({ id: 764, label: `${COUNTRIES[764].name} - National` });
       rows.push({ id: 608, label: `${COUNTRIES[608].name} - National` });
+      let vnRowsT = [];
+      try {
+        vnRowsT = await ensureSheetRows(VN_SHEET_URL);
+      } catch (_) {
+        vnRowsT = [];
+      }
+      const vnAreasT = [...new Set(vnRowsT.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (vnAreasT.length) {
+        vnAreasT.forEach((ar) => {
+          rows.push({
+            id: 704,
+            label: `${COUNTRIES[704].name} - ${labelVietnamArea(ar)}`,
+            vnArea: ar,
+          });
+        });
+      } else {
+        rows.push({ id: 704, label: `${COUNTRIES[704].name} - National`, vnArea: '' });
+      }
       rows.push({ id: 116, label: `${COUNTRIES[116].name} - National` });
-      rows.push({ id: 104, label: `${COUNTRIES[104].name} - National` });
+      let mmRowsT = [];
+      try {
+        mmRowsT = await ensureSheetRows(MM_SHEET_URL);
+      } catch (_) {
+        mmRowsT = [];
+      }
+      const mmRegsT = [...new Set(mmRowsT.map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (mmRegsT.length) {
+        mmRegsT.forEach((reg) => {
+          rows.push({ id: 104, label: `${COUNTRIES[104].name} - ${reg}`, mmRegion: reg });
+        });
+      } else {
+        rows.push({ id: 104, label: `${COUNTRIES[104].name} - National`, mmRegion: '' });
+      }
 
       let sgRows = [];
       try {
@@ -1486,6 +1678,8 @@
         const ic = el.getAttribute('data-id-city') || '';
         const laProv = el.getAttribute('data-la-province') || '';
         const sgProv = el.getAttribute('data-sg-provider') || '';
+        const mmReg = el.getAttribute('data-mm-region') || '';
+        const vnArea = el.getAttribute('data-vn-area') || '';
         const displayLabel = el.getAttribute('data-label') || '';
 
         if (id === 458 && mr) setMalaysiaRegion(mr);
@@ -1506,6 +1700,14 @@
             else localStorage.removeItem('terminal_sg_provider');
           } catch (_) {}
           delete PAGER_INDEX[702];
+        }
+        if (mmReg && id === 104) {
+          try { localStorage.setItem('terminal_mm_region', mmReg); } catch (_) {}
+          delete PAGER_INDEX[104];
+        }
+        if (vnArea && id === 704) {
+          try { localStorage.setItem('terminal_vn_area', vnArea); } catch (_) {}
+          delete PAGER_INDEX[704];
         }
 
         input.value = displayLabel || COUNTRIES[id].name;
@@ -1535,7 +1737,9 @@
             data-my-region="${escAttr(c.myRegion ?? '')}"
             data-id-city="${escAttr(c.idCity ?? '')}"
             data-la-province="${escAttr(c.laProvince ?? '')}"
-            data-sg-provider="${c.sgProvider != null ? escAttr(c.sgProvider) : ''}">
+            data-sg-provider="${c.sgProvider != null ? escAttr(c.sgProvider) : ''}"
+            data-mm-region="${escAttr(c.mmRegion ?? '')}"
+            data-vn-area="${escAttr(c.vnArea ?? '')}">
             <div class="label">${escHtml(c.label)}</div>
           </div>
         `).join('');
@@ -1632,6 +1836,7 @@
       116: { name: 'Cambodia', url: '/terminal?country=116' },
       418: { name: 'Laos', url: '/terminal?country=418' },
       104: { name: 'Myanmar', url: '/terminal?country=104' },
+      704: { name: 'Vietnam', url: '/terminal?country=704' },
     };
 
     const NAMES = {
@@ -1822,6 +2027,14 @@
         if (laProv && String(laProv).trim()) {
           try { localStorage.setItem('terminal_la_province', String(laProv).trim()); } catch (_) {}
         }
+        const vnArea = u.searchParams.get('vn_area');
+        if (vnArea && String(vnArea).trim()) {
+          try { localStorage.setItem('terminal_vn_area', String(vnArea).trim()); } catch (_) {}
+        }
+        const mmReg = u.searchParams.get('mm_region');
+        if (mmReg && String(mmReg).trim()) {
+          try { localStorage.setItem('terminal_mm_region', String(mmReg).trim()); } catch (_) {}
+        }
       } catch (_) {}
 
       window.__terminalMapDeepLinkCountry = mapDeepLinkCountry;
@@ -1842,7 +2055,7 @@
       const nextBtn = document.getElementById('pager-next');
       if (!prevBtn || !nextBtn) return;
 
-      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764, 608, 116, 104, 418]);
+      const PAGER_COUNTRIES = new Set([360, 458, 702, 96, 764, 608, 704, 116, 104, 418]);
 
       function syncPager() {
         const cid = +window.__terminalSelectedCountryId;

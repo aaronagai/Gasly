@@ -129,7 +129,7 @@
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/LA fuels — from config.js
+    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA fuels — from config.js
     // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -159,8 +159,43 @@
       rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
       rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
       rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
+      let vnRows = [];
+      try {
+        vnRows = await ensureSheetRows(VN_SHEET_URL);
+      } catch (_) {
+        vnRows = [];
+      }
+      const vnAreas = [...new Set(vnRows.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (vnAreas.length) {
+        vnAreas.forEach((ar) => {
+          rows.push({
+            countryId: 704,
+            label: `${COUNTRIES[704].name} - ${labelVietnamArea(ar)}`,
+            vnArea: ar,
+          });
+        });
+      } else {
+        rows.push({ countryId: 704, label: `${COUNTRIES[704].name} - National`, vnArea: '' });
+      }
       rows.push({ countryId: 116, label: `${COUNTRIES[116].name} - National` });
-      rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - National` });
+      let mmRows = [];
+      try {
+        mmRows = await ensureSheetRows(MM_SHEET_URL);
+      } catch (_) {
+        mmRows = [];
+      }
+      const mmRegs = [...new Set(mmRows.map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (mmRegs.length) {
+        mmRegs.forEach((reg) => {
+          rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - ${reg}`, mmRegion: reg });
+        });
+      } else {
+        rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - National`, mmRegion: '' });
+      }
 
       let sgRows = [];
       try {
@@ -210,8 +245,8 @@
 
     /** vs previous dated row; '-' if unchanged or no comparison (same ASCII hyphen everywhere). */
     function fmtDeltaPerL(sym, currentVal, prevVal, decimals = 2) {
-      const cur = parseFloat(currentVal);
-      const prev = parseFloat(prevVal);
+      const cur = parseFloat(String(currentVal).replace(/,/g, ''));
+      const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
       if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
       const diff = cur - prev;
@@ -248,6 +283,29 @@
 
     function getLaosProvince() {
       try { return localStorage.getItem('terminal_la_province') || 'Vientiane Capital'; } catch (_) { return 'Vientiane Capital'; }
+    }
+
+    function getMyanmarRegion() {
+      try {
+        const s = localStorage.getItem('terminal_mm_region');
+        if (s && String(s).trim()) return String(s).trim();
+      } catch (_) {}
+      return 'Thuwanna';
+    }
+
+    function getVietnamArea() {
+      try {
+        const s = localStorage.getItem('terminal_vn_area');
+        if (s && String(s).trim()) return String(s).trim();
+      } catch (_) {}
+      return 'area_1';
+    }
+
+    function labelVietnamArea(areaKey) {
+      const a = normalizeSheetString(areaKey).toLowerCase();
+      const m = /^area[_-]?(\d+)$/.exec(a);
+      if (m) return `Area ${m[1]}`;
+      return normalizeSheetString(areaKey) || 'Area 1';
     }
 
     function syncSearchInputFromSelection() {
@@ -317,7 +375,7 @@
               font: { size: 10 },
               callback(v) {
                 if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
-                if (countryId === 116 || countryId === 418 || countryId === 104) {
+                if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
                   const n = Number(v);
                   if (!Number.isFinite(n)) return v;
                   if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
@@ -669,17 +727,18 @@
 
         if (cid === 104) {
           const rows = await ensureSheetRows(MM_SHEET_URL);
-          const seriesAsc = sortRowsByDate(rows);
+          const reg = normalizeSheetString(getMyanmarRegion());
+          const seriesAsc = sortRowsByDate(rows.filter((r) => normalizeSheetString(r.region) === reg));
           if (!seriesAsc.length) {
-            titleEl.textContent = cname;
+            titleEl.textContent = reg || cname;
             subEl.textContent = 'No price rows in sheet';
-            renderHiRows([['Data', 'No rows yet']]);
+            renderHiRows([['Data', 'No rows for this station']]);
             if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
             emptyChart();
             return;
           }
           const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
-          titleEl.textContent = cname;
+          titleEl.textContent = reg || cname;
           subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           const pairs = MM_FUELS.map((f) => [
             f.label,
@@ -693,6 +752,37 @@
           const chartKeys = MM_FUELS.map(f => ({ key: f.key, label: f.label }));
           if (labels.length) {
             updateChart({ labels, datasets: buildChartSeries(sliceRows, chartKeys, labels), countryId: 104 });
+          } else emptyChart();
+          return;
+        }
+
+        if (cid === 704) {
+          const rows = await ensureSheetRows(VN_SHEET_URL);
+          const areaNorm = normalizeSheetString(getVietnamArea());
+          const seriesAsc = sortRowsByDate(rows.filter((r) => normalizeSheetString(r.area) === areaNorm));
+          if (!seriesAsc.length) {
+            titleEl.textContent = labelVietnamArea(getVietnamArea());
+            subEl.textContent = 'No price rows in sheet';
+            renderHiRows([['Data', 'No rows for this area']]);
+            if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+            emptyChart();
+            return;
+          }
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
+          titleEl.textContent = labelVietnamArea(getVietnamArea());
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
+          const pairs = VN_FUELS.map((f) => [
+            f.label,
+            fmtHiPerL('VND', rSel[f.key], 0),
+            fmtDeltaPerL('VND', rSel[f.key], rPrev ? rPrev[f.key] : NaN, 0),
+          ]);
+          renderHiRows(pairs);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+          const sliceRows = rowsForPriceChart(seriesAsc).map((r) => ({ ...r, __label: fmtDate(r.date) }));
+          const labels = sliceRows.map((r) => r.__label);
+          const chartKeys = VN_FUELS.map((f) => ({ key: f.key, label: f.label }));
+          if (labels.length) {
+            updateChart({ labels, datasets: buildChartSeries(sliceRows, chartKeys, labels), countryId: 704 });
           } else emptyChart();
           return;
         }
@@ -1047,7 +1137,7 @@
         menu.innerHTML = items
           .map(
             (x) =>
-              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${escAttr(x.myRegion ?? '')}" data-id-city="${escAttr(x.idCity ?? '')}" data-la-province="${escAttr(x.laProvince ?? '')}" data-sg-provider="${x.sgProvider != null ? escAttr(x.sgProvider) : ''}">${x.label}</div>`
+              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${escAttr(x.myRegion ?? '')}" data-id-city="${escAttr(x.idCity ?? '')}" data-la-province="${escAttr(x.laProvince ?? '')}" data-sg-provider="${x.sgProvider != null ? escAttr(x.sgProvider) : ''}" data-mm-region="${escAttr(x.mmRegion ?? '')}" data-vn-area="${escAttr(x.vnArea ?? '')}">${x.label}</div>`
           )
           .join('');
       };
@@ -1071,6 +1161,8 @@
         const ic = it.getAttribute('data-id-city');
         const laProv = it.getAttribute('data-la-province');
         const sgProv = it.getAttribute('data-sg-provider');
+        const mmReg = it.getAttribute('data-mm-region');
+        const vnArea = it.getAttribute('data-vn-area');
         if (mr) {
           try { localStorage.setItem('terminal_my_region', mr); } catch (_) {}
         }
@@ -1085,6 +1177,12 @@
             if (sgProv) localStorage.setItem('terminal_sg_provider', sgProv);
             else localStorage.removeItem('terminal_sg_provider');
           } catch (_) {}
+        }
+        if (mmReg && countryId === 104) {
+          try { localStorage.setItem('terminal_mm_region', mmReg); } catch (_) {}
+        }
+        if (vnArea && countryId === 704) {
+          try { localStorage.setItem('terminal_vn_area', vnArea); } catch (_) {}
         }
         setSelected(countryId);
         input.value = '';

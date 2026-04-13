@@ -48,6 +48,7 @@ const PH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const KH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Cambodia`;
 const LA_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Laos`;
 const MM_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Myanmar`;
+const VN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Vietnam`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
@@ -65,8 +66,8 @@ const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
  *
  * **Legacy layout** — if none of `bopd`, `1p_reserves`, … are set, the parser still accepts `row1_left_k` / `row1_left_v` / … `row4_*`.
  *
- * If the sheet cannot be fetched, has no row for a country, or that row has no text/metrics, the UI uses
- * **`COUNTRY_OVERVIEW_UNAVAILABLE`** (paragraph + metrics show “Unavailable”) instead of the in-code fallback.
+ * If the sheet cannot be fetched, or a country has no in-code fallback and no usable sheet row, the UI uses
+ * **`COUNTRY_OVERVIEW_UNAVAILABLE`**. When the sheet loads but a row is empty, the UI uses **`COUNTRY_OVERVIEW_FALLBACK`** for that country if defined.
  */
 const OVERVIEW_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Overviews`;
 
@@ -97,6 +98,7 @@ const COUNTRIES = {
   360: { name: 'Indonesia' },
   764: { name: 'Thailand' },
   608: { name: 'Philippines' },
+  704: { name: 'Vietnam' },
   116: { name: 'Cambodia' },
   418: { name: 'Laos' },
   104: { name: 'Myanmar' },
@@ -113,6 +115,7 @@ const USD_RATES = {
   KHR: 0.00025,
   LAK: 0.000048,
   MMK: 0.00048,
+  VND: 0.000038,
 };
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
@@ -148,11 +151,22 @@ const KH_FUELS = [
   { key: 'diesel', label: 'Diesel' },
 ];
 
-/** Myanmar — national sheet (`date`, `ron92`, `ron95`, `diesel`). Prices in MMK/L. */
+/** Myanmar — sheet (`date`, `region`, `ron92`, `ron95`, `diesel`, `premium_diesel`). Prices in MMK/L. */
 const MM_FUELS = [
   { key: 'ron92', label: 'RON 92' },
   { key: 'ron95', label: 'RON 95' },
   { key: 'diesel', label: 'Diesel' },
+  { key: 'premium_diesel', label: 'Premium Diesel' },
+];
+
+/** Vietnam — sheet (`date`, `area`, …). Prices in VND/L with thousands separators in the sheet. */
+const VN_FUELS = [
+  { key: 'ron95_v', label: 'RON 95 (V)' },
+  { key: 'ron95_iii', label: 'RON 95 (III)' },
+  { key: 'ron92_ii', label: 'RON 92 (II)' },
+  { key: 'diesel_euro5', label: 'Diesel Euro 5' },
+  { key: 'diesel_euro2', label: 'Diesel Euro 2' },
+  { key: 'kerosene', label: 'Kerosene' },
 ];
 
 /** Laos — per `province` (`date`, `province`, `gasoline`, `gasoline_95`, `diesel`). Prices in LAK/L. */
@@ -256,6 +270,16 @@ const COUNTRY_OVERVIEW_FALLBACK = {
   104: {
     oilContext:
       'Long-standing producer with uneven sanctions-era trade; domestic crude is modest relative to demand, so transport and industry still lean heavily on fuel imports and informal cross-border flows.',
+    metricRows: [
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refinery Intake', '-'], null],
+      [['Export Value', '-'], ['Import Value', '-']],
+      [['Status', 'Net Importer'], null],
+    ],
+  },
+  704: {
+    oilContext:
+      'Fast-growing manufacturing and transport hub; modest domestic crude with heavy reliance on imported crude and products to meet rising demand.',
     metricRows: [
       [['BOPD', '-'], ['1P Reserves', '-']],
       [['Refinery Intake', '-'], null],

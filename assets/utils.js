@@ -67,6 +67,7 @@ const FUEL_PRICE_HEADER_KEYS = new Set([
   'gasohol_91', 'gasohol_95', 'e20', 'e85',
   'kerosene',
   'gasoline_95',
+  'ron95_v', 'ron95_iii', 'ron92_ii', 'diesel_euro5', 'diesel_euro2', 'premium_diesel',
 ]);
 
 /**
@@ -120,6 +121,21 @@ function normalizeSingaporeSheetRows(rows) {
     return { ...r, date: curDate, provider: curProvider };
   });
   return filled.filter((r) => normalizeSheetString(r.date) && normalizeSheetString(r.provider));
+}
+
+/**
+ * Myanmar sheet: one `date` cell per update block, then many `region` rows with a blank date.
+ * Forward-fill `date` so rows can be filtered by region and sorted for charts / pager.
+ */
+function normalizeMyanmarSheetRows(rows) {
+  if (!rows || !rows.length) return [];
+  let curDate = '';
+  const filled = rows.map((r) => {
+    const d = r.date != null ? String(r.date).trim() : '';
+    if (d) curDate = d;
+    return { ...r, date: curDate };
+  });
+  return filled.filter((r) => normalizeSheetString(r.date) && normalizeSheetString(r.region));
 }
 
 /** Unique provider names from normalized Singapore rows, sorted for stable cycling. */
@@ -309,7 +325,7 @@ function fmtDate(d) {
 }
 
 function fmtPerL(sym, n, decimals = 2) {
-  const x = parseFloat(n);
+  const x = parseFloat(String(n == null ? '' : n).replace(/,/g, '').trim());
   if (!Number.isFinite(x)) return '—';
   return `${sym} ${x.toFixed(decimals)}/L`;
 }
@@ -442,7 +458,8 @@ function rowsForPriceChart(sortedAsc) {
 
 /** Parse a value as a finite number, or return null. */
 function asNum(v) {
-  const n = parseFloat(v);
+  if (v == null || v === '') return null;
+  const n = parseFloat(String(v).replace(/,/g, '').trim());
   return Number.isFinite(n) ? n : null;
 }
 
@@ -647,7 +664,8 @@ async function ensureCountryOverviewMapFromSheet() {
 
 /**
  * Overview for one country: merges sheet + `COUNTRY_OVERVIEW_FALLBACK` when the sheet has data;
- * otherwise returns `COUNTRY_OVERVIEW_UNAVAILABLE` (fetch error, no row, or empty row).
+ * if the sheet loads but the row has no copy/metrics, falls back to `COUNTRY_OVERVIEW_FALLBACK` when defined.
+ * `COUNTRY_OVERVIEW_UNAVAILABLE` only when the sheet cannot be fetched or there is no in-code fallback.
  */
 async function getCountryOverview(countryId) {
   const id = +countryId;
@@ -678,12 +696,12 @@ async function getCountryOverview(countryId) {
   try {
     const m = await ensureCountryOverviewMapFromSheet();
     const sheet = m.get(id);
-    if (!sheetHasUsableContent(sheet)) return unav;
-
-    const fb =
-      (typeof COUNTRY_OVERVIEW_FALLBACK !== 'undefined' && COUNTRY_OVERVIEW_FALLBACK[id]) ||
-      { oilContext: '—', metricRows: [] };
-    return mergeCountryOverview(fb, sheet);
+    const fallbackEntry =
+      typeof COUNTRY_OVERVIEW_FALLBACK !== 'undefined' ? COUNTRY_OVERVIEW_FALLBACK[id] : undefined;
+    const fb = fallbackEntry || { oilContext: '—', metricRows: [] };
+    if (sheetHasUsableContent(sheet)) return mergeCountryOverview(fb, sheet);
+    if (fallbackEntry) return fallbackEntry;
+    return unav;
   } catch (_) {
     return unav;
   }
@@ -883,6 +901,9 @@ async function ensureSheetRows(url) {
   if (url.includes('sheet=Singapore')) {
     const norm = normalizeSingaporeSheetRows(rows);
     rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
+  }
+  if (url.includes('sheet=Myanmar')) {
+    rows = normalizeMyanmarSheetRows(rows);
   }
   _sheetCache.set(url, { rows, t: now });
   return rows;

@@ -154,6 +154,12 @@
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(104, true);
         return;
       }
+      if (nid === 704 && cur === 704) {
+        o.refreshHighlights(704).catch(() => {});
+        applySel();
+        if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(704, true);
+        return;
+      }
 
       o.setSelected(nid);
       applySel();
@@ -382,6 +388,10 @@
             }
             if (id === 104) {
               map.easeTo({ center: [96.0, 19.8], zoom: 5.05, duration: dur, offset: off });
+              return;
+            }
+            if (id === 704) {
+              map.easeTo({ center: [108.3, 14.2], zoom: 5.35, duration: dur, offset: off });
               return;
             }
             if (id === 418) {
