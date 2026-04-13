@@ -366,10 +366,18 @@
       justify-content: flex-start;
       height: 36px;
     }
+    .map-topbar-center .search-field {
+      flex: 1;
+      min-width: 0;
+      max-width: min(520px, 100%);
+      position: relative;
+      z-index: 62;
+      height: 36px;
+    }
     .map-topbar-center .search {
       width: 100%;
-      max-width: min(520px, 100%);
-      min-width: min(240px, 100%);
+      max-width: 100%;
+      min-width: 0;
     }
 
     /* Zoom — top-right of map column only (not full viewport) */
@@ -429,36 +437,35 @@
       background: transparent;
       font: inherit;
       color: inherit;
-      width: min(260px, 42vw);
+      width: 100%;
+      min-width: 0;
       height: 100%;
     }
     .search input::placeholder { color: var(--term-fg-tertiary); }
-    .search-menu{
-      position: fixed;
-      left: 0;
-      transform: none;
-      top: calc(max(14px, env(safe-area-inset-top, 0px)) + 36px + 8px);
-      z-index: 26;
-      width: min(520px, calc(100vw - 28px));
-      min-width: 260px;
-      max-width: min(520px, calc(100vw - 28px));
-      max-height: min(320px, calc(100vh - 120px));
+    /* Panel position (left/top/width/max-height) is set in JS so it stays aligned with the search field under a fixed top bar. */
+    .map-topbar-center .search-field .search-menu {
+      z-index: 63;
+      box-sizing: border-box;
       overflow: auto;
       border: 1px solid var(--term-float-border-0);
       background: var(--term-menu-bg);
       border-radius: 0;
-      box-shadow: 0 10px 26px var(--term-menu-shadow);
-      padding: 4px;
+      box-shadow: 0 8px 22px var(--term-menu-shadow);
+      padding: 4px 0;
       display: none;
+      -webkit-overflow-scrolling: touch;
     }
-    .search-menu.open{ display: block; }
+    .map-topbar-center .search-field .search-menu.open {
+      display: block;
+    }
     /* Scope + normal weight: Inter “500” still reads bold; map chrome must not inherit heavy faces */
     #country-search-menu .search-item{
       display: flex;
       flex-direction: column;
       gap: 1px;
+      margin: 0 4px;
       padding: 9px 10px;
-      border-radius: 0;
+      border-radius: 8px;
       cursor: pointer;
       user-select: none;
       color: var(--term-fg-secondary);
@@ -469,8 +476,24 @@
       line-height: 1.35;
     }
     #country-search-menu .search-item:hover,
-    #country-search-menu .search-item.active{
-      background: var(--term-row-hover);
+    #country-search-menu .search-item.active,
+    #country-search-menu .search-item:focus-visible{
+      background: transparent;
+      outline: none;
+      color: var(--term-fg-strong);
+    }
+    #country-search-menu .search-item:hover .search-item-chevron,
+    #country-search-menu .search-item.active .search-item-chevron,
+    #country-search-menu .search-item:focus-visible .search-item-chevron{
+      color: inherit;
+      opacity: 0.9;
+    }
+    @media (prefers-color-scheme: dark) {
+      #country-search-menu .search-item:hover,
+      #country-search-menu .search-item.active,
+      #country-search-menu .search-item:focus-visible{
+        color: #fff;
+      }
     }
     #country-search-menu .search-item .label{
       font-weight: 400;
@@ -482,6 +505,36 @@
       color: var(--term-fg-tertiary);
       font-weight: 400;
       font-synthesis: none;
+    }
+    #country-search-menu .search-item-expand {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #country-search-menu .search-item-expand .label {
+      flex: 1;
+      min-width: 0;
+    }
+    #country-search-menu .search-item-pick.search-item-nested {
+      padding-left: 22px;
+      font-size: 0.9rem;
+    }
+    #country-search-menu .search-item-chevron {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      color: var(--term-fg-tertiary);
+      margin-left: 8px;
+      transition: transform 0.18s ease;
+    }
+    #country-search-menu .search-item-chevron-open {
+      transform: rotate(-180deg);
+    }
+    #country-search-menu .search-item-dropdown-icon {
+      display: block;
+      pointer-events: none;
     }
     .search-empty{
       padding: 12px 10px;

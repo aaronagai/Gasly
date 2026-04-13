@@ -40,6 +40,8 @@ function canonicalFuelHeader(h) {
   const raw = String(h).replace(/^\ufeff/g, '').trim();
   if (!raw) return '';
   const low = raw.toLowerCase();
+  if (/^area$/i.test(raw)) return 'area';
+  if (/pricing\s*area/i.test(raw)) return 'area';
   if (/country varies|changes date|\bdate\b/i.test(raw) && !/update/i.test(raw)) return 'date';
   if (/indonesia.*city|region.*city/i.test(raw)) return 'city';
   if (/^province$/i.test(raw)) return 'province';
@@ -136,6 +138,41 @@ function normalizeMyanmarSheetRows(rows) {
     return { ...r, date: curDate };
   });
   return filled.filter((r) => normalizeSheetString(r.date) && normalizeSheetString(r.region));
+}
+
+/** Area / subnational key from a Vietnam sheet row (header aliases + `area_2` duplicate keys). */
+function rowVietnamAreaKey(row) {
+  if (!row || typeof row !== 'object') return '';
+  const keys = Object.keys(row).sort((a, b) => a.localeCompare(b));
+  for (const k of keys) {
+    if (!/^(area(_[0-9]+)?|pricing_area|zone|location)$/i.test(k)) continue;
+    const s = normalizeSheetString(row[k]);
+    if (s) return s;
+  }
+  return '';
+}
+
+/**
+ * Canonical sheet key for Vietnam `area` (e.g. `Area 1`, `AREA-2`, `area_1` → `area_1`).
+ * Non-matching names (custom region labels) pass through `normalizeSheetString`.
+ */
+function canonVietnamAreaKey(raw) {
+  const s = normalizeSheetString(raw).toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  const m = /^area\s*[_-]?\s*(\d+)$/.exec(s);
+  if (m) return `area_${m[1]}`;
+  return normalizeSheetString(raw);
+}
+
+/** Copy rows with a single stable `area` field for filtering, charts, and search. */
+function normalizeVietnamSheetRows(rows) {
+  if (!rows || !rows.length) return [];
+  return rows.map((r) => {
+    const merged = rowVietnamAreaKey(r) || normalizeSheetString(r.area);
+    const canon = canonVietnamAreaKey(merged);
+    const a = canon || merged;
+    return { ...r, area: a };
+  });
 }
 
 /** Unique provider names from normalized Singapore rows, sorted for stable cycling. */
@@ -324,10 +361,45 @@ function fmtDate(d) {
   return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+/**
+ * en-US style with comma thousands (e.g. 1,234,567.89).
+ * Sanitizes fraction-digit args: NaN would reach toLocaleString and throw RangeError.
+ * @param {number} n
+ * @param {number} [minFractionDigits=0]
+ * @param {number} [maxFractionDigits] defaults to minFractionDigits
+ */
+function formatNumberCommas(n, minFractionDigits = 0, maxFractionDigits) {
+  try {
+    if (!Number.isFinite(n)) return '';
+    let min = Number(minFractionDigits);
+    let max = maxFractionDigits != null ? Number(maxFractionDigits) : min;
+    if (!Number.isFinite(min) || min < 0) min = 0;
+    if (!Number.isFinite(max) || max < 0) max = 0;
+    if (min > max) max = min;
+    min = Math.min(20, Math.floor(min));
+    max = Math.min(20, Math.floor(max));
+    /* Omit useGrouping — en-US still groups thousands; avoids rare engine issues. */
+    return n.toLocaleString('en-US', {
+      minimumFractionDigits: min,
+      maximumFractionDigits: max,
+    });
+  } catch (_) {
+    try {
+      const x = Number(n);
+      if (!Number.isFinite(x)) return '';
+      return String(x);
+    } catch (__) {
+      return '';
+    }
+  }
+}
+
 function fmtPerL(sym, n, decimals = 2) {
   const x = parseFloat(String(n == null ? '' : n).replace(/,/g, '').trim());
   if (!Number.isFinite(x)) return '—';
-  return `${sym} ${x.toFixed(decimals)}/L`;
+  const dec =
+    Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
+  return `${sym} ${formatNumberCommas(x, dec, dec)}/L`;
 }
 
 // ── Geography helpers ────────────────────────────────────────────────────────
@@ -893,18 +965,45 @@ async function ensureSheetRows(url) {
   if (hit && now - hit.t < SHEET_CACHE_TTL_MS) return hit.rows;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Sheet fetch ${res.status}`);
+  const text = await res.text();
   const headerIdx =
     typeof SHEET_CSV_HEADER_ROW_INDEX === 'number' && SHEET_CSV_HEADER_ROW_INDEX >= 0
       ? SHEET_CSV_HEADER_ROW_INDEX
       : undefined;
-  let rows = parseCSV(await res.text(), { headerRowIndex: headerIdx });
-  if (url.includes('sheet=Singapore')) {
-    const norm = normalizeSingaporeSheetRows(rows);
-    rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
+
+  /** Vietnam tab: prefer CSV line 0 as header; if that yields no usable rows, fall back to auto-detect. */
+  let rows = [];
+  try {
+    if (url.includes('sheet=Vietnam')) {
+      const vnHeader = typeof headerIdx === 'number' ? headerIdx : 0;
+      rows = normalizeVietnamSheetRows(parseCSV(text, { headerRowIndex: vnHeader }));
+      function vnRowHasPrices(r) {
+        if (!r) return false;
+        const keys = ['ron95_v', 'ron95_iii', 'ron92_ii', 'diesel_euro5', 'diesel_euro2', 'kerosene'];
+        return keys.some((k) => asNum(r[k]) != null);
+      }
+      const vnOk = (list) =>
+        (list || []).some((r) => normalizeSheetString(r.area) && vnRowHasPrices(r));
+      if (typeof headerIdx !== 'number' && (!rows.length || !vnOk(rows))) {
+        const alt = normalizeVietnamSheetRows(parseCSV(text, {}));
+        if (alt.length && vnOk(alt)) rows = alt;
+      }
+    } else {
+      rows = parseCSV(text, { headerRowIndex: headerIdx });
+    }
+
+    if (url.includes('sheet=Singapore')) {
+      const norm = normalizeSingaporeSheetRows(rows);
+      rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
+    }
+    if (url.includes('sheet=Myanmar')) {
+      rows = normalizeMyanmarSheetRows(rows);
+    }
+  } catch (err) {
+    console.error('ensureSheetRows parse failed', url, err);
+    rows = [];
   }
-  if (url.includes('sheet=Myanmar')) {
-    rows = normalizeMyanmarSheetRows(rows);
-  }
+
   _sheetCache.set(url, { rows, t: now });
   return rows;
 }

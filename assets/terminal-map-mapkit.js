@@ -111,9 +111,21 @@
           localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
         } catch (_) {}
       }
-      if (+window.__terminalSelectedCountryId === id && (id === 458 || id === 360 || id === 764 || id === 608 || id === 116 || id === 104 || id === 704 || id === 418)) {
+      const intraRegionPick =
+        id === 458 ||
+        id === 360 ||
+        id === 702 ||
+        id === 96 ||
+        id === 764 ||
+        id === 608 ||
+        id === 116 ||
+        id === 104 ||
+        id === 704 ||
+        id === 418;
+      if (+window.__terminalSelectedCountryId === id && intraRegionPick) {
         o.updateRightPanelForCountry(id).catch(() => {});
         applyMkSel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(id, true);
         return;
       }
       o.setLeftOverview(id);

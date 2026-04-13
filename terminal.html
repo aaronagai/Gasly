@@ -71,12 +71,15 @@
           <span>petrolprice.xyz</span>
         </a>
         <div class="map-topbar-center">
-          <div class="search" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7.5"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries and regions" autocomplete="off" spellcheck="false" />
+          <div class="search-field">
+            <div class="search" aria-label="Search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7.5"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="country-search" type="search" placeholder="Search (Cmd+F)" aria-label="Search countries and regions" autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
           </div>
         </div>
       </div>
@@ -86,7 +89,6 @@
           <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
         </div>
       </div>
-      <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
     </main>
 
     <div class="gutter gutter-right" id="gutter-right" role="separator" aria-label="Resize right panel" aria-orientation="vertical" tabindex="0"></div>
@@ -165,7 +167,10 @@
     function getVietnamArea() {
       try {
         const s = localStorage.getItem('terminal_vn_area');
-        if (s && String(s).trim()) return String(s).trim();
+        if (s && String(s).trim()) {
+          const t = String(s).trim();
+          return canonVietnamAreaKey(t) || t;
+        }
       } catch (_) {}
       return 'area_1';
     }
@@ -243,8 +248,8 @@
 
     function vietnamSortedAreaRows() {
       if (!_vnAllRows) return [];
-      const a = normalizeSheetString(getVietnamArea());
-      return sortRowsByDate(_vnAllRows.filter((r) => normalizeSheetString(r.area) === a));
+      const want = canonVietnamAreaKey(getVietnamArea());
+      return sortRowsByDate(_vnAllRows.filter((r) => canonVietnamAreaKey(r.area) === want));
     }
 
     async function pagerSeries(cid) {
@@ -283,19 +288,21 @@
     function fmtTerminalPerL(localSym, n, decimals = 2) {
       const x = typeof n === 'number' && Number.isFinite(n) ? n : parseFloat(String(n).replace(/,/g, '').trim());
       if (!Number.isFinite(x)) return 'Unavailable';
+      const dec =
+        Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
-        return `USD ${(x * rate).toFixed(3)}/L`;
+        return `USD ${formatNumberCommas(x * rate, 3, 3)}/L`;
       }
-      const s = fmtPerL(localSym, x, decimals);
+      const s = fmtPerL(localSym, x, dec);
       return s === '—' ? 'Unavailable' : s;
     }
     function fmtIDR(v) {
       if (!isFinite(v)) return 'Unavailable';
       if (isTerminalUsd()) {
-        return `USD ${(v * USD_RATES.IDR).toFixed(4)}/L`;
+        return `USD ${formatNumberCommas(v * USD_RATES.IDR, 4, 4)}/L`;
       }
-      return `IDR ${Math.round(v).toLocaleString('en-US')}/L`;
+      return `IDR ${formatNumberCommas(Math.round(v), 0, 0)}/L`;
     }
 
     /** vs previous history row; '-' if unchanged / no comparison (ASCII hyphen). Respects USD toggle. */
@@ -303,23 +310,25 @@
       const cur = parseFloat(String(currentVal).replace(/,/g, ''));
       const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
-      if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
+      const dec =
+        Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
+      if (cur.toFixed(dec) === prev.toFixed(dec)) return '-';
       const diff = cur - prev;
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
         const dUsd = diff * rate;
-        const mag = Math.abs(dUsd).toFixed(3);
+        const mag = formatNumberCommas(Math.abs(dUsd), 3, 3);
         if (dUsd > 0) return `+USD ${mag}`;
         return `-USD ${mag}`;
       }
-      const mag = Math.abs(diff).toFixed(decimals);
+      const mag = formatNumberCommas(Math.abs(diff), dec, dec);
       if (diff > 0) return `+${localSym} ${mag}`;
       return `-${localSym} ${mag}`;
     }
 
     function fmtTerminalDeltaIDR(currentVal, prevVal) {
-      const cur = parseFloat(currentVal);
-      const prev = parseFloat(prevVal);
+      const cur = parseFloat(String(currentVal).replace(/,/g, ''));
+      const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
       const a = Math.round(cur);
       const b = Math.round(prev);
@@ -328,11 +337,11 @@
       const rate = USD_RATES.IDR;
       if (isTerminalUsd() && rate != null) {
         const dUsd = diff * rate;
-        const mag = Math.abs(dUsd).toFixed(4);
+        const mag = formatNumberCommas(Math.abs(dUsd), 4, 4);
         if (dUsd > 0) return `+USD ${mag}`;
         return `-USD ${mag}`;
       }
-      const abs = Math.abs(diff).toLocaleString('en-US');
+      const abs = formatNumberCommas(Math.abs(diff), 0, 0);
       if (diff > 0) return `+IDR ${abs}/L`;
       return `-IDR ${abs}/L`;
     }
@@ -348,7 +357,7 @@
         return regs.size > 1;
       }
       if (c === 704) {
-        const areas = new Set((_vnAllRows || []).map((r) => normalizeSheetString(r.area)).filter(Boolean));
+        const areas = new Set((_vnAllRows || []).map((r) => canonVietnamAreaKey(r.area)).filter(Boolean));
         return areas.size > 1;
       }
       return false;
@@ -420,12 +429,9 @@
         };
         const fmt = (n, dec) => {
           try {
-            return new Intl.NumberFormat(undefined, {
-              minimumFractionDigits: dec,
-              maximumFractionDigits: dec,
-            }).format(n);
+            return formatNumberCommas(n, dec, dec);
           } catch (_) {
-            return n.toFixed(dec);
+            return Number.isFinite(n) ? String(n) : '';
           }
         };
         const animateNumber = (el, from, to, dec, prefix, suffix) => {
@@ -580,16 +586,23 @@
               color: tick,
               font: { family: 'Inter', size: 11 },
               callback(v) {
-                if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
+                if (countryId === 360) {
+                  const nv = Number(v);
+                  if (!Number.isFinite(nv)) return v;
+                  if (nv >= 1e6) return `${formatNumberCommas(nv / 1e6, 1, 1)}M`;
+                  return `${formatNumberCommas(Math.round(nv / 1000), 0, 0)}k`;
+                }
                 if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
                   const n = Number(v);
                   if (!Number.isFinite(n)) return v;
-                  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-                  if (Math.abs(n) >= 1000) return `${Math.round(n / 1000)}k`;
-                  return String(Math.round(n));
+                  if (Math.abs(n) >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
+                  if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
+                  return formatNumberCommas(Math.round(n), 0, 0);
                 }
                 const n = Number(v);
-                return Number.isFinite(n) ? String(parseFloat(n.toFixed(6))) : v;
+                return Number.isFinite(n)
+                  ? formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6)
+                  : v;
               },
             },
           },
@@ -688,20 +701,25 @@
 
       destroyRightChart();
       const themeChart = chartThemeOptions(countryId);
-      RIGHT_CHART = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets: nextDs },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: animate ? { duration: 0 } : { duration: 0 },
-          plugins: {
-            legend: { display: false },
-            tooltip: themeChart.tooltip,
+      try {
+        RIGHT_CHART = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets: nextDs },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: animate ? { duration: 0 } : { duration: 0 },
+            plugins: {
+              legend: { display: false },
+              tooltip: themeChart.tooltip,
+            },
+            scales: themeChart.scales,
           },
-          scales: themeChart.scales,
-        },
-      });
+        });
+      } catch (err) {
+        console.error('Terminal chart failed', err);
+        RIGHT_CHART = null;
+      }
       RIGHT_CHART_COUNTRY = countryId ?? null;
     }
 
@@ -1462,14 +1480,14 @@
         if (cid === 704) {
           menu.setAttribute('aria-label', 'Select Vietnam pricing area');
           const cur = getVietnamArea();
-          const curN = normalizeSheetString(cur);
-          const areas = [...new Set((_vnAllRows || []).map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+          const curCanon = canonVietnamAreaKey(cur);
+          const areas = [...new Set((_vnAllRows || []).map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
             a.localeCompare(b),
           );
           areas.forEach((ar) => {
             appendOptionRow({
               labelText: labelVietnamArea(ar),
-              active: normalizeSheetString(ar) === curN,
+              active: canonVietnamAreaKey(ar) === curCanon,
               onPick: () => {
                 try { localStorage.setItem('terminal_vn_area', ar); } catch (_) {}
                 delete PAGER_INDEX[704];
@@ -1529,6 +1547,7 @@
     /** Search rows: `Country - Region` / provider / city / province / VN area / MM station (aligned with app.html; refetched when search opens). */
     async function buildTerminalSearchRegionsList() {
       const rows = [];
+      const vnName = (COUNTRIES[704] && COUNTRIES[704].name) || 'Vietnam';
       MY_REGIONS.forEach((r) => {
         rows.push({
           id: 458,
@@ -1545,19 +1564,19 @@
       } catch (_) {
         vnRowsT = [];
       }
-      const vnAreasT = [...new Set(vnRowsT.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+      const vnAreasT = [...new Set(vnRowsT.map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b),
       );
       if (vnAreasT.length) {
         vnAreasT.forEach((ar) => {
           rows.push({
             id: 704,
-            label: `${COUNTRIES[704].name} - ${labelVietnamArea(ar)}`,
+            label: `${vnName} - ${labelVietnamArea(ar)}`,
             vnArea: ar,
           });
         });
       } else {
-        rows.push({ id: 704, label: `${COUNTRIES[704].name} - National`, vnArea: '' });
+        rows.push({ id: 704, label: `${vnName} - National`, vnArea: '' });
       }
       rows.push({ id: 116, label: `${COUNTRIES[116].name} - National` });
       let mmRowsT = [];
@@ -1602,10 +1621,54 @@
         .forEach((city) => {
           rows.push({ id: 360, label: `${COUNTRIES[360].name} - ${city}`, idCity: city });
         });
+      if (!rows.some((x) => +x.id === 704)) {
+        rows.push({ id: 704, label: `${vnName} - National`, vnArea: '' });
+      }
       return rows.sort((a, b) => a.label.localeCompare(b.label));
     }
 
-    // Country / region search dropdown
+    /** Match `buildTerminalSearchRegionsList` row to current map selection + localStorage (sync). */
+    function findTerminalSearchRowForSelection(rows, cid) {
+      if (!rows || !rows.length) return null;
+      const id = +cid;
+      const m = rows.filter((r) => +r.id === id);
+      if (!m.length) return null;
+      if (id === 458) {
+        const want = getMalaysiaRegion();
+        return m.find((r) => (r.myRegion || '') === want) || m[0];
+      }
+      if (id === 360) {
+        const city = getIndonesiaCity();
+        return m.find((r) => (r.idCity || '') === city) || m[0];
+      }
+      if (id === 702) {
+        let stored = '';
+        try {
+          stored = normalizeSheetString(localStorage.getItem('terminal_sg_provider') || '');
+        } catch (_) {}
+        if (stored) {
+          const hit = m.find((r) => normalizeSheetString(r.sgProvider || '') === stored);
+          if (hit) return hit;
+        }
+        return m.find((r) => !r.sgProvider) || m[0];
+      }
+      if (id === 418) {
+        const prov = getLaosProvince();
+        return m.find((r) => (r.laProvince || '') === prov) || m[0];
+      }
+      if (id === 104) {
+        const reg = getMyanmarRegion();
+        return m.find((r) => (r.mmRegion || '') === reg) || m[0];
+      }
+      if (id === 704) {
+        const want = canonVietnamAreaKey(getVietnamArea()) || getVietnamArea();
+        const hit = m.find((r) => canonVietnamAreaKey(r.vnArea || '') === want || (r.vnArea || '') === want);
+        return hit || m[0];
+      }
+      return m[0];
+    }
+
+    // Country / region search: countries first, then regions inside a country when applicable.
     (async function initCountrySearch() {
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
@@ -1622,6 +1685,47 @@
           }));
         }
       }
+
+      let isOpen = false;
+      let activeIndex = -1;
+      let lastCommittedLabel = '';
+      let expandedCountryId = null;
+
+      function rowCountryId(r) {
+        return +(r.countryId ?? r.id);
+      }
+
+      function buildCountryGroups(rows) {
+        const m = new Map();
+        for (const r of rows) {
+          const cid = rowCountryId(r);
+          if (!COUNTRIES[cid]) continue;
+          if (!m.has(cid)) m.set(cid, []);
+          m.get(cid).push(r);
+        }
+        return [...m.entries()]
+          .map(([countryId, gRows]) => ({
+            countryId,
+            name: COUNTRIES[countryId]?.name || String(countryId),
+            rows: gRows.slice().sort((a, b) => String(a.label).localeCompare(String(b.label))),
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      window.__terminalSyncSearchCommittedLabel = function syncTerminalSearchCommittedLabel() {
+        void rebuildAll().then(() => {
+          const hit = findTerminalSearchRowForSelection(all, window.__terminalSelectedCountryId);
+          if (hit && hit.label) {
+            lastCommittedLabel = String(hit.label).trim();
+            if (document.activeElement !== input) input.value = lastCommittedLabel;
+          } else {
+            lastCommittedLabel = '';
+            if (document.activeElement !== input) input.value = '';
+          }
+          if (isOpen) refresh();
+        });
+      };
+
       await rebuildAll();
 
       function escAttr(s) {
@@ -1637,17 +1741,28 @@
           .replace(/"/g, '&quot;');
       }
 
-      let isOpen = false;
-      let activeIndex = -1;
-
       function positionSearchMenu() {
-        const r = input.getBoundingClientRect();
-        const pad = 8;
-        const left = Math.max(pad, r.left);
-        const w = Math.min(520, Math.max(200, window.innerWidth - left - pad));
-        menu.style.left = `${left}px`;
-        menu.style.width = `${w}px`;
-        menu.style.maxWidth = `${w}px`;
+        const field = input.closest('.search-field');
+        const anchor = field || input;
+        const r = anchor.getBoundingClientRect();
+        const pad = 10;
+        const spaceBelow = window.innerHeight - r.bottom - pad;
+        /* `position: absolute` under a `fixed` topbar can mis-anchor the panel; pin to the search field in viewport space. */
+        menu.style.position = 'fixed';
+        menu.style.left = `${Math.max(8, r.left)}px`;
+        menu.style.width = `${r.width}px`;
+        menu.style.right = 'auto';
+        menu.style.top = `${r.bottom + 6}px`;
+        menu.style.maxHeight = `${Math.min(320, Math.max(120, spaceBelow - 8))}px`;
+      }
+
+      function clearSearchMenuLayout() {
+        menu.style.position = '';
+        menu.style.left = '';
+        menu.style.width = '';
+        menu.style.right = '';
+        menu.style.top = '';
+        menu.style.maxHeight = '';
       }
 
       function openMenu() {
@@ -1661,20 +1776,87 @@
         if (!isOpen) return;
         isOpen = false;
         activeIndex = -1;
+        expandedCountryId = null;
         menu.classList.remove('open');
         input.setAttribute('aria-expanded', 'false');
+        clearSearchMenuLayout();
       }
-      function setActive(idx) {
+      function setActive(idx, opts) {
+        const doScroll = !opts || opts.scroll !== false;
         activeIndex = idx;
         const items = Array.from(menu.querySelectorAll('.search-item'));
         items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
-        if (activeIndex >= 0 && items[activeIndex]) {
+        if (doScroll && activeIndex >= 0 && items[activeIndex]) {
           items[activeIndex].scrollIntoView({ block: 'nearest' });
         }
       }
 
+      /** Replace list HTML without jumping scroll (expand/collapse keeps the user’s place in the list). */
+      function setMenuInnerHTML(html) {
+        const prev = menu.scrollTop;
+        menu.innerHTML = html;
+        requestAnimationFrame(() => {
+          const max = Math.max(0, menu.scrollHeight - menu.clientHeight);
+          menu.scrollTop = Math.min(max, prev);
+        });
+      }
+
+      function regionShortLabel(countryName, fullLabel) {
+        const p = `${countryName} - `;
+        const s = String(fullLabel || '');
+        return s.startsWith(p) ? s.slice(p.length) : s;
+      }
+
+      function pickRowHtmlTerm(c, displayOverride, nested) {
+        const id = c.id;
+        const shown = displayOverride != null ? escHtml(displayOverride) : escHtml(c.label);
+        const nest = nested ? ' search-item-nested' : '';
+        return `<div class="search-item search-item-pick${nest}" role="option" data-id="${id}" data-label="${escAttr(c.label)}" data-my-region="${escAttr(c.myRegion ?? '')}" data-id-city="${escAttr(c.idCity ?? '')}" data-la-province="${escAttr(c.laProvince ?? '')}" data-sg-provider="${c.sgProvider != null ? escAttr(c.sgProvider) : ''}" data-mm-region="${escAttr(c.mmRegion ?? '')}" data-vn-area="${escAttr(c.vnArea ?? '')}"><div class="label">${shown}</div></div>`;
+      }
+
+      function renderFlat(list) {
+        if (!list.length) {
+          setMenuInnerHTML(`<div class="search-empty">No matches</div>`);
+          return;
+        }
+        setMenuInnerHTML(list.map((c) => pickRowHtmlTerm(c)).join(''));
+      }
+
+      function renderCountries(groups) {
+        if (!groups.length) {
+          setMenuInnerHTML(`<div class="search-empty">No matches</div>`);
+          return;
+        }
+        const chevronSvg =
+          '<svg class="search-item-dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+        const parts = [];
+        for (const g of groups) {
+          if (g.rows.length > 1) {
+            const isOpen = expandedCountryId === g.countryId;
+            parts.push(
+              `<div class="search-item search-item-expand${isOpen ? ' search-item-expand-open' : ''}" role="button" tabindex="-1" aria-expanded="${isOpen ? 'true' : 'false'}" data-expand="${g.countryId}"><div class="label">${escHtml(g.name)}</div><span class="search-item-chevron${isOpen ? ' search-item-chevron-open' : ''}" aria-hidden="true">${chevronSvg}</span></div>`,
+            );
+            if (isOpen) {
+              for (const c of g.rows) {
+                parts.push(pickRowHtmlTerm(c, regionShortLabel(g.name, c.label), true));
+              }
+            }
+          } else {
+            parts.push(pickRowHtmlTerm(g.rows[0], g.name));
+          }
+        }
+        setMenuInnerHTML(parts.join(''));
+      }
+
+      function showsCountryPicker() {
+        const raw = (input.value || '').trim();
+        const q = raw.toLowerCase();
+        const committed = (lastCommittedLabel || '').trim().toLowerCase();
+        return !q || q === committed;
+      }
+
       function applySearchPick(el) {
-        if (!el) return;
+        if (!el || !el.classList.contains('search-item-pick')) return;
         const id = +el.getAttribute('data-id');
         if (!COUNTRIES[id]) return;
         const mr = el.getAttribute('data-my-region') || '';
@@ -1713,7 +1895,9 @@
           delete PAGER_INDEX[704];
         }
 
-        input.value = displayLabel || COUNTRIES[id].name;
+        const picked = (displayLabel || COUNTRIES[id].name).trim();
+        input.value = picked;
+        lastCommittedLabel = picked;
         setLeftOverview(id);
         document.querySelectorAll('.country.live').forEach((el) => {
           const did = el && el.__data__ ? +el.__data__.id : NaN;
@@ -1728,44 +1912,52 @@
         input.blur();
       }
 
-      function render(list) {
-        if (!list.length) {
-          menu.innerHTML = `<div class="search-empty">No matches</div>`;
-          return;
-        }
-        menu.innerHTML = list.map((c, idx) => `
-          <div class="search-item" role="option" data-idx="${idx}"
-            data-id="${c.id}"
-            data-label="${escAttr(c.label)}"
-            data-my-region="${escAttr(c.myRegion ?? '')}"
-            data-id-city="${escAttr(c.idCity ?? '')}"
-            data-la-province="${escAttr(c.laProvince ?? '')}"
-            data-sg-provider="${c.sgProvider != null ? escAttr(c.sgProvider) : ''}"
-            data-mm-region="${escAttr(c.mmRegion ?? '')}"
-            data-vn-area="${escAttr(c.vnArea ?? '')}">
-            <div class="label">${escHtml(c.label)}</div>
-          </div>
-        `).join('');
-      }
-
-      function getFiltered() {
-        const q = (input.value || '').trim().toLowerCase();
-        if (!q) return all;
-        return all.filter((c) => c.label.toLowerCase().includes(q));
-      }
-
       function refresh() {
-        const filtered = getFiltered();
-        render(filtered);
-        setActive(filtered.length ? 0 : -1);
+        const raw = (input.value || '').trim();
+        const q = raw.toLowerCase();
+        const committed = (lastCommittedLabel || '').trim().toLowerCase();
+        const groups = buildCountryGroups(all);
+
+        if (!showsCountryPicker()) {
+          expandedCountryId = null;
+          const items = all.filter((c) => c.label.toLowerCase().includes(q));
+          renderFlat(items);
+        } else if (!q || q === committed) {
+          renderCountries(groups);
+        } else {
+          const byCountry = groups.filter((g) => g.name.toLowerCase().includes(q));
+          if (byCountry.length) {
+            if (expandedCountryId != null && !byCountry.some((g) => g.countryId === expandedCountryId)) {
+              expandedCountryId = null;
+            }
+            renderCountries(byCountry);
+          } else {
+            expandedCountryId = null;
+            const hits = all.filter((c) => c.label.toLowerCase().includes(q));
+            renderFlat(hits);
+          }
+        }
+
+        const items = Array.from(menu.querySelectorAll('.search-item'));
+        let startIdx = items.length ? 0 : -1;
+        if (items.length && showsCountryPicker() && expandedCountryId != null) {
+          const j = items.findIndex(
+            (el) => el.classList.contains('search-item-expand') && +el.getAttribute('data-expand') === expandedCountryId,
+          );
+          if (j >= 0) startIdx = j;
+        }
+        setActive(startIdx, { scroll: false });
         if (isOpen) positionSearchMenu();
       }
 
       window.addEventListener('resize', () => { if (isOpen) positionSearchMenu(); });
+      window.addEventListener('scroll', () => { if (isOpen) positionSearchMenu(); }, true);
       const appEl = document.querySelector('.app');
-      if (appEl && typeof ResizeObserver !== 'undefined') {
+      const fieldEl = input.closest('.search-field');
+      if (typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(() => { if (isOpen) positionSearchMenu(); });
-        ro.observe(appEl);
+        if (appEl) ro.observe(appEl);
+        if (fieldEl) ro.observe(fieldEl);
       }
 
       input.setAttribute('aria-controls', 'country-search-menu');
@@ -1773,12 +1965,14 @@
 
       input.addEventListener('focus', () => {
         void rebuildAll().then(() => {
+          expandedCountryId = null;
           openMenu();
           refresh();
         });
       });
       input.addEventListener('click', () => {
         void rebuildAll().then(() => {
+          expandedCountryId = null;
           openMenu();
           refresh();
         });
@@ -1787,6 +1981,7 @@
       input.addEventListener('keydown', (e) => {
         if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
           void rebuildAll().then(() => {
+            expandedCountryId = null;
             openMenu();
             refresh();
           });
@@ -1796,12 +1991,27 @@
         if (!isOpen) return;
 
         const items = Array.from(menu.querySelectorAll('.search-item'));
-        if (e.key === 'Escape') { closeMenu(); e.preventDefault(); return; }
+        if (e.key === 'Escape') {
+          if (expandedCountryId != null) {
+            expandedCountryId = null;
+            refresh();
+          } else {
+            closeMenu();
+          }
+          e.preventDefault();
+          return;
+        }
         if (e.key === 'ArrowDown') { setActive(Math.min(items.length - 1, activeIndex + 1)); e.preventDefault(); return; }
         if (e.key === 'ArrowUp') { setActive(Math.max(0, activeIndex - 1)); e.preventDefault(); return; }
         if (e.key === 'Enter') {
           const el = items[activeIndex];
-          if (el) applySearchPick(el);
+          if (el && el.classList.contains('search-item-expand')) {
+            const id = +el.getAttribute('data-expand');
+            expandedCountryId = expandedCountryId === id ? null : id;
+            refresh();
+          } else if (el && el.classList.contains('search-item-pick')) {
+            applySearchPick(el);
+          }
           e.preventDefault();
         }
       });
@@ -1809,11 +2019,21 @@
       menu.addEventListener('mousemove', (e) => {
         const item = e.target.closest('.search-item');
         if (!item) return;
-        const idx = +item.getAttribute('data-idx');
-        if (Number.isFinite(idx)) setActive(idx);
+        const items = Array.from(menu.querySelectorAll('.search-item'));
+        const idx = items.indexOf(item);
+        if (idx >= 0) setActive(idx);
       });
-      menu.addEventListener('mousedown', (e) => {
-        const item = e.target.closest('.search-item');
+      menu.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary) return;
+        const expand = e.target.closest('.search-item-expand');
+        if (expand) {
+          const id = +expand.getAttribute('data-expand');
+          expandedCountryId = expandedCountryId === id ? null : id;
+          refresh();
+          e.preventDefault();
+          return;
+        }
+        const item = e.target.closest('.search-item-pick');
         if (!item) return;
         applySearchPick(item);
         e.preventDefault();
@@ -1834,12 +2054,15 @@
         e.preventDefault();
         e.stopPropagation();
         void rebuildAll().then(() => {
+          expandedCountryId = null;
           openMenu();
           refresh();
           input.focus();
           try { input.select(); } catch (_) {}
         });
       }, true);
+
+      void window.__terminalSyncSearchCommittedLabel();
     })();
 
     // Map
@@ -1853,7 +2076,7 @@
       116: { name: 'Cambodia', url: '/terminal?country=116' },
       418: { name: 'Laos', url: '/terminal?country=418' },
       104: { name: 'Myanmar', url: '/terminal?country=104' },
-      704: { name: 'Vietnam', url: '/terminal?country=704' },
+      704: { name: 'Vietnam', url: '/terminal?country=704&vn_area=area_1' },
     };
 
     const NAMES = {
@@ -2133,6 +2356,9 @@
       const origSetLeftOverview = setLeftOverview;
       setLeftOverview = function patchedSetLeftOverview(countryId) {
         origSetLeftOverview(countryId);
+        if (typeof window.__terminalSyncSearchCommittedLabel === 'function') {
+          window.__terminalSyncSearchCommittedLabel();
+        }
         // update button state after panel update kicks off
         setTimeout(syncPager, 0);
       };
@@ -2207,12 +2433,12 @@
         rows = await ensureSheetRows(VN_SHEET_URL);
         _vnAllRows = rows;
       }
-      const areas = [...new Set(rows.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+      const areas = [...new Set(rows.map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b),
       );
       if (areas.length < 2) return;
-      const curN = normalizeSheetString(getVietnamArea());
-      let i = areas.findIndex((a) => normalizeSheetString(a) === curN);
+      const curCanon = canonVietnamAreaKey(getVietnamArea());
+      let i = areas.findIndex((a) => canonVietnamAreaKey(a) === curCanon);
       if (i < 0) i = 0;
       const n = (i + step + areas.length) % areas.length;
       try { localStorage.setItem('terminal_vn_area', areas[n]); } catch (_) {}

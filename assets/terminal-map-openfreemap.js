@@ -35,11 +35,28 @@
     ];
   }
 
-  function pickCountryId(map, e) {
+  function featNid(feat) {
+    if (!feat) return null;
+    const p = feat.properties || {};
+    let v = p.nid;
+    if (v == null && feat.id != null) v = feat.id;
+    if (v == null) return null;
+    const n = +v;
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /** Prefer a live country in the hit stack (e.g. Vietnam under China). */
+  function pickCountryId(map, e, liveById, names) {
     if (!map.getLayer('countries-hit')) return null;
     const feats = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
     if (!feats.length) return null;
-    return feats[0].properties.nid;
+    for (let i = 0; i < feats.length; i++) {
+      const nid = featNid(feats[i]);
+      if (nid == null || names[nid] == null) continue;
+      if (liveById && liveById[nid]) return nid;
+    }
+    const top = featNid(feats[0]);
+    return names[top] != null ? top : null;
   }
 
   window.__renderTerminalMapOpenFreeMap = function (o) {
@@ -112,6 +129,13 @@
       if (nid === 702 && +window.__terminalSelectedCountryId === 702) {
         o.updateRightPanelForCountry(702).catch(() => {});
         applySel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(702, true);
+        return;
+      }
+      if (nid === 96 && +window.__terminalSelectedCountryId === 96) {
+        o.updateRightPanelForCountry(96).catch(() => {});
+        applySel();
+        if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(96, true);
         return;
       }
       if (nid === 764 && +window.__terminalSelectedCountryId === 764) {
@@ -172,12 +196,14 @@
           const countries = topojson.feature(world, world.objects.countries);
           const features = countries.features.map((f) => ({
             type: 'Feature',
+            id: +f.id,
             properties: { ...(f.properties || {}), nid: +f.id },
             geometry: f.geometry,
           }));
           if (sgFeat && sgFeat.type === 'Feature' && sgFeat.geometry) {
             features.push({
               type: 'Feature',
+              id: 702,
               properties: { ...(sgFeat.properties || {}), nid: 702 },
               geometry: sgFeat.geometry,
             });
@@ -192,17 +218,36 @@
           map.addSource('countries', {
             type: 'geojson',
             data: { type: 'FeatureCollection', features },
-            promoteId: 'nid',
           });
 
-        map.addLayer({
-          id: 'countries-hit',
-          type: 'fill',
-          source: 'countries',
-          paint: { 'fill-opacity': 0 },
-        });
+          map.addLayer({
+            id: 'countries-hit',
+            type: 'fill',
+            source: 'countries',
+            layout: {
+              'fill-sort-key': [
+                'match',
+                ['to-number', ['get', 'nid']],
+                704, 1000,
+                702, 900,
+                458, 800,
+                360, 700,
+                104, 650,
+                418, 600,
+                116, 550,
+                96, 500,
+                764, 500,
+                608, 500,
+                0,
+              ],
+            },
+            paint: { 'fill-opacity': 0 },
+          });
 
         window.__terminalZoomToCountry = function zoomToCountry(countryId, animate) {
+          try {
+            map.stop();
+          } catch (_) {}
           const id = +countryId;
           const dur = animate ? 480 : 0;
           const f = byNid[id];
@@ -291,7 +336,7 @@
         }
 
         map.on('mousemove', (e) => {
-          const nid = pickCountryId(map, e);
+          const nid = pickCountryId(map, e, LIVE, NAMES);
           const canvas = map.getCanvas();
           if (nid == null || NAMES[nid] == null) {
             o.hideTip();
@@ -307,15 +352,24 @@
           map.getCanvas().style.cursor = '';
         });
 
-        map.on('click', (e) => {
-          const nid = pickCountryId(map, e);
+        let lastMapPickMs = 0;
+        function onMapPick(e) {
+          const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+          if (now - lastMapPickMs < 380) return;
+          lastMapPickMs = now;
+          const nid = pickCountryId(map, e, LIVE, NAMES);
           if (nid == null || NAMES[nid] == null) return;
           handleCountryPick(nid, e.lngLat);
+        }
+        map.on('click', onMapPick);
+        map.on('touchend', (e) => {
+          if (!e.originalEvent.changedTouches || e.originalEvent.changedTouches.length !== 1) return;
+          onMapPick(e);
         });
 
         map.on('touchstart', (e) => {
           if (!e.originalEvent.touches || !e.originalEvent.touches.length) return;
-          const nid = pickCountryId(map, e);
+          const nid = pickCountryId(map, e, LIVE, NAMES);
           if (nid == null || NAMES[nid] == null) {
             o.hideTip();
             return;

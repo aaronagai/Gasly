@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=3" />
+  <link rel="stylesheet" href="assets/app.css?v=5" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -30,18 +30,20 @@
     <div class="map" id="map"></div>
 
     <div class="topbar">
-      <div class="search" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input id="country-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
+      <div class="search-field">
+        <div class="search" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input id="country-search" type="search" placeholder="Search countries & regions" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
       </div>
       <a href="index.html" class="topbar-home" aria-label="Back to home">
         <img src="assets/appicon.png" alt="" width="44" height="44" decoding="async" />
       </a>
     </div>
-    <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
 
     <div id="sg-provider-menu" class="sg-provider-menu" role="listbox" aria-label="Singapore petrol provider" aria-hidden="true"></div>
 
@@ -146,9 +148,51 @@
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
 
+    /** Pick the list row that matches the current app selection + localStorage sub-keys (sync; `rows` from buildSearchRegionsList). */
+    function findAppSearchRowForSelection(rows, cid) {
+      if (!rows || !rows.length) return null;
+      const id = +cid;
+      const m = rows.filter((r) => +r.countryId === id);
+      if (!m.length) return null;
+      if (id === 458) {
+        const want = getMalaysiaRegion();
+        return m.find((r) => (r.myRegion || '') === want) || m[0];
+      }
+      if (id === 360) {
+        const city = getIndonesiaCity();
+        return m.find((r) => (r.idCity || '') === city) || m[0];
+      }
+      if (id === 702) {
+        let stored = '';
+        try {
+          stored = normalizeSheetString(localStorage.getItem('terminal_sg_provider') || '');
+        } catch (_) {}
+        if (stored) {
+          const hit = m.find((r) => normalizeSheetString(r.sgProvider || '') === stored);
+          if (hit) return hit;
+        }
+        return m.find((r) => !r.sgProvider) || m[0];
+      }
+      if (id === 418) {
+        const prov = getLaosProvince();
+        return m.find((r) => (r.laProvince || '') === prov) || m[0];
+      }
+      if (id === 104) {
+        const reg = getMyanmarRegion();
+        return m.find((r) => (r.mmRegion || '') === reg) || m[0];
+      }
+      if (id === 704) {
+        const want = canonVietnamAreaKey(getVietnamArea()) || getVietnamArea();
+        const hit = m.find((r) => canonVietnamAreaKey(r.vnArea || '') === want || (r.vnArea || '') === want);
+        return hit || m[0];
+      }
+      return m[0];
+    }
+
     /** Search suggestions: MY regions, BN/TH/PH/KH national, VN areas + MM stations from sheets, SG providers, LA provinces, ID cities (matches terminal; list refetched when search opens). */
     async function buildSearchRegionsList() {
       const rows = [];
+      const vnName = (COUNTRIES[704] && COUNTRIES[704].name) || 'Vietnam';
       MY_REGIONS.forEach((r) => {
         rows.push({
           countryId: 458,
@@ -165,19 +209,19 @@
       } catch (_) {
         vnRows = [];
       }
-      const vnAreas = [...new Set(vnRows.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+      const vnAreas = [...new Set(vnRows.map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b),
       );
       if (vnAreas.length) {
         vnAreas.forEach((ar) => {
           rows.push({
             countryId: 704,
-            label: `${COUNTRIES[704].name} - ${labelVietnamArea(ar)}`,
+            label: `${vnName} - ${labelVietnamArea(ar)}`,
             vnArea: ar,
           });
         });
       } else {
-        rows.push({ countryId: 704, label: `${COUNTRIES[704].name} - National`, vnArea: '' });
+        rows.push({ countryId: 704, label: `${vnName} - National`, vnArea: '' });
       }
       rows.push({ countryId: 116, label: `${COUNTRIES[116].name} - National` });
       let mmRows = [];
@@ -222,14 +266,20 @@
         .forEach((city) => {
           rows.push({ countryId: 360, label: `${COUNTRIES[360].name} - ${city}`, idCity: city });
         });
+      if (!rows.some((x) => +x.countryId === 704)) {
+        const ins = rows.findIndex((x) => +x.countryId === 116);
+        const entry = { countryId: 704, label: `${vnName} - National`, vnArea: '' };
+        if (ins === -1) rows.push(entry);
+        else rows.splice(ins, 0, entry);
+      }
       return rows;
     }
 
 
     function fmtIDR(n) {
-      const x = parseFloat(n);
+      const x = parseFloat(String(n).replace(/,/g, ''));
       if (!Number.isFinite(x)) return '—';
-      return `IDR ${Math.round(x).toLocaleString('en-US')}/L`;
+      return `IDR ${formatNumberCommas(Math.round(x), 0, 0)}/L`;
     }
 
     /** Highlight card: show copy instead of em-dash when price is missing. */
@@ -248,22 +298,24 @@
       const cur = parseFloat(String(currentVal).replace(/,/g, ''));
       const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
-      if (cur.toFixed(decimals) === prev.toFixed(decimals)) return '-';
+      const dec =
+        Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
+      if (cur.toFixed(dec) === prev.toFixed(dec)) return '-';
       const diff = cur - prev;
-      const mag = Math.abs(diff).toFixed(decimals);
+      const mag = formatNumberCommas(Math.abs(diff), dec, dec);
       if (diff > 0) return `+${sym} ${mag}`;
       return `-${sym} ${mag}`;
     }
 
     function fmtDeltaIDR(currentVal, prevVal) {
-      const cur = parseFloat(currentVal);
-      const prev = parseFloat(prevVal);
+      const cur = parseFloat(String(currentVal).replace(/,/g, ''));
+      const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
       const a = Math.round(cur);
       const b = Math.round(prev);
       if (a === b) return '-';
       const diff = a - b;
-      const abs = Math.abs(diff).toLocaleString('en-US');
+      const abs = formatNumberCommas(Math.abs(diff), 0, 0);
       if (diff > 0) return `+IDR ${abs}/L`;
       return `-IDR ${abs}/L`;
     }
@@ -296,7 +348,10 @@
     function getVietnamArea() {
       try {
         const s = localStorage.getItem('terminal_vn_area');
-        if (s && String(s).trim()) return String(s).trim();
+        if (s && String(s).trim()) {
+          const t = String(s).trim();
+          return canonVietnamAreaKey(t) || t;
+        }
       } catch (_) {}
       return 'area_1';
     }
@@ -311,7 +366,11 @@
     function syncSearchInputFromSelection() {
       const inp = document.getElementById('country-search');
       if (!inp || document.activeElement === inp) return;
-      inp.value = '';
+      if (typeof window.__appSyncSearchCommittedLabel === 'function') {
+        try {
+          window.__appSyncSearchCommittedLabel();
+        } catch (_) {}
+      }
     }
 
     // Data fetch helpers — ensureMalaysiaRows / ensureSheetRows come from utils.js
@@ -374,16 +433,23 @@
               color: tickColor,
               font: { size: 10 },
               callback(v) {
-                if (countryId === 360) return Number(v) >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1000)}k`;
+                if (countryId === 360) {
+                  const nv = Number(v);
+                  if (!Number.isFinite(nv)) return v;
+                  if (nv >= 1e6) return `${formatNumberCommas(nv / 1e6, 1, 1)}M`;
+                  return `${formatNumberCommas(Math.round(nv / 1000), 0, 0)}k`;
+                }
                 if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
                   const n = Number(v);
                   if (!Number.isFinite(n)) return v;
-                  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-                  if (Math.abs(n) >= 1000) return `${Math.round(n / 1000)}k`;
-                  return String(Math.round(n));
+                  if (Math.abs(n) >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
+                  if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
+                  return formatNumberCommas(Math.round(n), 0, 0);
                 }
                 const n = Number(v);
-                return Number.isFinite(n) ? String(parseFloat(n.toFixed(6))) : v;
+                return Number.isFinite(n)
+                  ? formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6)
+                  : v;
               },
             },
           },
@@ -417,19 +483,27 @@
       }));
 
       if (RIGHT_CHART) {
-        RIGHT_CHART.destroy();
+        try {
+          RIGHT_CHART.destroy();
+        } catch (_) {}
         RIGHT_CHART = null;
       }
 
-      RIGHT_CHART = new Chart(ctx, {
-        type: 'line',
-        data: { labels: labels || [], datasets: nextDs },
-        options: chartOptions(countryId),
-      });
+      try {
+        RIGHT_CHART = new Chart(ctx, {
+          type: 'line',
+          data: { labels: labels || [], datasets: nextDs },
+          options: chartOptions(countryId),
+        });
+      } catch (err) {
+        console.error('App chart failed', err);
+        RIGHT_CHART = null;
+      }
     }
 
     function renderHiRows(pairs) {
       const el = document.getElementById('hi-lines');
+      if (!el) return;
       el.innerHTML = pairs.map((row) => {
         const k = row[0];
         const v = row[1];
@@ -758,8 +832,8 @@
 
         if (cid === 704) {
           const rows = await ensureSheetRows(VN_SHEET_URL);
-          const areaNorm = normalizeSheetString(getVietnamArea());
-          const seriesAsc = sortRowsByDate(rows.filter((r) => normalizeSheetString(r.area) === areaNorm));
+          const want = canonVietnamAreaKey(getVietnamArea());
+          const seriesAsc = sortRowsByDate(rows.filter((r) => canonVietnamAreaKey(r.area) === want));
           if (!seriesAsc.length) {
             titleEl.textContent = labelVietnamArea(getVietnamArea());
             subEl.textContent = 'No price rows in sheet';
@@ -818,10 +892,14 @@
         renderHiRows([['Source', 'Unavailable']]);
         emptyChart();
       } catch (_) {
-        titleEl.textContent = cname;
-        subEl.textContent = 'Could not load live prices';
-        renderHiRows([['Status', 'Check connection']]);
-        emptyChart();
+        if (titleEl) titleEl.textContent = cname;
+        if (subEl) subEl.textContent = 'Could not load live prices';
+        try {
+          renderHiRows([['Status', 'Check connection']]);
+        } catch (__) {}
+        try {
+          emptyChart();
+        } catch (__) {}
       } finally {
         syncSearchInputFromSelection();
       }
@@ -982,6 +1060,10 @@
       const onViewportResize = () => setSnap(snap);
       window.addEventListener('resize', onViewportResize);
       window.visualViewport?.addEventListener('resize', onViewportResize);
+
+      window.__appCollapseSheetToMin = function () {
+        setSnap(0);
+      };
     }
 
     function initSingaporeProviderMenu() {
@@ -1126,6 +1208,28 @@
       const input = document.getElementById('country-search');
       const menu = document.getElementById('country-search-menu');
       let list = [];
+      /** When the field still shows the last picked label, reopening the menu lists all countries until the user types. */
+      let lastCommittedLabel = '';
+      /** In country-picker mode: which country’s region rows are expanded inline (`null` = none). */
+      let expandedCountryId = null;
+
+      function buildCountryGroups(rows) {
+        const m = new Map();
+        for (const r of rows) {
+          const cid = +r.countryId;
+          if (!COUNTRIES[cid]) continue;
+          if (!m.has(cid)) m.set(cid, []);
+          m.get(cid).push(r);
+        }
+        return [...m.entries()]
+          .map(([countryId, gRows]) => ({
+            countryId,
+            name: COUNTRIES[countryId]?.name || String(countryId),
+            rows: gRows.slice().sort((a, b) => String(a.label).localeCompare(String(b.label))),
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      }
+
       async function rebuildList() {
         try {
           list = await buildSearchRegionsList();
@@ -1133,42 +1237,104 @@
           list = [];
         }
       }
-      await rebuildList();
       let open = false;
       const openMenu = () => { open=true; menu.classList.add('open'); };
-      const closeMenu = () => { open=false; menu.classList.remove('open'); };
+      const closeMenu = () => {
+        open=false;
+        menu.classList.remove('open');
+        expandedCountryId = null;
+      };
+      const searchShell = input.closest('.search');
+      const searchField = input.closest('.search-field');
       const escAttr = (s) => String(s)
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;');
-      const render = (items) => {
-        menu.innerHTML = items
-          .map(
-            (x) =>
-              `<div class="search-item" role="option" data-country-id="${x.countryId}" data-my-region="${escAttr(x.myRegion ?? '')}" data-id-city="${escAttr(x.idCity ?? '')}" data-la-province="${escAttr(x.laProvince ?? '')}" data-sg-provider="${x.sgProvider != null ? escAttr(x.sgProvider) : ''}" data-mm-region="${escAttr(x.mmRegion ?? '')}" data-vn-area="${escAttr(x.vnArea ?? '')}">${x.label}</div>`
-          )
-          .join('');
-      };
-      const filter = () => {
-        const q = (input.value||'').trim().toLowerCase();
-        const items = !q ? list : list.filter((x) => x.label.toLowerCase().includes(q));
-        render(items);
-      };
-      input.addEventListener('focus', () => {
-        void rebuildList().then(() => {
-          openMenu();
-          filter();
-        });
-      });
-      input.addEventListener('input', () => { openMenu(); filter(); });
-      document.addEventListener('pointerdown', (e) => {
-        if (!open) return;
-        if (menu.contains(e.target) || input.contains(e.target)) return;
-        closeMenu();
-      }, true);
-      menu.addEventListener('mousedown', (e) => {
-        const it = e.target.closest('.search-item');
-        if (!it) return;
+
+      function regionShortLabel(countryName, fullLabel) {
+        const p = `${countryName} - `;
+        const s = String(fullLabel || '');
+        return s.startsWith(p) ? s.slice(p.length) : s;
+      }
+
+      function pickRowHtmlApp(x, displayOverride, nested) {
+        const cid = x.countryId;
+        const shown = displayOverride != null ? escAttr(displayOverride) : escAttr(x.label);
+        const nest = nested ? ' search-item-nested' : '';
+        return `<div class="search-item search-item-pick${nest}" role="option" data-country-id="${cid}" data-label="${escAttr(x.label)}" data-my-region="${escAttr(x.myRegion ?? '')}" data-id-city="${escAttr(x.idCity ?? '')}" data-la-province="${escAttr(x.laProvince ?? '')}" data-sg-provider="${x.sgProvider != null ? escAttr(x.sgProvider) : ''}" data-mm-region="${escAttr(x.mmRegion ?? '')}" data-vn-area="${escAttr(x.vnArea ?? '')}">${shown}</div>`;
+      }
+
+      function renderFlat(items) {
+        menu.innerHTML = items.length
+          ? items.map((x) => pickRowHtmlApp(x)).join('')
+          : '<div class="search-empty">No matches</div>';
+      }
+
+      function renderCountries(groups) {
+        if (!groups.length) {
+          menu.innerHTML = '<div class="search-empty">No matches</div>';
+          return;
+        }
+        const chevronSvg =
+          '<svg class="search-item-dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+        const parts = [];
+        for (const g of groups) {
+          if (g.rows.length > 1) {
+            const isOpen = expandedCountryId === g.countryId;
+            parts.push(
+              `<div class="search-item search-item-expand${isOpen ? ' search-item-expand-open' : ''}" role="button" tabindex="-1" aria-expanded="${isOpen ? 'true' : 'false'}" data-expand="${g.countryId}"><span class="search-item-label">${escAttr(g.name)}</span><span class="search-item-chevron${isOpen ? ' search-item-chevron-open' : ''}" aria-hidden="true">${chevronSvg}</span></div>`,
+            );
+            if (isOpen) {
+              for (const x of g.rows) {
+                parts.push(pickRowHtmlApp(x, regionShortLabel(g.name, x.label), true));
+              }
+            }
+          } else {
+            parts.push(pickRowHtmlApp(g.rows[0], g.name));
+          }
+        }
+        menu.innerHTML = parts.join('');
+      }
+
+      function showsCountryPicker() {
+        const raw = (input.value || '').trim();
+        const q = raw.toLowerCase();
+        const committed = (lastCommittedLabel || '').trim().toLowerCase();
+        return !q || q === committed;
+      }
+
+      function filter() {
+        const raw = (input.value || '').trim();
+        const q = raw.toLowerCase();
+        const committed = (lastCommittedLabel || '').trim().toLowerCase();
+        const groups = buildCountryGroups(list);
+
+        if (!showsCountryPicker()) {
+          expandedCountryId = null;
+          const items = list.filter((x) => x.label.toLowerCase().includes(q));
+          renderFlat(items);
+          return;
+        }
+
+        if (!q || q === committed) {
+          renderCountries(groups);
+          return;
+        }
+
+        const byCountry = groups.filter((g) => g.name.toLowerCase().includes(q));
+        if (byCountry.length) {
+          if (expandedCountryId != null && !byCountry.some((g) => g.countryId === expandedCountryId)) {
+            expandedCountryId = null;
+          }
+          renderCountries(byCountry);
+          return;
+        }
+        expandedCountryId = null;
+        const hits = list.filter((x) => x.label.toLowerCase().includes(q));
+        renderFlat(hits);
+      }
+
+      function applyPickFromRowEl(it) {
         const countryId = +it.getAttribute('data-country-id');
         const mr = it.getAttribute('data-my-region');
         const ic = it.getAttribute('data-id-city');
@@ -1198,28 +1364,113 @@
           try { localStorage.setItem('terminal_vn_area', vnArea); } catch (_) {}
         }
         setSelected(countryId);
-        input.value = '';
+        const labAttr = it.getAttribute('data-label');
+        lastCommittedLabel = (labAttr || (it.textContent || '')).replace(/\s+/g, ' ').trim();
+        input.value = lastCommittedLabel;
         closeMenu();
-        e.preventDefault();
-        // Defer so mobile browsers reliably drop focus (and the keyboard) after a suggestion tap.
         setTimeout(() => {
           try {
             input.blur();
           } catch (_) {}
         }, 0);
+      }
+
+      window.__appSyncSearchCommittedLabel = () => {
+        void rebuildList().then(() => {
+          const hit = findAppSearchRowForSelection(list, selected);
+          if (hit && hit.label) {
+            lastCommittedLabel = hit.label;
+            if (document.activeElement !== input) input.value = hit.label;
+          } else {
+            lastCommittedLabel = '';
+            if (document.activeElement !== input) input.value = '';
+          }
+        });
+      };
+      function collapseSheetForSearch() {
+        if (typeof window.__appCollapseSheetToMin === 'function') {
+          try {
+            window.__appCollapseSheetToMin();
+          } catch (_) {}
+        }
+      }
+      if (searchShell) {
+        searchShell.addEventListener('pointerdown', (e) => {
+          if (!e.isPrimary) return;
+          collapseSheetForSearch();
+          queueMicrotask(() => {
+            if (document.activeElement === input) return;
+            try {
+              input.focus({ preventScroll: true });
+            } catch (_) {
+              try {
+                input.focus();
+              } catch (_) {}
+            }
+          });
+        });
+      }
+      input.addEventListener('focus', () => {
+        collapseSheetForSearch();
+        void rebuildList().then(() => {
+          expandedCountryId = null;
+          openMenu();
+          filter();
+        });
+      });
+      input.addEventListener('click', () => {
+        collapseSheetForSearch();
+      });
+      input.addEventListener('input', () => { openMenu(); filter(); });
+      input.addEventListener('keydown', (e) => {
+        if (!open) return;
+        if (e.key === 'Escape' && expandedCountryId != null) {
+          expandedCountryId = null;
+          filter();
+          e.preventDefault();
+        }
+      });
+      document.addEventListener('pointerdown', (e) => {
+        if (!open) return;
+        if (menu.contains(e.target) || (searchField && searchField.contains(e.target))) return;
+        closeMenu();
+      }, true);
+      menu.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary) return;
+        const expand = e.target.closest('.search-item-expand');
+        if (expand) {
+          const id = +expand.getAttribute('data-expand');
+          expandedCountryId = expandedCountryId === id ? null : id;
+          filter();
+          e.preventDefault();
+          return;
+        }
+        const it = e.target.closest('.search-item-pick');
+        if (!it) return;
+        applyPickFromRowEl(it);
+        e.preventDefault();
       });
       document.addEventListener('keydown', (e) => {
         const isMacFind = (e.metaKey && !e.ctrlKey && (e.key === 'f' || e.key === 'F'));
         const isWinFind = (e.ctrlKey && !e.metaKey && (e.key === 'f' || e.key === 'F'));
         if (!isMacFind && !isWinFind) return;
         e.preventDefault();
+        if (typeof window.__appCollapseSheetToMin === 'function') {
+          try {
+            window.__appCollapseSheetToMin();
+          } catch (_) {}
+        }
         void rebuildList().then(() => {
+          expandedCountryId = null;
           openMenu();
           filter();
           input.focus();
           try { input.select(); } catch (_) {}
         });
       }, true);
+
+      await rebuildList();
+      void window.__appSyncSearchCommittedLabel();
     }
 
     function initChart(){

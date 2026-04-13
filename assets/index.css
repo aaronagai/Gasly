@@ -114,11 +114,16 @@
       margin-right: 8px;
     }
 
+    /* HTML markers sit in the map container; keep them above the canvas for clicks. */
+    .map-wrap .maplibregl-marker {
+      z-index: 6;
+    }
+
     .index-map-sg-hit,
     .index-map-vn-hit {
-      width: 36px;
-      height: 36px;
-      margin: -18px 0 0 -18px;
+      width: 56px;
+      height: 56px;
+      margin: -28px 0 0 -28px;
       padding: 0;
       border: none;
       border-radius: 50%;

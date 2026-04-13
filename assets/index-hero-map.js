@@ -50,7 +50,7 @@
       116: { name: 'Cambodia', url: '/terminal?country=116' },
       418: { name: 'Laos', url: '/terminal?country=418' },
       104: { name: 'Myanmar', url: '/terminal?country=104' },
-      704: { name: 'Vietnam', url: '/terminal?country=704' },
+      704: { name: 'Vietnam', url: '/terminal?country=704&vn_area=area_1' },
     };
 
     const NAMES = {
@@ -116,13 +116,14 @@
         const countries = window.topojson.feature(world, world.objects.countries);
         const features = countries.features.map((f) => ({
           type: 'Feature',
-          id: f.id,
+          id: +f.id,
           properties: { ...(f.properties || {}), nid: +f.id },
           geometry: f.geometry,
         }));
         if (sgFeat && sgFeat.type === 'Feature' && sgFeat.geometry) {
           features.push({
             type: 'Feature',
+            id: 702,
             properties: { ...(sgFeat.properties || {}), nid: 702 },
             geometry: sgFeat.geometry,
           });
@@ -139,9 +140,19 @@
           dragRotate: false,
           pitchWithRotate: false,
           touchPitch: false,
-          cooperativeGestures: true,
+          cooperativeGestures: false,
           attributionControl: false,
         });
+
+        function featNid(feat) {
+          if (!feat) return null;
+          const p = feat.properties || {};
+          let v = p.nid;
+          if (v == null && feat.id != null) v = feat.id;
+          if (v == null) return null;
+          const n = +v;
+          return Number.isFinite(n) ? n : null;
+        }
 
         function pickCountryId(e) {
           if (!map.getLayer('countries-hit')) return null;
@@ -149,11 +160,11 @@
           if (!feats.length) return null;
           // Topmost feature may be a non-live neighbour (e.g. China over Vietnam); prefer first live country in the stack.
           for (let i = 0; i < feats.length; i++) {
-            const nid = feats[i].properties && feats[i].properties.nid;
+            const nid = featNid(feats[i]);
             if (nid == null || NAMES[nid] == null) continue;
             if (LIVE[nid]) return nid;
           }
-          const top = feats[0].properties && feats[0].properties.nid;
+          const top = featNid(feats[0]);
           return NAMES[top] != null ? top : null;
         }
 
@@ -165,13 +176,29 @@
           map.addSource('countries', {
             type: 'geojson',
             data: { type: 'FeatureCollection', features },
-            promoteId: 'nid',
           });
 
           map.addLayer({
             id: 'countries-hit',
             type: 'fill',
             source: 'countries',
+            layout: {
+              'fill-sort-key': [
+                'match',
+                ['to-number', ['get', 'nid']],
+                704, 1000,
+                702, 900,
+                458, 800,
+                360, 700,
+                104, 650,
+                418, 600,
+                116, 550,
+                96, 500,
+                764, 500,
+                608, 500,
+                0,
+              ],
+            },
             paint: { 'fill-opacity': 0 },
           });
         });

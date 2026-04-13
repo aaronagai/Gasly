@@ -35,11 +35,28 @@
     ];
   }
 
-  function pickCountryId(map, e) {
+  function featNid(feat) {
+    if (!feat) return null;
+    const p = feat.properties || {};
+    let v = p.nid;
+    if (v == null && feat.id != null) v = feat.id;
+    if (v == null) return null;
+    const n = +v;
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /** Prefer a selectable / live country in the hit stack (e.g. Vietnam under China). */
+  function pickCountryId(map, e, selectableById, names) {
     if (!map.getLayer('countries-hit')) return null;
     const feats = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
     if (!feats.length) return null;
-    return feats[0].properties.nid;
+    for (let i = 0; i < feats.length; i++) {
+      const nid = featNid(feats[i]);
+      if (nid == null || names[nid] == null) continue;
+      if (selectableById && selectableById[nid] != null) return nid;
+    }
+    const top = featNid(feats[0]);
+    return names[top] != null ? top : null;
   }
 
   window.__renderAppMapOpenFreeMap = function (o) {
@@ -117,6 +134,7 @@
       if (nid === 702 && cur === 702) {
         o.refreshHighlights(702).catch(() => {});
         applySel();
+        if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(702, true);
         return;
       }
       if (nid === 764 && cur === 764) {
@@ -177,12 +195,14 @@
           const countries = topojson.feature(world, world.objects.countries);
           const features = countries.features.map((f) => ({
             type: 'Feature',
+            id: +f.id,
             properties: { ...(f.properties || {}), nid: +f.id },
             geometry: f.geometry,
           }));
           if (sgFeat && sgFeat.type === 'Feature' && sgFeat.geometry) {
             features.push({
               type: 'Feature',
+              id: 702,
               properties: { ...(sgFeat.properties || {}), nid: 702 },
               geometry: sgFeat.geometry,
             });
@@ -197,13 +217,29 @@
           map.addSource('countries', {
             type: 'geojson',
             data: { type: 'FeatureCollection', features },
-            promoteId: 'nid',
           });
 
           map.addLayer({
             id: 'countries-hit',
             type: 'fill',
             source: 'countries',
+            layout: {
+              'fill-sort-key': [
+                'match',
+                ['to-number', ['get', 'nid']],
+                704, 1000,
+                702, 900,
+                458, 800,
+                360, 700,
+                104, 650,
+                418, 600,
+                116, 550,
+                96, 500,
+                764, 500,
+                608, 500,
+                0,
+              ],
+            },
             paint: { 'fill-opacity': 0 },
           });
 
@@ -342,6 +378,9 @@
           }
 
           window.APP_ZOOM_TO = function zoomToCountry(countryId, animate) {
+            try {
+              map.stop();
+            } catch (_) {}
             const id = +countryId;
             const dur = animate ? 480 : 0;
             const off = appMapFocusOffset();
@@ -413,7 +452,7 @@
           };
 
           map.on('mousemove', (e) => {
-            const nid = pickCountryId(map, e);
+            const nid = pickCountryId(map, e, COUNTRIES, NAMES);
             const canvas = map.getCanvas();
             if (nid == null || NAMES[nid] == null) {
               canvas.style.cursor = '';
@@ -426,10 +465,20 @@
             map.getCanvas().style.cursor = '';
           });
 
-          map.on('click', (e) => {
-            const nid = pickCountryId(map, e);
+          let lastMapPickMs = 0;
+          function onMapPick(e) {
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            if (now - lastMapPickMs < 380) return;
+            lastMapPickMs = now;
+            const nid = pickCountryId(map, e, COUNTRIES, NAMES);
             if (nid == null || COUNTRIES[nid] == null) return;
             handleCountryPick(nid, e.lngLat);
+          }
+          map.on('click', onMapPick);
+          /* Touches do not always emit `click` on the canvas reliably across mobile WebKit builds. */
+          map.on('touchend', (e) => {
+            if (!e.originalEvent.changedTouches || e.originalEvent.changedTouches.length !== 1) return;
+            onMapPick(e);
           });
 
           fitSeaOverview(false);
