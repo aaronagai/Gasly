@@ -147,8 +147,14 @@
           if (!map.getLayer('countries-hit')) return null;
           const feats = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
           if (!feats.length) return null;
-          const nid = feats[0].properties.nid;
-          return NAMES[nid] != null ? nid : null;
+          // Topmost feature may be a non-live neighbour (e.g. China over Vietnam); prefer first live country in the stack.
+          for (let i = 0; i < feats.length; i++) {
+            const nid = feats[i].properties && feats[i].properties.nid;
+            if (nid == null || NAMES[nid] == null) continue;
+            if (LIVE[nid]) return nid;
+          }
+          const top = feats[0].properties && feats[0].properties.nid;
+          return NAMES[top] != null ? top : null;
         }
 
         map.on('load', () => {
@@ -230,6 +236,33 @@
         sgHit.addEventListener('touchend', (ev) => {
           ev.preventDefault();
           window.location.href = LIVE[702].url;
+        });
+
+        const vnHit = document.createElement('button');
+        vnHit.type = 'button';
+        vnHit.className = 'index-map-vn-hit';
+        vnHit.setAttribute('aria-label', 'Vietnam — live prices');
+        new maplibregl.Marker({ element: vnHit, anchor: 'center' })
+          .setLngLat([108.25, 14.4])
+          .addTo(map);
+
+        vnHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 704));
+        vnHit.addEventListener('mouseleave', hideTip);
+        vnHit.addEventListener('click', () => {
+          window.location.href = LIVE[704].url;
+        });
+        vnHit.addEventListener(
+          'touchstart',
+          (ev) => {
+            ev.stopPropagation();
+            const t = ev.touches[0];
+            showTip(t.clientX, t.clientY, 704);
+          },
+          { passive: true },
+        );
+        vnHit.addEventListener('touchend', (ev) => {
+          ev.preventDefault();
+          window.location.href = LIVE[704].url;
         });
 
         const wrap = document.getElementById('map-wrap');

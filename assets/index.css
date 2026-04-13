@@ -114,7 +114,8 @@
       margin-right: 8px;
     }
 
-    .index-map-sg-hit {
+    .index-map-sg-hit,
+    .index-map-vn-hit {
       width: 36px;
       height: 36px;
       margin: -18px 0 0 -18px;
