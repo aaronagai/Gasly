@@ -530,7 +530,7 @@
       titleEl.removeAttribute('aria-controls');
     }
 
-    async function refreshHighlights(cid) {
+    async function refreshHighlights(cid, opts) {
       const titleEl = document.getElementById('hi-title');
       const subEl = document.getElementById('hi-sub');
       const chartKicker = document.getElementById('chart-kicker');
@@ -901,7 +901,7 @@
           emptyChart();
         } catch (__) {}
       } finally {
-        syncSearchInputFromSelection();
+        if (!opts || opts.syncSearchBar !== false) syncSearchInputFromSelection();
       }
     }
 
@@ -934,11 +934,11 @@
       } catch (_) {}
     }
 
-    function setSelected(cid){
+    function setSelected(cid, opts){
       selected = cid;
       document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
       void renderCountryOverview(cid).catch(() => {});
-      refreshHighlights(cid);
+      refreshHighlights(cid, opts);
       if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(cid, true);
       if (typeof window.__appMapApplySelection === 'function') {
         try { window.__appMapApplySelection(); } catch (_) {}
@@ -1363,10 +1363,9 @@
         if (vnArea && countryId === 704) {
           try { localStorage.setItem('terminal_vn_area', vnArea); } catch (_) {}
         }
-        setSelected(countryId);
-        const labAttr = it.getAttribute('data-label');
-        lastCommittedLabel = (labAttr || (it.textContent || '')).replace(/\s+/g, ' ').trim();
-        input.value = lastCommittedLabel;
+        setSelected(countryId, { syncSearchBar: false });
+        lastCommittedLabel = '';
+        input.value = '';
         closeMenu();
         setTimeout(() => {
           try {

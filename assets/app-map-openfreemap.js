@@ -114,7 +114,7 @@
           localStorage.setItem('terminal_my_region', o.malaysiaRegionFromLngLat(lon, lat));
         } catch (_) {}
         if (cur === 458) {
-          o.refreshHighlights(458).catch(() => {});
+          o.refreshHighlights(458, { syncSearchBar: false }).catch(() => {});
           applySel();
           if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(458, true);
           return;
@@ -125,26 +125,26 @@
           localStorage.setItem('terminal_id_city', o.indonesiaCityFromLngLat(lon, lat));
         } catch (_) {}
         if (cur === 360) {
-          o.refreshHighlights(360).catch(() => {});
+          o.refreshHighlights(360, { syncSearchBar: false }).catch(() => {});
           applySel();
           if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(360, true);
           return;
         }
       }
       if (nid === 702 && cur === 702) {
-        o.refreshHighlights(702).catch(() => {});
+        o.refreshHighlights(702, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(702, true);
         return;
       }
       if (nid === 764 && cur === 764) {
-        o.refreshHighlights(764).catch(() => {});
+        o.refreshHighlights(764, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(764, true);
         return;
       }
       if (nid === 608 && cur === 608) {
-        o.refreshHighlights(608).catch(() => {});
+        o.refreshHighlights(608, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(608, true);
         return;
@@ -154,32 +154,32 @@
           localStorage.setItem('terminal_la_province', o.laosProvinceFromLngLat(lon, lat));
         } catch (_) {}
         if (cur === 418) {
-          o.refreshHighlights(418).catch(() => {});
+          o.refreshHighlights(418, { syncSearchBar: false }).catch(() => {});
           applySel();
           if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(418, true);
           return;
         }
       }
       if (nid === 116 && cur === 116) {
-        o.refreshHighlights(116).catch(() => {});
+        o.refreshHighlights(116, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(116, true);
         return;
       }
       if (nid === 104 && cur === 104) {
-        o.refreshHighlights(104).catch(() => {});
+        o.refreshHighlights(104, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(104, true);
         return;
       }
       if (nid === 704 && cur === 704) {
-        o.refreshHighlights(704).catch(() => {});
+        o.refreshHighlights(704, { syncSearchBar: false }).catch(() => {});
         applySel();
         if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(704, true);
         return;
       }
 
-      o.setSelected(nid);
+      o.setSelected(nid, { syncSearchBar: false });
       applySel();
     }
 
@@ -385,6 +385,16 @@
             const dur = animate ? 480 : 0;
             const off = appMapFocusOffset();
             const f = byNid[id];
+            /** After SEA overview (~6.4+) legacy preset zooms were lower, so easeTo zoomed *out*. */
+            function zoomAtLeast(preset, cap) {
+              const lim = cap == null ? 12 : cap;
+              let cur = 5;
+              try {
+                cur = map.getZoom();
+              } catch (_) {}
+              if (!Number.isFinite(cur)) cur = 5;
+              return Math.min(Math.max(preset, cur + 0.38), lim);
+            }
             if (id === 360) {
               let city = 'Jakarta Pusat';
               try {
@@ -392,7 +402,7 @@
               } catch (_) {}
               const ll = o.ID_CITY_LONLAT[city];
               const c = ll && Number.isFinite(ll[0]) ? [ll[0], ll[1]] : [118, -2.5];
-              map.easeTo({ center: c, zoom: 4.75, duration: dur, offset: off });
+              map.easeTo({ center: c, zoom: zoomAtLeast(4.75), duration: dur, offset: off });
               return;
             }
             if (id === 458) {
@@ -402,35 +412,36 @@
                 region = k === 'SabahSarawak' ? 'SabahSarawak' : 'Semenanjung';
               } catch (_) {}
               const c = region === 'SabahSarawak' ? [115, 4] : [102, 4];
-              map.easeTo({ center: c, zoom: 4.9, duration: dur, offset: off });
+              const z0 = region === 'SabahSarawak' ? 5.05 : 4.9;
+              map.easeTo({ center: c, zoom: zoomAtLeast(z0), duration: dur, offset: off });
               return;
             }
             if (id === 702) {
-              map.easeTo({ center: [103.82, 1.35], zoom: 10.2, duration: dur, offset: off });
+              map.easeTo({ center: [103.82, 1.35], zoom: zoomAtLeast(10.2, 14), duration: dur, offset: off });
               return;
             }
             if (id === 96) {
-              map.easeTo({ center: [114.65, 4.55], zoom: 7.25, duration: dur, offset: off });
+              map.easeTo({ center: [114.65, 4.55], zoom: zoomAtLeast(7.25), duration: dur, offset: off });
               return;
             }
             if (id === 764) {
-              map.easeTo({ center: [100.6, 13.8], zoom: 5.35, duration: dur, offset: off });
+              map.easeTo({ center: [100.6, 13.8], zoom: zoomAtLeast(5.35), duration: dur, offset: off });
               return;
             }
             if (id === 608) {
-              map.easeTo({ center: [122.5, 12.2], zoom: 5.45, duration: dur, offset: off });
+              map.easeTo({ center: [122.5, 12.2], zoom: zoomAtLeast(5.45), duration: dur, offset: off });
               return;
             }
             if (id === 116) {
-              map.easeTo({ center: [104.9, 12.55], zoom: 5.95, duration: dur, offset: off });
+              map.easeTo({ center: [104.9, 12.55], zoom: zoomAtLeast(5.95), duration: dur, offset: off });
               return;
             }
             if (id === 104) {
-              map.easeTo({ center: [96.0, 19.8], zoom: 5.05, duration: dur, offset: off });
+              map.easeTo({ center: [96.0, 19.8], zoom: zoomAtLeast(5.05), duration: dur, offset: off });
               return;
             }
             if (id === 704) {
-              map.easeTo({ center: [108.3, 14.2], zoom: 5.35, duration: dur, offset: off });
+              map.easeTo({ center: [108.3, 14.2], zoom: zoomAtLeast(5.35), duration: dur, offset: off });
               return;
             }
             if (id === 418) {
@@ -440,13 +451,18 @@
               } catch (_) {}
               const ll = (o.LA_PROVINCE_LONLAT && o.LA_PROVINCE_LONLAT[prov]) || [103.8, 18.2];
               const c = ll && Number.isFinite(ll[0]) ? [ll[0], ll[1]] : [103.8, 18.2];
-              map.easeTo({ center: c, zoom: 6.05, duration: dur, offset: off });
+              map.easeTo({ center: c, zoom: zoomAtLeast(6.05), duration: dur, offset: off });
               return;
             }
             if (f && f.geometry) {
               const bb = boundsFromGeometry(f.geometry);
               if (bb) {
-                map.fitBounds(bb, { padding: appMapFitBoundsPadding(), duration: dur, maxZoom: 6.65 });
+                map.fitBounds(bb, {
+                  padding: appMapFitBoundsPadding(),
+                  duration: dur,
+                  maxZoom: 11,
+                  offset: off,
+                });
               }
             }
           };
