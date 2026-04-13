@@ -107,7 +107,7 @@
         <div class="hint" id="info-sub">Click a country to compare</div>
         <div class="lines" aria-label="Highlights" id="info-lines">
           <div class="kv"><span class="k">Status</span><span class="v">Live</span></div>
-          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region, city, SG provider, or Lao province · ←/→ date · [ ] date · +/− map zoom</span></div>
+          <div class="kv"><span class="k">Tip</span><span class="v">↑/↓ region, city, SG provider, Lao province, MM station, or VN area · ←/→ date · [ ] date · +/− map zoom</span></div>
         </div>
         <div class="pager" aria-label="Highlights date history">
           <button type="button" id="pager-prev" aria-label="Previous">&lt;</button>
@@ -2164,6 +2164,46 @@
       if (typeof window.__terminalZoomToCountry === 'function') window.__terminalZoomToCountry(418, true);
     }
 
+    async function cycleMyanmarRegion(step) {
+      let rows = _mmAllRows;
+      if (!rows || !rows.length) {
+        rows = await ensureSheetRows(MM_SHEET_URL);
+        _mmAllRows = rows;
+      }
+      const regs = [...new Set(rows.map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (regs.length < 2) return;
+      const curN = normalizeSheetString(getMyanmarRegion());
+      let i = regs.findIndex((r) => normalizeSheetString(r) === curN);
+      if (i < 0) i = 0;
+      const n = (i + step + regs.length) % regs.length;
+      try { localStorage.setItem('terminal_mm_region', regs[n]); } catch (_) {}
+      delete PAGER_INDEX[104];
+      await updateRightPanelForCountry(104);
+      if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+    }
+
+    async function cycleVietnamArea(step) {
+      let rows = _vnAllRows;
+      if (!rows || !rows.length) {
+        rows = await ensureSheetRows(VN_SHEET_URL);
+        _vnAllRows = rows;
+      }
+      const areas = [...new Set(rows.map((r) => normalizeSheetString(r.area)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (areas.length < 2) return;
+      const curN = normalizeSheetString(getVietnamArea());
+      let i = areas.findIndex((a) => normalizeSheetString(a) === curN);
+      if (i < 0) i = 0;
+      const n = (i + step + areas.length) % areas.length;
+      try { localStorage.setItem('terminal_vn_area', areas[n]); } catch (_) {}
+      delete PAGER_INDEX[704];
+      await updateRightPanelForCountry(704);
+      if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+    }
+
     async function cycleSingaporeProvider(step) {
       await ensureSingaporeRows();
       const providers = sortedSingaporeProviders(_sgAllRows || []);
@@ -2178,7 +2218,7 @@
       if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
     }
 
-    // Keyboard: ↑/↓ = Malaysia region / Indonesia city / Singapore provider; ←/→ = date pager; BN ↑/↓ = zoom; [ ] = date pager
+    // Keyboard: ↑/↓ = Malaysia region / Indonesia city / Singapore provider / Laos / Myanmar / Vietnam; ←/→ = date pager; else ↑/↓ = map zoom; [ ] = date pager
     (function initTerminalKeyboardShortcuts() {
       function isTypingTarget(el) {
         if (!el || el.nodeType !== 1) return false;
@@ -2234,6 +2274,16 @@
               cycleLaosProvince(-1);
               return;
             }
+            if (cid === 104) {
+              stopForTerminalMapKeys(e);
+              cycleMyanmarRegion(-1).catch(() => {});
+              return;
+            }
+            if (cid === 704) {
+              stopForTerminalMapKeys(e);
+              cycleVietnamArea(-1).catch(() => {});
+              return;
+            }
             const z = document.getElementById('zoom-in');
             if (!z || typeof z.onclick !== 'function') return;
             stopForTerminalMapKeys(e);
@@ -2259,6 +2309,16 @@
             if (cid === 418) {
               stopForTerminalMapKeys(e);
               cycleLaosProvince(1);
+              return;
+            }
+            if (cid === 104) {
+              stopForTerminalMapKeys(e);
+              cycleMyanmarRegion(1).catch(() => {});
+              return;
+            }
+            if (cid === 704) {
+              stopForTerminalMapKeys(e);
+              cycleVietnamArea(1).catch(() => {});
               return;
             }
             const z = document.getElementById('zoom-out');
