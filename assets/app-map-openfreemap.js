@@ -97,6 +97,17 @@
       map.touchZoomRotate.disableRotation();
     }
 
+    let __appMapResizeRaf = null;
+    function scheduleMapResize() {
+      if (__appMapResizeRaf != null) return;
+      __appMapResizeRaf = requestAnimationFrame(() => {
+        __appMapResizeRaf = null;
+        try {
+          map.resize();
+        } catch (_) {}
+      });
+    }
+
     window.__appOfmMap = map;
 
     function applySel() {}
@@ -508,16 +519,12 @@
     const wrap = root.closest('.map') || root.parentElement;
     if (wrap && typeof ResizeObserver !== 'undefined') {
       const ro = new ResizeObserver(() => {
-        try {
-          map.resize();
-        } catch (_) {}
+        scheduleMapResize();
       });
       ro.observe(wrap);
     }
     window.addEventListener('resize', () => {
-      try {
-        map.resize();
-      } catch (_) {}
+      scheduleMapResize();
     });
   };
 })();
