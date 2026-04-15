@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=7" />
+  <link rel="stylesheet" href="assets/app.css?v=9" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -40,9 +40,26 @@
         </div>
         <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
       </div>
-      <a href="index.html" class="topbar-home" aria-label="Back to home">
-        <img src="assets/appicon.png" alt="" width="44" height="44" decoding="async" />
-      </a>
+      <button
+        type="button"
+        class="topbar-home"
+        id="app-settings-open"
+        aria-label="Settings"
+        aria-haspopup="dialog"
+        aria-controls="app-settings-modal"
+        aria-expanded="false"
+      >
+        <svg class="topbar-home__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+          />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+        </svg>
+      </button>
     </div>
 
     <div id="sg-provider-menu" class="sg-provider-menu" role="listbox" aria-label="Singapore petrol provider" aria-hidden="true"></div>
@@ -109,6 +126,37 @@
       </div>
     </div>
 
+    <div class="app-settings-modal" id="app-settings-modal" aria-hidden="true">
+      <div class="app-settings-backdrop" aria-hidden="true"></div>
+      <div
+        class="app-settings-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-settings-heading"
+      >
+        <div class="app-settings-header">
+          <h2 class="app-settings-heading" id="app-settings-heading">Settings</h2>
+          <button type="button" class="app-settings-close" id="app-settings-close" aria-label="Close">×</button>
+        </div>
+        <div class="app-settings-body">
+          <div class="app-settings-row">
+            <div class="app-settings-copy">
+              <div class="app-settings-label">Highlight prices in USD</div>
+              <p class="app-settings-hint">
+                Uses live rates from the <strong>Currency</strong> tab in the same Google Sheet. Turn off to show each
+                country’s local currency in the highlight card.
+              </p>
+            </div>
+            <label class="app-settings-switch">
+              <input type="checkbox" id="app-settings-usd" />
+              <span class="app-settings-switch-ui" aria-hidden="true"></span>
+            </label>
+          </div>
+          <a class="app-settings-home-link" href="index.html">PetrolPrice home</a>
+        </div>
+      </div>
+    </div>
+
     <div class="export-story-modal" id="export-story-modal" aria-hidden="true">
       <div class="export-story-backdrop" aria-hidden="true"></div>
       <div class="export-story-dialog" role="dialog" aria-modal="true" aria-labelledby="export-story-heading">
@@ -132,7 +180,7 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
     const MAP_COUNTRY_NAMES = {
@@ -147,6 +195,8 @@
     let RIGHT_CHART = null;
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
+    /** Parsed from `Currency` sheet: ISO code → multiply local price/L by this for USD/L. */
+    let _appCurrencyMult = null;
     /** Monotonic: stale `refreshHighlights` runs bail so async sheet fetches cannot overwrite a newer selection. */
     let __appHiRefreshEpoch = 0;
     /** Monotonic: stale `getCountryOverview` responses cannot overwrite after a newer `renderCountryOverview` starts. */
@@ -297,13 +347,154 @@
       return `IDR ${formatNumberCommas(Math.round(x), 0, 0)}/L`;
     }
 
+    function appHighlightUsdOn() {
+      try {
+        return localStorage.getItem('app_highlight_usd') === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function getAppUsdMultiplier(sym) {
+      const code = String(sym || '')
+        .trim()
+        .toUpperCase();
+      /* Always prefer merged `USD_RATES` from the Currency sheet; `_appCurrencyMult` is only a fallback layout. */
+      if (typeof USD_RATES !== 'undefined' && USD_RATES[code] != null) {
+        const x = Number(USD_RATES[code]);
+        if (Number.isFinite(x) && x > 0) return x;
+      }
+      if (_appCurrencyMult && Number.isFinite(_appCurrencyMult[code]) && _appCurrencyMult[code] > 0) {
+        return _appCurrencyMult[code];
+      }
+      return null;
+    }
+
+    function usdDecimalsForValue(usd) {
+      const a = Math.abs(usd);
+      if (!Number.isFinite(a)) return 2;
+      if (a < 0.01) return 4;
+      if (a < 0.25) return 3;
+      return 2;
+    }
+
+    /**
+     * Currency tab: columns `currency` (or `code`) + `to_usd` (multiply price/L in that currency to get USD/L).
+     * Optional `local_per_usd` (e.g. IDR per $1) — multiplier = 1 / value.
+     */
+    function buildCurrencyMapFromRows(rows) {
+      const m = Object.create(null);
+      for (const r of rows || []) {
+        if (!r || typeof r !== 'object') continue;
+        let code = '';
+        for (const k of Object.keys(r)) {
+          const kl = String(k || '')
+            .toLowerCase()
+            .replace(/_/g, '');
+          if (kl === 'currency' || kl === 'code' || kl === 'ccy' || kl === 'symbol') {
+            const raw = normalizeSheetString(r[k]).toUpperCase().replace(/[^A-Z]/g, '');
+            if (raw.length >= 3) {
+              code = raw.slice(0, 3);
+              break;
+            }
+          }
+        }
+        if (!code) continue;
+        let mult = typeof asNumSheetCell === 'function' ? asNumSheetCell(r.to_usd) : asNum(r.to_usd);
+        if (mult == null) {
+          for (const k of Object.keys(r)) {
+            const kl = String(k || '')
+              .toLowerCase()
+              .replace(/_/g, '');
+            if (
+              kl === 'multiply' ||
+              kl === 'rate' ||
+              kl === 'usd' ||
+              (kl.includes('usd') && (kl.includes('per') || kl.includes('to')))
+            ) {
+              const v = typeof asNumSheetCell === 'function' ? asNumSheetCell(r[k]) : asNum(r[k]);
+              if (v != null && v > 0 && !String(k).toLowerCase().includes('local')) {
+                mult = v;
+                break;
+              }
+            }
+          }
+        }
+        if (mult == null) {
+          const inv = typeof asNumSheetCell === 'function'
+            ? asNumSheetCell(r.local_per_usd ?? r.idr_per_usd ?? r.localperusd)
+            : asNum(r.local_per_usd ?? r.idr_per_usd ?? r.localperusd);
+          if (inv != null && inv > 0) mult = 1 / inv;
+        }
+        if (mult != null && mult > 0) {
+          const adj =
+            typeof normalizeCurrencySheetMultiplier === 'function'
+              ? normalizeCurrencySheetMultiplier(code, mult)
+              : mult;
+          if (adj != null && Number.isFinite(adj) && adj > 0) m[code] = adj;
+        }
+      }
+      return m;
+    }
+
+    async function loadAppCurrencyRates() {
+      const url = typeof CURRENCY_SHEET_URL === 'string' ? CURRENCY_SHEET_URL.trim() : '';
+      if (!url) return;
+      try {
+        let rows;
+        if (typeof ensureSheetRows === 'function') {
+          rows = await ensureSheetRows(url);
+        } else {
+          const text = await (await fetch(url, { cache: 'no-store' })).text();
+          const rawLines = text.trim().split(/\r?\n/).filter((ln) => ln.length > 0);
+          const lineArrays = rawLines.map((ln) => splitCSVLine(ln));
+          const hi =
+            typeof detectCurrencyHeaderRowIndex === 'function' ? detectCurrencyHeaderRowIndex(lineArrays) : 0;
+          rows = parseCSV(text, { headerRowIndex: hi });
+        }
+        /**
+         * Mutate shared `USD_RATES` (same as terminal). Fallback `_appCurrencyMult` only if the sheet
+         * uses the alternate `currency` + `to_usd` layout instead of `country_name` + `fx_rate`.
+         */
+        let n = 0;
+        if (typeof mergeCurrencySheetRowsIntoUsdRates === 'function' && typeof USD_RATES !== 'undefined') {
+          n = mergeCurrencySheetRowsIntoUsdRates(rows, USD_RATES);
+        }
+        if (n > 0) {
+          _appCurrencyMult = null;
+        } else {
+          _appCurrencyMult = buildCurrencyMapFromRows(rows);
+          if (!_appCurrencyMult || !Object.keys(_appCurrencyMult).length) _appCurrencyMult = null;
+        }
+      } catch (e) {
+        console.warn('Currency sheet load failed', e);
+        _appCurrencyMult = null;
+      }
+    }
+
     /** Highlight card: show copy instead of em-dash when price is missing. */
     function fmtHiPerL(sym, n, decimals) {
+      if (appHighlightUsdOn()) {
+        const mult = getAppUsdMultiplier(sym);
+        const x = parseFloat(String(n == null ? '' : n).replace(/,/g, '').trim());
+        if (!Number.isFinite(x) || mult == null) return 'Unavailable';
+        const usd = x * mult;
+        const dec = usdDecimalsForValue(usd);
+        return `$${formatNumberCommas(usd, dec, dec)}/L`;
+      }
       const s = fmtPerL(sym, n, decimals);
       return s === '—' ? 'Unavailable' : s;
     }
 
     function fmtHiIDR(n) {
+      if (appHighlightUsdOn()) {
+        const mult = getAppUsdMultiplier('IDR');
+        const x = parseFloat(String(n == null ? '' : n).replace(/,/g, '').trim());
+        if (!Number.isFinite(x) || mult == null) return 'Unavailable';
+        const usd = x * mult;
+        const dec = usdDecimalsForValue(usd);
+        return `$${formatNumberCommas(usd, dec, dec)}/L`;
+      }
       const s = fmtIDR(n);
       return s === '—' ? 'Unavailable' : s;
     }
@@ -313,6 +504,18 @@
       const cur = parseFloat(String(currentVal).replace(/,/g, ''));
       const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      if (appHighlightUsdOn()) {
+        const mult = getAppUsdMultiplier(sym);
+        if (mult == null) return '-';
+        const cUsd = cur * mult;
+        const pUsd = prev * mult;
+        const diff = cUsd - pUsd;
+        if (Math.abs(diff) < 1e-9) return '-';
+        const dec = Math.max(usdDecimalsForValue(diff), usdDecimalsForValue(cUsd));
+        const mag = formatNumberCommas(Math.abs(diff), dec, dec);
+        if (diff > 0) return `+$${mag}`;
+        return `-$${mag}`;
+      }
       const dec =
         Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
       if (cur.toFixed(dec) === prev.toFixed(dec)) return '-';
@@ -326,6 +529,18 @@
       const cur = parseFloat(String(currentVal).replace(/,/g, ''));
       const prev = parseFloat(String(prevVal).replace(/,/g, ''));
       if (!Number.isFinite(cur) || !Number.isFinite(prev)) return '-';
+      if (appHighlightUsdOn()) {
+        const mult = getAppUsdMultiplier('IDR');
+        if (mult == null) return '-';
+        const cUsd = cur * mult;
+        const pUsd = prev * mult;
+        const diff = cUsd - pUsd;
+        if (Math.abs(diff) < 1e-9) return '-';
+        const dec = Math.max(usdDecimalsForValue(diff), usdDecimalsForValue(cUsd));
+        const mag = formatNumberCommas(Math.abs(diff), dec, dec);
+        if (diff > 0) return `+$${mag}`;
+        return `-$${mag}`;
+      }
       const a = Math.round(cur);
       const b = Math.round(prev);
       if (a === b) return '-';
@@ -390,7 +605,21 @@
 
     // Data fetch helpers — ensureMalaysiaRows / ensureSheetRows come from utils.js
 
-    function chartOptions(countryId) {
+    /** ISO currency per country for charts (must match `fmtHiPerL` / `fmtHiIDR` and Currency sheet). */
+    const APP_CHART_CCY = {
+      458: 'MYR',
+      702: 'SGD',
+      96: 'BND',
+      360: 'IDR',
+      764: 'THB',
+      608: 'PHP',
+      116: 'KHR',
+      104: 'MMK',
+      704: 'VND',
+      418: 'LAK',
+    };
+
+    function chartOptions(countryId, chartUsdMode = false) {
       const legendColor = cssVar('--chart-legend', 'rgba(0,0,0,0.48)');
       const tickColor = cssVar('--chart-tick', 'rgba(0,0,0,0.45)');
       const gridColor = cssVar('--chart-grid', 'rgba(0,0,0,0.06)');
@@ -448,23 +677,22 @@
               color: tickColor,
               font: { size: 10 },
               callback(v) {
+                const n = Number(v);
+                if (!Number.isFinite(n)) return v;
+                if (chartUsdMode) {
+                  const d = usdDecimalsForValue(n);
+                  return `$${formatNumberCommas(n, d, d)}`;
+                }
                 if (countryId === 360) {
-                  const nv = Number(v);
-                  if (!Number.isFinite(nv)) return v;
-                  if (nv >= 1e6) return `${formatNumberCommas(nv / 1e6, 1, 1)}M`;
-                  return `${formatNumberCommas(Math.round(nv / 1000), 0, 0)}k`;
+                  if (n >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
+                  return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
                 }
                 if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
-                  const n = Number(v);
-                  if (!Number.isFinite(n)) return v;
                   if (Math.abs(n) >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
                   if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
                   return formatNumberCommas(Math.round(n), 0, 0);
                 }
-                const n = Number(v);
-                return Number.isFinite(n)
-                  ? formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6)
-                  : v;
+                return formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6);
               },
             },
           },
@@ -484,9 +712,25 @@
         return grad;
       }
 
+      const ccy = countryId != null ? APP_CHART_CCY[countryId] : null;
+      let usdMult = 1;
+      let chartUsdMode = false;
+      if (ccy && appHighlightUsdOn()) {
+        const m = getAppUsdMultiplier(ccy);
+        if (m != null && Number.isFinite(m) && m > 0) {
+          usdMult = m;
+          chartUsdMode = true;
+        }
+      }
+
       const nextDs = (datasets || []).map((ds) => ({
         label: ds.label,
-        data: ds.data || [],
+        data: (ds.data || []).map((v) => {
+          if (v == null || v === '') return v;
+          const x = typeof v === 'number' ? v : parseFloat(String(v).replace(/,/g, ''));
+          if (!Number.isFinite(x)) return v;
+          return x * usdMult;
+        }),
         borderColor: ds.color,
         backgroundColor: mkFill(ds.color),
         borderWidth: 2,
@@ -508,7 +752,7 @@
         RIGHT_CHART = new Chart(ctx, {
           type: 'line',
           data: { labels: labels || [], datasets: nextDs },
-          options: chartOptions(countryId),
+          options: chartOptions(countryId, chartUsdMode),
         });
         scheduleChartResize();
       } catch (err) {
@@ -572,6 +816,14 @@
           const rows = await ensureMalaysiaRows();
           if (!alive()) return;
           const seriesAsc = sortRowsByDate(rows);
+          if (!seriesAsc.length) {
+            titleEl.textContent = cname;
+            subEl.textContent = 'No Malaysia price rows from the official API';
+            renderHiRows([['Data', 'Try again in a moment']]);
+            if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+            emptyChart();
+            return;
+          }
           const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
           const regionKey = getMalaysiaRegion();
           const isEast = regionKey === 'SabahSarawak';
@@ -1934,10 +2186,60 @@
       });
     }
 
+    function initAppSettingsModal() {
+      const modal = document.getElementById('app-settings-modal');
+      const openBtn = document.getElementById('app-settings-open');
+      const backdrop = modal?.querySelector('.app-settings-backdrop');
+      const closeBtn = document.getElementById('app-settings-close');
+      const chk = document.getElementById('app-settings-usd');
+      if (!modal || !openBtn || !chk) return;
+
+      function syncToggle() {
+        try {
+          chk.checked = localStorage.getItem('app_highlight_usd') === '1';
+        } catch (_) {
+          chk.checked = false;
+        }
+      }
+
+      function openModal() {
+        syncToggle();
+        modal.classList.add('app-settings-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        openBtn.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeModal() {
+        modal.classList.remove('app-settings-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+        openBtn.setAttribute('aria-expanded', 'false');
+        try {
+          openBtn.focus();
+        } catch (_) {}
+      }
+
+      openBtn.addEventListener('click', () => openModal());
+      backdrop?.addEventListener('click', closeModal);
+      closeBtn?.addEventListener('click', closeModal);
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!modal.classList.contains('app-settings-modal--open')) return;
+        closeModal();
+      });
+      chk.addEventListener('change', () => {
+        try {
+          localStorage.setItem('app_highlight_usd', chk.checked ? '1' : '0');
+        } catch (_) {}
+        refreshHighlights(selected).catch(() => {});
+      });
+      syncToggle();
+    }
+
     // Init
     initSheet();
     initSingaporeProviderMenu();
     void initSearch();
+    initAppSettingsModal();
     initExportStoryModal();
     initCardExport();
 
@@ -1958,7 +2260,11 @@
     window.addEventListener('load', () => {
       initChart();
       initMap();
-      setSelected(458, { syncSearchBar: false });
+      void loadAppCurrencyRates()
+        .catch(() => {})
+        .then(() => {
+          setSelected(458, { syncSearchBar: false });
+        });
     });
   </script>
 </body>

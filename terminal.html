@@ -24,7 +24,20 @@
 <body>
   <div class="sidebar-hover">
     <div class="sidebar-hover-trigger" aria-hidden="true"></div>
-    <nav class="sidebar-hover-panel" id="sidebar-hover-panel" aria-label="Sidebar menu"></nav>
+    <nav class="sidebar-hover-panel" id="sidebar-hover-panel" aria-label="Sidebar menu">
+      <div class="sidebar-hover-panel-inner">
+        <div class="sidebar-hover-spacer" aria-hidden="true"></div>
+        <div class="sidebar-hover-footer">
+          <div class="sidebar-currency-row">
+            <div class="sidebar-currency-labels" aria-hidden="true">
+              <span>Local</span>
+              <span>USD</span>
+            </div>
+            <button type="button" class="sidebar-currency-toggle" id="sidebar-currency-toggle" role="switch" aria-checked="false" aria-label="Highlight prices: switch between local currency and US dollars"></button>
+          </div>
+        </div>
+      </div>
+    </nav>
   </div>
 
   <div class="app" role="application" aria-label="Terminal">
@@ -136,7 +149,7 @@
   <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
     // Per-country selected index for the highlights pager (all non-Malaysia).
@@ -802,6 +815,21 @@
         const rows = await ensureMalaysiaRows();
         const seriesAsc = sortRowsByDate(rows || []);
         LOADED_ROWS.set(458, seriesAsc);
+
+        if (!seriesAsc.length) {
+          setRightPanel({
+            kicker: 'Malaysia Petrol Prices History',
+            titleA: 'Malaysia',
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: `${(MY_REGIONS.find((r) => r.key === MY_REGION)?.label) || MY_REGION}`,
+            infoSub: 'No data from official API — try again later',
+            infoLines: [['Data', 'Unavailable', '-']],
+          });
+          destroyRightChart();
+          if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
+          return;
+        }
 
         if (MY_INDEX == null) MY_INDEX = Math.max(0, seriesAsc.length - 1); // default: latest
         MY_INDEX = Math.max(0, Math.min(seriesAsc.length - 1, MY_INDEX));
@@ -2288,6 +2316,42 @@
       if (mapDeepLinkCountry && typeof window.__terminalZoomToCountry === 'function') {
         window.__terminalZoomToCountry(cid, false);
       }
+    })();
+    (function initSidebarCurrencyToggle() {
+      const sw = document.getElementById('sidebar-currency-toggle');
+      function syncSidebarCurrencyToggle() {
+        if (!sw) return;
+        const usd = isTerminalUsd();
+        sw.setAttribute('aria-checked', usd ? 'true' : 'false');
+        sw.setAttribute(
+          'aria-label',
+          usd
+            ? 'Showing US dollars — activate to show local currency'
+            : 'Showing local currency — activate to show US dollars'
+        );
+      }
+      if (sw) {
+        sw.addEventListener('click', () => {
+          try {
+            localStorage.setItem('currency', isTerminalUsd() ? 'local' : 'usd');
+          } catch (_) {}
+          syncSidebarCurrencyToggle();
+          const cid = window.__terminalSelectedCountryId;
+          if (cid != null) updateRightPanelForCountry(cid).catch(() => {});
+        });
+      }
+      syncSidebarCurrencyToggle();
+      (async function loadRates() {
+        try {
+          const rows = await ensureSheetRows(CURRENCY_SHEET_URL);
+          mergeCurrencySheetRowsIntoUsdRates(rows, USD_RATES);
+        } catch (e) {
+          console.warn('Currency sheet:', e);
+        }
+        syncSidebarCurrencyToggle();
+        const cid = window.__terminalSelectedCountryId;
+        if (cid != null) updateRightPanelForCountry(cid).catch(() => {});
+      })();
     })();
     // Orange-panel pager (highlights timeline)
     (function initPager() {

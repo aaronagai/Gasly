@@ -52,6 +52,13 @@ const VN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
 
 /**
+ * FX for app highlight USD mode. Tab **Currency**: row 1 = headers; one row per ISO code.
+ * Columns: **`currency`** (or `code`) + **`to_usd`** (multiply local price/L → USD/L). Optional **`local_per_usd`**
+ * (1 / value used as multiplier). Falls back to `USD_RATES` in this file if the tab is missing or a code is absent.
+ */
+const CURRENCY_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Currency`;
+
+/**
  * Country overview copy + metrics (same workbook). Tab name must match `sheet=`.
  * Row 1 = headers only, then one data row per live country in `COUNTRIES`.
  *
@@ -104,18 +111,30 @@ const COUNTRIES = {
   104: { name: 'Myanmar' },
 };
 
-/** USD conversion rates (multiply local price to get USD). */
+/**
+ * USD conversion: multiply local price/L by this for USD/L.
+ * Overwritten at runtime from the **Currency** sheet (`country_name` + `fx_rate`; see `mergeCurrencySheetRowsIntoUsdRates`).
+ * Sheet `country_name` slugs → ISO: malaysia MYR, singapore SGD, brunei BND, indonesia IDR, thailand THB,
+ * philippines PHP, vietnam VND, myanmar MMK, cambodia KHR, laos LAK.
+ * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK.
+ *
+ * **Spreadsheet format:** Put **plain numbers** in `fx_rate` (optional `RM` / `$` prefix is stripped).
+ * The value must be **USD per 1 unit of local currency** (e.g. ~0.25 for MYR, ~0.00006 for IDR). If you paste
+ * **local per 1 USD** instead (e.g. 4.2 MYR, 1.35 SGD, 17000 IDR), any number **≥ 1** is auto-inverted to the multiplier.
+ * Do not use **percent** or **whole cents** (e.g. “25” for 0.25) — use the decimal multiplier.
+ * Fallback snapshot below when the sheet cannot load.
+ */
 const USD_RATES = {
-  MYR: 0.22,
-  SGD: 0.74,
-  BND: 0.74,
-  IDR: 0.000061,
-  THB: 0.029,
-  PHP: 0.018,
-  KHR: 0.00025,
-  LAK: 0.000048,
-  MMK: 0.00048,
-  VND: 0.000038,
+  MYR: 0.2527648,
+  SGD: 0.7870299,
+  BND: 0.7862731,
+  IDR: 0.0000582988399,
+  THB: 0.03122073,
+  PHP: 0.0166668056,
+  KHR: 0.000249066002,
+  LAK: 0.0000455166136,
+  MMK: 0.00047,
+  VND: 0.0000379795,
 };
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];

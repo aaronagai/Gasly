@@ -295,6 +295,89 @@
       -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
       border-right: 1px solid var(--term-glass-stroke);
       box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .sidebar-hover-panel-inner {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+    .sidebar-hover-spacer {
+      flex: 1;
+      min-height: 8px;
+    }
+    .sidebar-hover-footer {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+    }
+    .sidebar-currency-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      max-width: 100%;
+    }
+    .sidebar-currency-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 44px;
+      font-size: 9px;
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      color: var(--term-ghost-fg);
+      opacity: 0.88;
+      user-select: none;
+    }
+    .sidebar-currency-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid var(--term-ghost-border);
+      border-radius: 999px;
+      background: var(--term-ghost-bg);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      flex-shrink: 0;
+    }
+    .sidebar-currency-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--term-ghost-fg);
+      opacity: 0.92;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background 0.15s ease;
+    }
+    .sidebar-currency-toggle[aria-checked='true'] {
+      background: rgba(255, 106, 0, 0.22);
+      border-color: rgba(255, 106, 0, 0.45);
+    }
+    .sidebar-currency-toggle[aria-checked='true']::after {
+      transform: translateX(20px);
+      background: #ff6a00;
+      opacity: 1;
+    }
+    .sidebar-currency-toggle:hover {
+      background: var(--term-ghost-bg-hover);
+      border-color: rgba(255, 106, 0, 0.35);
+    }
+    .sidebar-currency-toggle:active {
+      background: var(--term-ghost-bg-active);
+    }
+    .sidebar-currency-toggle:focus-visible {
+      outline: 2px solid rgba(255, 106, 0, 0.45);
+      outline-offset: 2px;
     }
     @media (hover: hover) and (pointer: fine) {
       .sidebar-hover:has(.sidebar-hover-trigger:hover) .sidebar-hover-panel,

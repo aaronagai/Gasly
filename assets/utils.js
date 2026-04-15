@@ -77,6 +77,26 @@ const FUEL_PRICE_HEADER_KEYS = new Set([
  * Indonesia tabs often omit the word "diesel" (Dexlite / Pertamina Dex only), so we
  * score rows by canonical fuel columns instead of requiring a diesel substring match.
  */
+/**
+ * Currency tab may have a title row above the real header. Prefer a row that has `country_name` + `fx_rate`.
+ */
+function detectCurrencyHeaderRowIndex(lineArrays) {
+  for (let i = 0; i < Math.min(20, lineArrays.length); i++) {
+    const cells = lineArrays[i];
+    if (!cells || cells.length < 2) continue;
+    const canon = cells.map(canonicalFuelHeader);
+    const hasCountry = canon.some((k) => k === 'country_name' || k === 'country');
+    const hasRate = canon.some(
+      (k) =>
+        k === 'fx_rate' ||
+        k === 'to_usd' ||
+        (k && (/^fx_?rate$/i.test(k) || /^rate$/i.test(k))),
+    );
+    if (hasCountry && hasRate) return i;
+  }
+  return 0;
+}
+
 function detectHeaderRowIndex(lineArrays) {
   let bestIdx = 0;
   let bestFuelCols = -1;
@@ -535,6 +555,42 @@ function asNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * Parse sheet/CSV numbers that may include commas, NBSP, or a leading currency symbol.
+ */
+function asNumSheetCell(v) {
+  if (v == null || v === '') return null;
+  let s = String(v)
+    .replace(/^\ufeff/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/,/g, '')
+    .trim();
+  s = s
+    .replace(/^\s*RM\s*/i, '')
+    .replace(/^\s*S\$\s*/i, '')
+    .replace(/^\s*[$€£¥]\s*/, '')
+    .replace(/\s*USD\s*$/i, '')
+    .trim();
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Currency tab `fx_rate` must be the **multiplier** such that: `local_price_per_L × rate = USD_per_L`
+ * (i.e. **USD per 1 unit of local currency**).
+ *
+ * People often paste **local currency per 1 USD** (e.g. 4.2 MYR/$, 1.35 SGD/$, 17000 IDR/$). For every
+ * SEA currency we support, the correct multiplier is **strictly below 1** (IDR/VND/etc. are tiny positives).
+ * So any value **≥ 1** is treated as “per USD” and inverted. (Avoids missing 1.2–1.5 SGD/USD with the old `> 1.6` rule.)
+ */
+function normalizeCurrencySheetMultiplier(ccy, v) {
+  if (v == null || !Number.isFinite(v) || v <= 0) return v;
+  const sea = new Set(['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND']);
+  if (!sea.has(ccy)) return v;
+  if (v >= 1) return 1 / v;
+  return v;
+}
+
 // ── Chart helpers ────────────────────────────────────────────────────────────
 
 /**
@@ -559,19 +615,34 @@ function buildChartSeries(rows, keys, labels, colorOffset = 0) {
 
 let _myRows = null;
 
-/** Fetch and cache Malaysia fuel price rows from the official API. */
+/**
+ * Fetch Malaysia fuel price rows from data.gov.my (`series_type` === level).
+ * Does not cache an empty array — `[]` is truthy in JS and would otherwise block retries forever.
+ */
 async function ensureMalaysiaRows() {
-  if (_myRows) return _myRows;
-  const res = await fetch(MY_API_URL);
+  if (_myRows && _myRows.length) return _myRows;
+  const res = await fetch(MY_API_URL, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Malaysia API ${res.status}`);
   const json = await res.json();
-  _myRows = (json || []).filter(r => r.series_type === 'level');
-  return _myRows;
+  const raw = Array.isArray(json)
+    ? json
+    : json && Array.isArray(json.data)
+      ? json.data
+      : json && Array.isArray(json.results)
+        ? json.results
+        : [];
+  const rows = raw.filter(
+    (r) => r && String(r.series_type || '').toLowerCase() === 'level',
+  );
+  if (rows.length) _myRows = rows;
+  return rows;
 }
 
 const _sheetCache = new Map();
 /** In-memory sheet cache TTL so highlights can pick up newer Google Sheet rows without a full reload. */
 const SHEET_CACHE_TTL_MS = 30 * 1000;
+/** FX tab should refresh quickly after you edit rates in the sheet. */
+const CURRENCY_SHEET_CACHE_TTL_MS = 5 * 1000;
 
 let _overviewByIdCache = null;
 let _overviewByIdCacheT = 0;
@@ -958,11 +1029,130 @@ function applyOpenFreeMapOrangeLand(map) {
   }
 }
 
+/**
+ * Apply FX multipliers from the `Currency` sheet into `USD_RATES` (mutates in place).
+ * Supported layout: rows with `country_name` (or `country` / `name`) and `fx_rate` (local × rate → USD).
+ * Also accepts a wide row whose column headers are ISO codes (MYR, SGD, …).
+ * @returns {number} number of currency codes updated
+ */
+function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
+  if (!usdRates || typeof usdRates !== 'object') return 0;
+  const NAME_TO_CCY = new Map([
+    ['malaysia', 'MYR'],
+    ['singapore', 'SGD'],
+    ['brunei', 'BND'],
+    ['indonesia', 'IDR'],
+    ['thailand', 'THB'],
+    ['philippines', 'PHP'],
+    ['vietnam', 'VND'],
+    ['myanmar', 'MMK'],
+    ['cambodia', 'KHR'],
+    ['laos', 'LAK'],
+  ]);
+  const CCY_CODES = ['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND'];
+
+  function normName(s) {
+    return normalizeSheetString(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+  /** Labels like "Peninsular Malaysia" → `peninsularmalaysia`; still map to MYR. */
+  function resolveCcyFromCountryName(nk) {
+    if (!nk) return null;
+    let c = NAME_TO_CCY.get(nk);
+    if (c) return c;
+    if (nk === 'my' || nk.endsWith('malaysia')) return 'MYR';
+    if (nk === 'sg' || nk.endsWith('singapore')) return 'SGD';
+    if (nk.endsWith('brunei')) return 'BND';
+    if (nk.endsWith('indonesia')) return 'IDR';
+    if (nk.endsWith('thailand')) return 'THB';
+    if (nk.endsWith('philippines')) return 'PHP';
+    if (nk.endsWith('vietnam')) return 'VND';
+    if (nk.endsWith('myanmar')) return 'MMK';
+    if (nk.endsWith('cambodia')) return 'KHR';
+    if (nk.endsWith('laos')) return 'LAK';
+    return null;
+  }
+  function rateFromRow(r) {
+    if (!r || typeof r !== 'object') return null;
+    /* Prefer real FX columns; avoid generic `usd` / `usd_per_l` (easy to confuse with other sheet data). */
+    const keys = ['fx_rate', 'rate', 'to_usd'];
+    for (const k of keys) {
+      if (r[k] != null) {
+        const v = asNumSheetCell(r[k]);
+        if (v != null && v > 0) return v;
+      }
+    }
+    for (const key of Object.keys(r)) {
+      const kl = key.toLowerCase();
+      if (/^(fx_)?rate$|^to_usd$/i.test(kl)) {
+        const v = asNumSheetCell(r[key]);
+        if (v != null && v > 0) return v;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Prefer a primary row (`malaysia`, `singapore`, …) over regional labels (`peninsularmalaysia`, …)
+   * so a second row with MYR/USD quoted as ~4.5 does not overwrite USD-per-MYR ~0.25 from the main row.
+   */
+  const byCcy = new Map();
+  for (const r of rows || []) {
+    const nameRaw = r.country_name ?? r.country ?? r.name;
+    const nk = normName(nameRaw);
+    const ccy = resolveCcyFromCountryName(nk);
+    if (!ccy) continue;
+    const rateRaw = rateFromRow(r);
+    if (rateRaw == null || rateRaw <= 0 || rateRaw >= 1e9) continue;
+    const v = normalizeCurrencySheetMultiplier(ccy, rateRaw);
+    if (v == null || !Number.isFinite(v) || v <= 0 || v >= 1e9) continue;
+    const tier = NAME_TO_CCY.has(nk) ? 0 : 1;
+    const prev = byCcy.get(ccy);
+    if (prev) {
+      if (tier > prev.tier) continue;
+      if (tier < prev.tier) {
+        byCcy.set(ccy, { v, tier });
+        continue;
+      }
+    }
+    byCcy.set(ccy, { v, tier });
+  }
+  let n = 0;
+  if (byCcy.size) {
+    for (const [ccy, ent] of byCcy) {
+      usdRates[ccy] = ent.v;
+      n++;
+    }
+    return n;
+  }
+
+  for (const r of rows || []) {
+    if (!r || typeof r !== 'object') continue;
+    let hit = 0;
+    for (const code of CCY_CODES) {
+      let cell = r[code];
+      if (cell == null) {
+        const lk = Object.keys(r).find((k) => k.toUpperCase() === code);
+        if (lk) cell = r[lk];
+      }
+      const raw = asNumSheetCell(cell);
+      if (raw == null || raw <= 0 || raw >= 1e9) continue;
+      const v = normalizeCurrencySheetMultiplier(code, raw);
+      if (v != null && Number.isFinite(v) && v > 0 && v < 1e9) {
+        usdRates[code] = v;
+        hit++;
+      }
+    }
+    if (hit >= 3) return hit;
+  }
+  return 0;
+}
+
 /** Fetch and cache a CSV Google Sheet by URL. */
 async function ensureSheetRows(url) {
   const now = Date.now();
   const hit = _sheetCache.get(url);
-  if (hit && now - hit.t < SHEET_CACHE_TTL_MS) return hit.rows;
+  const ttl = url.includes('sheet=Currency') ? CURRENCY_SHEET_CACHE_TTL_MS : SHEET_CACHE_TTL_MS;
+  if (hit && now - hit.t < ttl) return hit.rows;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Sheet fetch ${res.status}`);
   const text = await res.text();
@@ -974,7 +1164,12 @@ async function ensureSheetRows(url) {
   /** Vietnam tab: prefer CSV line 0 as header; if that yields no usable rows, fall back to auto-detect. */
   let rows = [];
   try {
-    if (url.includes('sheet=Vietnam')) {
+    if (url.includes('sheet=Currency')) {
+      const rawLines = text.trim().split(/\r?\n/).filter((ln) => ln.length > 0);
+      const lineArrays = rawLines.map(splitCSVLine);
+      const hi = detectCurrencyHeaderRowIndex(lineArrays);
+      rows = parseCSV(text, { headerRowIndex: hi });
+    } else if (url.includes('sheet=Vietnam')) {
       const vnHeader = typeof headerIdx === 'number' ? headerIdx : 0;
       rows = normalizeVietnamSheetRows(parseCSV(text, { headerRowIndex: vnHeader }));
       function vnRowHasPrices(r) {
