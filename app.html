@@ -370,11 +370,7 @@
       return null;
     }
 
-    function usdDecimalsForValue(usd) {
-      const a = Math.abs(usd);
-      if (!Number.isFinite(a)) return 2;
-      if (a < 0.01) return 4;
-      if (a < 0.25) return 3;
+    function usdDecimalsForValue(_usd) {
       return 2;
     }
 

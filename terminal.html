@@ -305,7 +305,7 @@
         Number.isFinite(decimals) && decimals >= 0 ? Math.min(20, Math.floor(decimals)) : 2;
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
-        return `USD ${formatNumberCommas(x * rate, 3, 3)}/L`;
+        return `USD ${formatNumberCommas(x * rate, 2, 2)}/L`;
       }
       const s = fmtPerL(localSym, x, dec);
       return s === '—' ? 'Unavailable' : s;
@@ -313,7 +313,7 @@
     function fmtIDR(v) {
       if (!isFinite(v)) return 'Unavailable';
       if (isTerminalUsd()) {
-        return `USD ${formatNumberCommas(v * USD_RATES.IDR, 4, 4)}/L`;
+        return `USD ${formatNumberCommas(v * USD_RATES.IDR, 2, 2)}/L`;
       }
       return `IDR ${formatNumberCommas(Math.round(v), 0, 0)}/L`;
     }
@@ -330,7 +330,7 @@
       const rate = USD_RATES[localSym];
       if (isTerminalUsd() && rate != null) {
         const dUsd = diff * rate;
-        const mag = formatNumberCommas(Math.abs(dUsd), 3, 3);
+        const mag = formatNumberCommas(Math.abs(dUsd), 2, 2);
         if (dUsd > 0) return `+USD ${mag}`;
         return `-USD ${mag}`;
       }
@@ -350,7 +350,7 @@
       const rate = USD_RATES.IDR;
       if (isTerminalUsd() && rate != null) {
         const dUsd = diff * rate;
-        const mag = formatNumberCommas(Math.abs(dUsd), 4, 4);
+        const mag = formatNumberCommas(Math.abs(dUsd), 2, 2);
         if (dUsd > 0) return `+USD ${mag}`;
         return `-USD ${mag}`;
       }
