@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=9" />
+  <link rel="stylesheet" href="assets/app.css?v=36" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -40,26 +40,11 @@
         </div>
         <div class="search-menu" id="country-search-menu" role="listbox" aria-label="Country and region results"></div>
       </div>
-      <button
-        type="button"
-        class="topbar-home"
-        id="app-settings-open"
-        aria-label="Settings"
-        aria-haspopup="dialog"
-        aria-controls="app-settings-modal"
-        aria-expanded="false"
-      >
+      <a href="dashboard.html" class="topbar-home" id="app-dashboard-open" aria-label="All prices">
         <svg class="topbar-home__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-          />
-          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+          <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 7h14M5 12h14M5 17h14" />
         </svg>
-      </button>
+      </a>
     </div>
 
     <div id="sg-provider-menu" class="sg-provider-menu" role="listbox" aria-label="Singapore petrol provider" aria-hidden="true"></div>
@@ -67,7 +52,21 @@
     <div class="sheet" id="sheet" aria-label="Details sheet">
       <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
       <div class="sheet-region-sticky" id="sheet-region-sticky">
-        <div class="title" id="hi-title">Semenanjung</div>
+        <div class="sheet-region-head">
+          <div class="title" id="hi-title">Semenanjung</div>
+          <button type="button" class="sheet-settings-btn" id="sheet-settings-open" aria-label="Settings">
+            <svg class="sheet-settings-btn__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+              />
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="sheet-scroll" id="sheet-scroll">
         <div class="sheet-cards-stack">
@@ -176,11 +175,13 @@
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/utils.js"></script>
+  <script src="assets/app-dashboard-core.js"></script>
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA fuels — from config.js
     // ensureMalaysiaRows, ensureSheetRows, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
+    // buildSearchRegionsList, labelVietnamArea, appHighlightUsdOn, getAppUsdMultiplier, loadAppCurrencyRates, loadAndRenderAppDashboard — assets/app-dashboard-core.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
     const MAP_COUNTRY_NAMES = {
@@ -195,8 +196,6 @@
     let RIGHT_CHART = null;
     /** Latest Singapore sheet rows (for provider picker). */
     let _appSgSheetRows = null;
-    /** Parsed from `Currency` sheet: ISO code → multiply local price/L by this for USD/L. */
-    let _appCurrencyMult = null;
     /** Monotonic: stale `refreshHighlights` runs bail so async sheet fetches cannot overwrite a newer selection. */
     let __appHiRefreshEpoch = 0;
     /** Monotonic: stale `getCountryOverview` responses cannot overwrite after a newer `renderCountryOverview` starts. */
@@ -254,218 +253,14 @@
       return m[0];
     }
 
-    /** Search suggestions: MY regions, BN/TH/PH/KH national, VN areas + MM stations from sheets, SG providers, LA provinces, ID cities (matches terminal; list refetched when search opens). */
-    async function buildSearchRegionsList() {
-      const rows = [];
-      const vnName = (COUNTRIES[704] && COUNTRIES[704].name) || 'Vietnam';
-      MY_REGIONS.forEach((r) => {
-        rows.push({
-          countryId: 458,
-          label: `${COUNTRIES[458].name} - ${r.label}`,
-          myRegion: r.key,
-        });
-      });
-      rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
-      rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
-      rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
-      let vnRows = [];
-      try {
-        vnRows = await ensureSheetRows(VN_SHEET_URL);
-      } catch (_) {
-        vnRows = [];
-      }
-      const vnAreas = [...new Set(vnRows.map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b),
-      );
-      if (vnAreas.length) {
-        vnAreas.forEach((ar) => {
-          rows.push({
-            countryId: 704,
-            label: `${vnName} - ${labelVietnamArea(ar)}`,
-            vnArea: ar,
-          });
-        });
-      } else {
-        rows.push({ countryId: 704, label: `${vnName} - National`, vnArea: '' });
-      }
-      rows.push({ countryId: 116, label: `${COUNTRIES[116].name} - National` });
-      let mmRows = [];
-      try {
-        mmRows = await ensureSheetRows(MM_SHEET_URL);
-      } catch (_) {
-        mmRows = [];
-      }
-      const mmRegs = [...new Set(mmRows.map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b),
-      );
-      if (mmRegs.length) {
-        mmRegs.forEach((reg) => {
-          rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - ${reg}`, mmRegion: reg });
-        });
-      } else {
-        rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - National`, mmRegion: '' });
-      }
-
-      let sgRows = [];
-      try {
-        sgRows = await ensureSheetRows(SG_SHEET_URL);
-      } catch (_) {
-        sgRows = [];
-      }
-      const sgProvs = sortedSingaporeProviders(sgRows);
-      if (sgProvs.length) {
-        sgProvs.forEach((p) => {
-          rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - ${p}`, sgProvider: p });
-        });
-      } else {
-        rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
-      }
-
-      Object.keys(LA_PROVINCE_LONLAT)
-        .sort((a, b) => a.localeCompare(b))
-        .forEach((prov) => {
-          rows.push({ countryId: 418, label: `${COUNTRIES[418].name} - ${prov}`, laProvince: prov });
-        });
-      Object.keys(ID_CITY_LONLAT)
-        .sort((a, b) => a.localeCompare(b))
-        .forEach((city) => {
-          rows.push({ countryId: 360, label: `${COUNTRIES[360].name} - ${city}`, idCity: city });
-        });
-      if (!rows.some((x) => +x.countryId === 704)) {
-        const ins = rows.findIndex((x) => +x.countryId === 116);
-        const entry = { countryId: 704, label: `${vnName} - National`, vnArea: '' };
-        if (ins === -1) rows.push(entry);
-        else rows.splice(ins, 0, entry);
-      }
-      return rows;
-    }
-
-
     function fmtIDR(n) {
       const x = parseFloat(String(n).replace(/,/g, ''));
       if (!Number.isFinite(x)) return '—';
       return `IDR ${formatNumberCommas(Math.round(x), 0, 0)}/L`;
     }
 
-    function appHighlightUsdOn() {
-      try {
-        return localStorage.getItem('app_highlight_usd') === '1';
-      } catch (_) {
-        return false;
-      }
-    }
-
-    function getAppUsdMultiplier(sym) {
-      const code = String(sym || '')
-        .trim()
-        .toUpperCase();
-      /* Always prefer merged `USD_RATES` from the Currency sheet; `_appCurrencyMult` is only a fallback layout. */
-      if (typeof USD_RATES !== 'undefined' && USD_RATES[code] != null) {
-        const x = Number(USD_RATES[code]);
-        if (Number.isFinite(x) && x > 0) return x;
-      }
-      if (_appCurrencyMult && Number.isFinite(_appCurrencyMult[code]) && _appCurrencyMult[code] > 0) {
-        return _appCurrencyMult[code];
-      }
-      return null;
-    }
-
     function usdDecimalsForValue(_usd) {
       return 2;
-    }
-
-    /**
-     * Currency tab: columns `currency` (or `code`) + `to_usd` (multiply price/L in that currency to get USD/L).
-     * Optional `local_per_usd` (e.g. IDR per $1) — multiplier = 1 / value.
-     */
-    function buildCurrencyMapFromRows(rows) {
-      const m = Object.create(null);
-      for (const r of rows || []) {
-        if (!r || typeof r !== 'object') continue;
-        let code = '';
-        for (const k of Object.keys(r)) {
-          const kl = String(k || '')
-            .toLowerCase()
-            .replace(/_/g, '');
-          if (kl === 'currency' || kl === 'code' || kl === 'ccy' || kl === 'symbol') {
-            const raw = normalizeSheetString(r[k]).toUpperCase().replace(/[^A-Z]/g, '');
-            if (raw.length >= 3) {
-              code = raw.slice(0, 3);
-              break;
-            }
-          }
-        }
-        if (!code) continue;
-        let mult = typeof asNumSheetCell === 'function' ? asNumSheetCell(r.to_usd) : asNum(r.to_usd);
-        if (mult == null) {
-          for (const k of Object.keys(r)) {
-            const kl = String(k || '')
-              .toLowerCase()
-              .replace(/_/g, '');
-            if (
-              kl === 'multiply' ||
-              kl === 'rate' ||
-              kl === 'usd' ||
-              (kl.includes('usd') && (kl.includes('per') || kl.includes('to')))
-            ) {
-              const v = typeof asNumSheetCell === 'function' ? asNumSheetCell(r[k]) : asNum(r[k]);
-              if (v != null && v > 0 && !String(k).toLowerCase().includes('local')) {
-                mult = v;
-                break;
-              }
-            }
-          }
-        }
-        if (mult == null) {
-          const inv = typeof asNumSheetCell === 'function'
-            ? asNumSheetCell(r.local_per_usd ?? r.idr_per_usd ?? r.localperusd)
-            : asNum(r.local_per_usd ?? r.idr_per_usd ?? r.localperusd);
-          if (inv != null && inv > 0) mult = 1 / inv;
-        }
-        if (mult != null && mult > 0) {
-          const adj =
-            typeof normalizeCurrencySheetMultiplier === 'function'
-              ? normalizeCurrencySheetMultiplier(code, mult)
-              : mult;
-          if (adj != null && Number.isFinite(adj) && adj > 0) m[code] = adj;
-        }
-      }
-      return m;
-    }
-
-    async function loadAppCurrencyRates() {
-      const url = typeof CURRENCY_SHEET_URL === 'string' ? CURRENCY_SHEET_URL.trim() : '';
-      if (!url) return;
-      try {
-        let rows;
-        if (typeof ensureSheetRows === 'function') {
-          rows = await ensureSheetRows(url);
-        } else {
-          const text = await (await fetch(url, { cache: 'no-store' })).text();
-          const rawLines = text.trim().split(/\r?\n/).filter((ln) => ln.length > 0);
-          const lineArrays = rawLines.map((ln) => splitCSVLine(ln));
-          const hi =
-            typeof detectCurrencyHeaderRowIndex === 'function' ? detectCurrencyHeaderRowIndex(lineArrays) : 0;
-          rows = parseCSV(text, { headerRowIndex: hi });
-        }
-        /**
-         * Mutate shared `USD_RATES` (same as terminal). Fallback `_appCurrencyMult` only if the sheet
-         * uses the alternate `currency` + `to_usd` layout instead of `country_name` + `fx_rate`.
-         */
-        let n = 0;
-        if (typeof mergeCurrencySheetRowsIntoUsdRates === 'function' && typeof USD_RATES !== 'undefined') {
-          n = mergeCurrencySheetRowsIntoUsdRates(rows, USD_RATES);
-        }
-        if (n > 0) {
-          _appCurrencyMult = null;
-        } else {
-          _appCurrencyMult = buildCurrencyMapFromRows(rows);
-          if (!_appCurrencyMult || !Object.keys(_appCurrencyMult).length) _appCurrencyMult = null;
-        }
-      } catch (e) {
-        console.warn('Currency sheet load failed', e);
-        _appCurrencyMult = null;
-      }
     }
 
     /** Highlight card: show copy instead of em-dash when price is missing. */
@@ -580,13 +375,6 @@
         }
       } catch (_) {}
       return 'area_1';
-    }
-
-    function labelVietnamArea(areaKey) {
-      const a = normalizeSheetString(areaKey).toLowerCase();
-      const m = /^area[_-]?(\d+)$/.exec(a);
-      if (m) return `Area ${m[1]}`;
-      return normalizeSheetString(areaKey) || 'Area 1';
     }
 
     function syncSearchInputFromSelection() {
@@ -2184,11 +1972,10 @@
 
     function initAppSettingsModal() {
       const modal = document.getElementById('app-settings-modal');
-      const openBtn = document.getElementById('app-settings-open');
       const backdrop = modal?.querySelector('.app-settings-backdrop');
       const closeBtn = document.getElementById('app-settings-close');
       const chk = document.getElementById('app-settings-usd');
-      if (!modal || !openBtn || !chk) return;
+      if (!modal || !chk) return;
 
       function syncToggle() {
         try {
@@ -2202,26 +1989,22 @@
         syncToggle();
         modal.classList.add('app-settings-modal--open');
         modal.setAttribute('aria-hidden', 'false');
-        openBtn.setAttribute('aria-expanded', 'true');
       }
 
       function closeModal() {
         modal.classList.remove('app-settings-modal--open');
         modal.setAttribute('aria-hidden', 'true');
-        openBtn.setAttribute('aria-expanded', 'false');
         try {
-          openBtn.focus();
+          document.getElementById('sheet-settings-open')?.focus();
         } catch (_) {}
       }
 
-      openBtn.addEventListener('click', () => openModal());
+      window.__appOpenSettingsModal = openModal;
+      window.__appCloseSettingsModal = closeModal;
+
+      document.getElementById('sheet-settings-open')?.addEventListener('click', openModal);
       backdrop?.addEventListener('click', closeModal);
       closeBtn?.addEventListener('click', closeModal);
-      document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        if (!modal.classList.contains('app-settings-modal--open')) return;
-        closeModal();
-      });
       chk.addEventListener('change', () => {
         try {
           localStorage.setItem('app_highlight_usd', chk.checked ? '1' : '0');

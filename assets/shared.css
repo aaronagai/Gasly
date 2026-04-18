@@ -107,6 +107,29 @@ header .logo-block {
   color: inherit;
 }
 
+a.header-context-link {
+  flex-shrink: 0;
+  font-family: 'DM Sans', var(--font);
+  font-weight: 400;
+  font-size: var(--header-lockup-font-size);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.header-context-link:hover {
+  opacity: 0.88;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a.header-context-link:focus-visible {
+  outline: 2px solid rgba(255, 106, 0, 0.45);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 /* Explicit lockup + tag so UA `h1` sizing (e.g. 2em) never wins over class-only rules */
 header .logo-block h1.site-wordmark.site-wordmark-lockup,
 header .logo-block a.site-wordmark.site-wordmark-lockup {
@@ -154,7 +177,8 @@ header .logo-block .site-wordmark-lockup > span {
   }
 
   .header-context-sep,
-  .header-context-label {
+  .header-context-label,
+  a.header-context-link {
     font-size: var(--header-lockup-font-size-sm);
   }
 
