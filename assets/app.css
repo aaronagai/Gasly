@@ -202,8 +202,8 @@
       box-shadow: var(--shadow);
     }
     .search svg{
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
       flex-shrink: 0;
       opacity: 0.42;
       color: var(--icon-fg);
@@ -215,8 +215,8 @@
       outline: none;
       background: transparent;
       font-family: var(--font);
-      /* ≥16px prevents iOS Safari focus-zoom (stuck zoom after blur) */
-      font-size: 16px;
+      /* 14px: smaller UI; iOS Safari may auto-zoom on focus (below ~16px) on some versions. */
+      font-size: 0.875rem;
       font-weight: 400;
       letter-spacing: 0.02em;
       color: var(--input-fg);
@@ -416,9 +416,273 @@
         opacity: 0.96;
       }
     }
+
+    /*
+     * Cross-document view transitions (Chrome 126+): same-named nav is morphed between
+     * app.html and dashboard.html so the bar appears to stay put on in-app navigations.
+     */
+    @view-transition {
+      navigation: auto;
+    }
+
+    /*
+     * Floating tab bar: solid surface (full opacity), no backdrop blur.
+     */
+    .app-liquid-nav{
+      view-transition-name: app-liquid-nav;
+      --liquid-nav-pill-max-width: 400px;
+      --liquid-nav-pill-fill: var(--surface);
+      --liquid-nav-active-bg: rgba(0, 0, 0, 0.07);
+      --liquid-nav-active-fg: var(--orange);
+      --liquid-nav-active-icon: var(--orange);
+      --liquid-nav-icon-hole: rgba(255, 255, 255, 0.9);
+      --liquid-nav-label: var(--muted);
+      --liquid-nav-icon: var(--icon-fg);
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      /* Must sit above .app-dashboard (z-index: 120) so the nav shows on dashboard.html. */
+      z-index: 140;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      padding: 0 20px max(18px, calc(6px + env(safe-area-inset-bottom, 0px)));
+    }
+    .app-liquid-nav__pill{
+      position: relative;
+      isolation: isolate;
+      transform: translate3d(0, -6px, 0);
+      pointer-events: auto;
+      /* pan-x made taps unreliable (browser treats slight horizontal movement as pan, no click). */
+      touch-action: manipulation;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-evenly;
+      gap: 2px;
+      width: 100%;
+      max-width: min(var(--liquid-nav-pill-max-width), calc(100vw - 40px));
+      padding: 5px 7px;
+      border-radius: 100vmax;
+      border: 1px solid var(--line);
+      background: var(--liquid-nav-pill-fill);
+      box-shadow:
+        var(--shadow),
+        inset 0 1px 0 var(--glass-inset);
+    }
+    .app-liquid-nav__pill::before{
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(
+        168deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        transparent 52%
+      );
+      opacity: 0.12;
+    }
+    .app-liquid-nav__pill::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: radial-gradient(
+        120% 90% at 50% 0%,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%
+      );
+      opacity: 0.14;
+    }
+    a.app-liquid-nav__item:visited{
+      color: var(--liquid-nav-label);
+    }
+    a.app-liquid-nav__item--active:visited{
+      color: var(--liquid-nav-active-fg);
+    }
+    .app-liquid-nav__item{
+      position: relative;
+      z-index: 2;
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 5px 10px 4px;
+      margin: 0;
+      border: none;
+      border-radius: 100vmax;
+      background: transparent;
+      color: var(--liquid-nav-label);
+      font-family: var(--font);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      text-decoration: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background 0.22s ease, box-shadow 0.22s ease, color 0.18s ease, transform 0.12s ease;
+    }
+    .app-liquid-nav__item:hover:not(.app-liquid-nav__item--active){
+      color: color-mix(in srgb, var(--text) 78%, var(--muted));
+    }
+    .app-liquid-nav__item:active:not(.app-liquid-nav__item--active){
+      transform: scale(0.97);
+    }
+    .app-liquid-nav__icon-wrap{
+      position: relative;
+      display: block;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .app-liquid-nav__icon{
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      display: block;
+      color: var(--liquid-nav-icon);
+      pointer-events: none;
+    }
+    .app-liquid-nav__icon--strong{
+      display: none;
+      color: var(--liquid-nav-active-icon);
+    }
+    .app-liquid-nav__item--active .app-liquid-nav__icon--muted{
+      display: none;
+    }
+    .app-liquid-nav__item--active .app-liquid-nav__icon--strong{
+      display: block;
+    }
+    .app-liquid-nav__label{
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .app-liquid-nav__item--active{
+      background-color: var(--liquid-nav-active-bg);
+      color: var(--liquid-nav-active-fg);
+      font-weight: 600;
+      box-shadow:
+        inset 0 1px 0 var(--glass-inset),
+        0 0 0 0.5px var(--glass-keyline);
+    }
+    .app-liquid-nav__item--active .app-liquid-nav__icon--muted,
+    .app-liquid-nav__item--active .app-liquid-nav__icon--strong{
+      color: var(--liquid-nav-active-icon);
+    }
+    .app-liquid-nav__pill.app-liquid-nav__pill--dragging{
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .app-liquid-nav__pill.app-liquid-nav__pill--dragging > .app-liquid-nav__item{
+      opacity: 0.38;
+      transition: opacity 0.06s ease;
+    }
+    .app-liquid-nav__pill.app-liquid-nav__pill--dragging > .app-liquid-nav__item.app-liquid-nav__item--sliding-hover{
+      opacity: 1;
+    }
+    .app-liquid-nav__item--sliding-hover{
+      background-color: var(--liquid-nav-active-bg);
+      color: var(--liquid-nav-active-fg);
+      font-weight: 600;
+      box-shadow:
+        inset 0 1px 0 var(--glass-inset),
+        0 0 0 0.5px var(--glass-keyline);
+    }
+    .app-liquid-nav__item--sliding-hover .app-liquid-nav__icon--muted{
+      display: none;
+    }
+    .app-liquid-nav__item--sliding-hover .app-liquid-nav__icon--strong{
+      display: block;
+    }
+    .app-liquid-nav__item--sliding-hover .app-liquid-nav__icon--muted,
+    .app-liquid-nav__item--sliding-hover .app-liquid-nav__icon--strong{
+      color: var(--liquid-nav-active-icon);
+    }
+    .app-liquid-nav__item:focus-visible{
+      outline: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
+      outline-offset: 2px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .app-liquid-nav{
+        --liquid-nav-active-bg: rgba(255, 255, 255, 0.12);
+        --liquid-nav-icon-hole: rgba(12, 12, 14, 0.92);
+      }
+      .app-liquid-nav__pill::before{
+        background: linear-gradient(
+          168deg,
+          rgba(255, 255, 255, 0.12) 0%,
+          transparent 55%
+        );
+        opacity: 0.28;
+      }
+      .app-liquid-nav__pill::after{
+        background: radial-gradient(
+          120% 90% at 50% 0%,
+          rgba(255, 255, 255, 0.08) 0%,
+          transparent 50%
+        );
+        opacity: 0.32;
+      }
+    }
+    @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))){
+      .app-liquid-nav__pill{
+        background: var(--liquid-nav-pill-fill);
+      }
+      .app-liquid-nav__pill::before,
+      .app-liquid-nav__pill::after{
+        opacity: 0.25;
+      }
+    }
+    @media (prefers-reduced-transparency: reduce){
+      .app-liquid-nav__pill{
+        transform: none;
+        background: var(--liquid-nav-pill-fill);
+        border-color: var(--line);
+        box-shadow: var(--shadow);
+      }
+      .app-liquid-nav__pill::before,
+      .app-liquid-nav__pill::after{
+        opacity: 0;
+      }
+      .app-liquid-nav__item--active{
+        background-color: var(--menu-hover);
+      }
+      .app-liquid-nav__item--sliding-hover{
+        background-color: var(--menu-hover);
+      }
+    }
+    body:has(.app-liquid-nav) .app-dashboard-scroll{
+      padding-bottom: max(16px, calc(96px + env(safe-area-inset-bottom, 0px)));
+    }
+    /* App sheet: fixed nav (z-index above sheet) overlaps the scroll area — pad so last cards clear it. */
+    body:has(.app-liquid-nav) .sheet-scroll{
+      padding-bottom: max(
+        28px,
+        calc(100px + var(--sheet-bottom-extra-deadspace) + env(safe-area-inset-bottom, 0px))
+      );
+    }
+
     /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
     .sheet{
       /* Horizontal rhythm: sticky headline + .sheet-scroll + .card .pad must match (inherited by children). */
+      /* Extra empty band inside the card below the last card (scroll + margin below scroller). */
+      --sheet-bottom-extra-deadspace: 80px;
       --sheet-gutter-x: 8px;
       --sheet-scroll-pad-left: 12px;
       --sheet-scroll-pad-right: 4px;
@@ -436,26 +700,88 @@
       flex-direction: column;
       border-radius: 26px 26px 36px 36px;
       border: 1px solid var(--sheet-frost-stroke);
-      background: var(--sheet-frost-fill);
+      /* Frost tapers to transparent at the physical bottom so the map reads through the lower card. */
+      background: linear-gradient(
+        to bottom,
+        var(--sheet-frost-fill) 0%,
+        var(--sheet-frost-fill) 50%,
+        transparent 100%
+      );
       backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
       -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
       box-shadow: var(--shadow);
       overflow: hidden;
+      /* Bottom scrim: extra-tall strip for mask + blur ramp (content scrolls underneath). */
+      --sheet-bottom-blur-h: 96px;
     }
-    /* Bottom fade: pinned to card bottom only. Sticky+negative margin inside .sheet-scroll overlapped mid-content (e.g. overview copy). */
-    .sheet::after{
+    /* Gradual frosted blur at card bottom (mask ramps opacity of the blurred layer). */
+    .sheet::before{
       content: '';
       position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 52px;
+      height: var(--sheet-bottom-blur-h, 96px);
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
       border-bottom-left-radius: 36px;
       border-bottom-right-radius: 36px;
-      background: linear-gradient(to bottom, transparent, var(--sheet-frost-fill));
-      display: block;
+      -webkit-backdrop-filter: blur(36px) saturate(175%);
+      backdrop-filter: blur(36px) saturate(175%);
+      -webkit-mask-image: linear-gradient(
+        to top,
+        transparent 0%,
+        #000 14%,
+        #000 24%,
+        rgba(0, 0, 0, 0.55) 55%,
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to top,
+        transparent 0%,
+        #000 14%,
+        #000 24%,
+        rgba(0, 0, 0, 0.55) 55%,
+        transparent 100%
+      );
+    }
+    @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))){
+      .sheet::before{
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: linear-gradient(
+          to top,
+          transparent 0%,
+          var(--sheet-frost-fill) 35%,
+          transparent 100%
+        );
+      }
+    }
+    @media (prefers-reduced-transparency: reduce){
+      .sheet::before{
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: linear-gradient(
+          to top,
+          transparent 0%,
+          var(--sheet-frost-fill) 32%,
+          transparent 100%
+        );
+        -webkit-mask-image: linear-gradient(
+          to top,
+          transparent 0%,
+          #000 18%,
+          #000 28%,
+          transparent 100%
+        );
+        mask-image: linear-gradient(
+          to top,
+          transparent 0%,
+          #000 18%,
+          #000 28%,
+          transparent 100%
+        );
+      }
     }
     /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
     .sheet:not(.sheet-scrollable){
@@ -494,8 +820,8 @@
       overflow-y: hidden;
       overscroll-behavior-y: none;
       /* Inset from sheet edges so the scrollbar stops above the rounded bottom corners */
-      margin: 0 var(--sheet-gutter-x) 16px var(--sheet-gutter-x);
-      padding: 0 var(--sheet-scroll-pad-right) 16px var(--sheet-scroll-pad-left);
+      margin: 0 var(--sheet-gutter-x) calc(16px + var(--sheet-bottom-extra-deadspace) / 2) var(--sheet-gutter-x);
+      padding: 0 var(--sheet-scroll-pad-right) calc(16px + var(--sheet-bottom-extra-deadspace)) var(--sheet-scroll-pad-left);
       display: flex;
       flex-direction: column;
       gap: 0;
@@ -549,7 +875,7 @@
       flex-shrink: 0;
       z-index: 6;
       /* Same left inset as first line of text inside .sheet-scroll > .card .pad (fallback: export clone off-sheet) */
-      /* Top padding balances the horizontal insets so the headline + settings row sits evenly below the grab handle */
+      /* Top padding balances the horizontal insets so the headline sits evenly below the grab handle */
       padding: 12px max(22px, env(safe-area-inset-right, 0px)) 8px var(--sheet-text-inset-left, 34px);
       background: transparent;
       box-shadow: none;
@@ -567,30 +893,6 @@
       min-width: 0;
       margin: 0;
       padding-top: 0;
-    }
-    .sheet-settings-btn{
-      flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      margin: 0;
-      padding: 0;
-      border: 1px solid var(--glass-stroke);
-      border-radius: 50%;
-      background: var(--glass-fill);
-      color: var(--icon-fg);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .sheet-settings-btn__icon{
-      width: 24px;
-      height: 24px;
-    }
-    .sheet-settings-btn:focus-visible{
-      outline: 2px solid rgba(255, 106, 0, 0.45);
-      outline-offset: 2px;
     }
     .sheet-region-sticky.sheet-region-sticky--raised{
       box-shadow: 0 6px 12px -8px var(--sticky-raised);
@@ -1030,15 +1332,6 @@
         --scroll-thumb: rgba(100, 116, 139, 0.35);
         --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
       }
-      .app-dashboard .app-dashboard-back{
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        color: #64748b;
-      }
-      .app-dashboard .app-dashboard-back:hover{
-        color: #0f172a;
-      }
       .app-dashboard .app-dashboard-table-outer{
         margin-left: 12px;
         margin-right: 12px;
@@ -1122,15 +1415,12 @@
       flex: 1 1 auto;
       justify-content: flex-start;
     }
-    .app-dashboard-top .header-context-label{
-      font-weight: 400;
-    }
     .app-dashboard-brand{
       min-width: 0;
       max-width: 100%;
       flex: 1 1 auto;
     }
-    /** Don’t grow the wordmark — otherwise `| Dashboard` is pushed to the far right. */
+    /** Don’t grow the wordmark — keeps lockup compact. */
     .app-dashboard-top-brand-row .app-dashboard-brand{
       flex: 0 1 auto;
     }
@@ -1164,46 +1454,6 @@
         font-size: var(--header-lockup-font-size-sm);
       }
     }
-    a.app-dashboard-back{
-      flex-shrink: 0;
-      text-decoration: none;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .app-dashboard-back{
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      margin: 0;
-      appearance: none;
-      -webkit-appearance: none;
-      font: inherit;
-      border: none;
-      border-radius: 999px;
-      position: relative;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      box-shadow: none;
-      color: var(--muted);
-      transition: color 0.15s ease, opacity 0.15s ease;
-    }
-    .app-dashboard-back:hover{
-      color: var(--text);
-    }
-    .app-dashboard-back:active{
-      opacity: 0.65;
-    }
-    .app-dashboard-back svg{
-      flex-shrink: 0;
-      display: block;
-    }
-    .app-dashboard-back:focus-visible{
-      outline: 2px solid rgba(255, 106, 0, 0.35);
-      outline-offset: 3px;
-    }
     .app-dashboard-scroll{
       flex: 1;
       min-height: 0;
@@ -1228,45 +1478,32 @@
       position: relative;
       z-index: 50;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px 12px;
+      gap: 6px 8px;
       margin: 10px 16px 20px;
       /* Fuel + sort use fixed bottom sheets, not dropdowns in this box. */
       overflow: visible;
       padding-bottom: 2px;
     }
-    /** Label + control stay on one line; whole group wraps together. */
+    /** One row: three equal flex slots so controls stay on a single line on narrow viewports. */
     .app-dashboard-toolbar-field{
-      display: inline-flex;
+      display: flex;
       flex-wrap: nowrap;
       align-items: center;
       gap: 6px 8px;
       min-width: 0;
-      flex: 0 0 auto;
+      flex: 1 1 0;
     }
     .app-dashboard-country-dropdown,
     .app-dashboard-fuel-dropdown,
     .app-dashboard-sort-dropdown{
       position: relative;
-      display: inline-block;
+      display: block;
       min-width: 0;
+      width: 100%;
+      max-width: 100%;
       box-sizing: border-box;
-    }
-    .app-dashboard-toolbar-field .app-dashboard-country-dropdown{
-      width: 9.25rem;
-      max-width: min(9.25rem, 40vw);
-      flex-shrink: 1;
-    }
-    .app-dashboard-toolbar-field .app-dashboard-fuel-dropdown{
-      width: 10.5rem;
-      max-width: min(10.5rem, 42vw);
-      flex-shrink: 1;
-    }
-    .app-dashboard-toolbar-field .app-dashboard-sort-dropdown{
-      width: 12.5rem;
-      max-width: min(12.5rem, 52vw);
-      flex-shrink: 1;
     }
     .app-dashboard-sort-trigger,
     .app-dashboard-country-trigger,

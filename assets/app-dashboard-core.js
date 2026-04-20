@@ -1477,9 +1477,9 @@ async function loadAndRenderAppDashboard() {
   const tbody = document.getElementById('app-dashboard-tbody');
   const statusEl = document.getElementById('app-dashboard-status');
   if (!tbody) return;
+  wireAppDashboardFuelSelect();
   wireAppDashboardCountryFilter();
   wireAppDashboardPeriodSelect();
-  wireAppDashboardFuelSelect();
   wireAppDashboardSortSelect();
   wireAppDashboardColumnHeaders();
   tbody.innerHTML = '';
