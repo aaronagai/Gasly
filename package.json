@@ -1,0 +1,25 @@
+{
+  "name": "petrolprice-xyz",
+  "version": "1.0.0",
+  "description": "A live fuel price tracker for Southeast Asia — real-time data sourced from official open government portals.",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/copy-flag-icons.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aaronagai/PetrolPrice.xyz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aaronagai/PetrolPrice.xyz/issues"
+  },
+  "homepage": "https://github.com/aaronagai/PetrolPrice.xyz#readme",
+  "dependencies": {
+    "flag-icons": "^7.5.0"
+  }
+}

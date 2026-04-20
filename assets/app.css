@@ -1055,10 +1055,6 @@
         background: #e2e8f0;
         border-color: #cbd5e1;
       }
-      .app-dashboard .app-dashboard-sub{
-        font-size: 0.8125rem;
-        letter-spacing: 0.01em;
-      }
       .app-dashboard .app-dashboard-toolbar{
         margin-left: 12px;
         margin-right: 12px;
@@ -1069,7 +1065,11 @@
         color: #dc2626;
       }
       .app-dashboard .app-dashboard-period-btn{
-        background: #f8fafc;
+        background: transparent;
+        color: #64748b;
+      }
+      .app-dashboard .app-dashboard-period-btn--active,
+      .app-dashboard .app-dashboard-period-btn--active:hover{
         color: #0f172a;
       }
       .app-dashboard .app-dashboard-period-menu{
@@ -1079,24 +1079,26 @@
       .app-dashboard .app-dashboard-period-option:hover{
         background: #f1f5f9;
       }
-      .app-dashboard .app-dashboard-fuel-select,
-      .app-dashboard .app-dashboard-sort-select{
+      .app-dashboard .app-dashboard-fuel-trigger,
+      .app-dashboard .app-dashboard-sort-trigger{
         border: none;
         background: #f8fafc;
         color: #0f172a;
       }
-      .app-dashboard .app-dashboard-filter-btn{
-        background: #f8fafc;
-        color: #0f172a;
-      }
-      .app-dashboard .app-dashboard-filter-panel{
+      .app-dashboard .app-dashboard-bottom-sheet-panel{
         background: #ffffff;
-        border-color: #e2e8f0;
+        box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.12);
+      }
+      .app-dashboard .app-dashboard-sort-option:hover,
+      .app-dashboard .app-dashboard-fuel-option:hover{
+        background: #f1f5f9;
       }
     }
 
     .app-dashboard-top{
       flex-shrink: 0;
+      position: relative;
+      z-index: 30;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -1132,6 +1134,7 @@
       font-size: var(--header-lockup-font-size);
       font-weight: 600;
       line-height: 1;
+      cursor: default;
     }
     .app-dashboard-brand .site-wordmark-logo{
       height: var(--header-lockup-logo-height);
@@ -1201,6 +1204,7 @@
       min-height: 0;
       overflow: auto;
       -webkit-overflow-scrolling: touch;
+      /* No top padding — padding here lets tbody paint above sticky thead in the inset. */
       padding: 0 0 max(12px, env(safe-area-inset-bottom, 0px));
       scrollbar-width: thin;
       scrollbar-color: var(--scroll-thumb) transparent;
@@ -1215,32 +1219,17 @@
     .app-dashboard-scroll::-webkit-scrollbar-track{
       background: transparent;
     }
-    .app-dashboard-sub{
-      margin: 12px 16px 8px;
-      font-size: 0.78rem;
-      line-height: 1.4;
-      color: var(--muted);
-      font-weight: 400;
-    }
     .app-dashboard-toolbar{
+      position: relative;
+      z-index: 50;
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px 12px;
-      margin: 0 16px 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: var(--scroll-thumb) transparent;
+      margin: 10px 16px 20px;
+      /* Fuel + sort use fixed bottom sheets, not dropdowns in this box. */
+      overflow: visible;
       padding-bottom: 2px;
-    }
-    .app-dashboard-toolbar::-webkit-scrollbar{
-      height: 4px;
-    }
-    .app-dashboard-toolbar::-webkit-scrollbar-thumb{
-      background: var(--scroll-thumb);
-      border-radius: 999px;
     }
     /** Label + control stay on one line; whole group wraps together. */
     .app-dashboard-toolbar-field{
@@ -1251,20 +1240,27 @@
       min-width: 0;
       flex: 0 0 auto;
     }
-    .app-dashboard-toolbar-field--filter{
-      flex-shrink: 0;
+    .app-dashboard-fuel-dropdown,
+    .app-dashboard-sort-dropdown{
+      position: relative;
+      display: inline-block;
+      min-width: 0;
+      box-sizing: border-box;
     }
-    .app-dashboard-toolbar-label{
-      flex-shrink: 0;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--metric-k);
+    .app-dashboard-toolbar-field .app-dashboard-fuel-dropdown{
+      width: 10.5rem;
+      max-width: min(10.5rem, 42vw);
+      flex-shrink: 1;
     }
-    .app-dashboard-fuel-select,
-    .app-dashboard-sort-select{
+    .app-dashboard-toolbar-field .app-dashboard-sort-dropdown{
+      width: 12.5rem;
+      max-width: min(12.5rem, 52vw);
+      flex-shrink: 1;
+    }
+    .app-dashboard-sort-trigger,
+    .app-dashboard-fuel-trigger{
       margin: 0;
+      width: 100%;
       padding: 5px 8px;
       border-radius: 6px;
       border: none;
@@ -1275,111 +1271,165 @@
       font-weight: 500;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      min-width: 0;
       box-sizing: border-box;
-    }
-    .app-dashboard-toolbar-field .app-dashboard-fuel-select{
-      width: 10.5rem;
-      max-width: min(10.5rem, 42vw);
-      flex-shrink: 1;
-    }
-    .app-dashboard-toolbar-field .app-dashboard-sort-select{
-      width: 12.5rem;
-      max-width: min(12.5rem, 52vw);
-      flex-shrink: 1;
-    }
-    .app-dashboard-fuel-select:focus-visible,
-    .app-dashboard-sort-select:focus-visible{
-      outline: 2px solid rgba(255, 106, 0, 0.45);
-      outline-offset: 2px;
-    }
-    .app-dashboard-filter-wrap{
-      position: relative;
       display: inline-flex;
       align-items: center;
+      justify-content: flex-start;
+      text-align: left;
     }
-    .app-dashboard-filter-btn{
+    .app-dashboard-sort-trigger-row{
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      min-width: 0;
+      flex: 1 1 auto;
+      width: 0;
+    }
+    .app-dashboard-sort-trigger-icon{
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      color: var(--metric-k);
+    }
+    .app-dashboard-sort-trigger-icon svg{
+      display: block;
+    }
+    .app-dashboard-sort-trigger-label,
+    .app-dashboard-fuel-trigger-label{
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .app-dashboard-sort-trigger::after,
+    .app-dashboard-fuel-trigger::after{
+      content: '▾';
+      flex-shrink: 0;
+      margin-left: 4px;
+      font-size: 0.65em;
+      opacity: 0.5;
+      line-height: 1;
+    }
+    .app-dashboard-bottom-sheet{
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+    }
+    .app-dashboard-bottom-sheet-backdrop{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       margin: 0;
-      padding: 5px 10px;
+      padding: 0;
       border: none;
-      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.42);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (prefers-color-scheme: dark) {
+      .app-dashboard-bottom-sheet-backdrop{
+        background: rgba(0, 0, 0, 0.58);
+      }
+    }
+    .app-dashboard-bottom-sheet-panel{
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: min(72vh, 560px);
+      border-radius: 20px 20px 0 0;
       background: var(--surface);
+      box-shadow: 0 -12px 48px rgba(15, 23, 42, 0.18);
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+      animation: app-dashboard-sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    @keyframes app-dashboard-sheet-in{
+      from{
+        transform: translateY(100%);
+      }
+      to{
+        transform: translateY(0);
+      }
+    }
+    .app-dashboard-bottom-sheet-handle{
+      flex-shrink: 0;
+      padding: 10px 16px 6px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-dashboard-bottom-sheet-handle-bar{
+      display: block;
+      width: 40px;
+      height: 5px;
+      margin: 0 auto;
+      border-radius: 999px;
+      background: var(--line);
+      opacity: 0.85;
+    }
+    .app-dashboard-bottom-sheet-title{
+      margin: 0;
+      padding: 2px 20px 14px;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-align: center;
+      color: var(--text);
+    }
+    .app-dashboard-bottom-sheet-list{
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 0 8px 4px;
+    }
+    .app-dashboard-sort-option,
+    .app-dashboard-fuel-option{
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 14px 16px;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid var(--hairline);
+      background: transparent;
       color: var(--text);
       font-family: var(--font);
-      font-size: 0.75rem;
+      font-size: 0.9375rem;
       font-weight: 600;
+      text-align: left;
       letter-spacing: 0.01em;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    .app-dashboard-filter-icon{
-      flex-shrink: 0;
-      display: block;
-      width: 14px;
-      height: 14px;
-      opacity: 0.88;
+    .app-dashboard-bottom-sheet-list [role='option']:last-child{
+      border-bottom: none;
     }
-    .app-dashboard-filter-panel{
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      z-index: 70;
-      min-width: min(100vw - 48px, 260px);
-      max-width: min(100vw - 32px, 320px);
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--hairline);
-      box-shadow: var(--shadow);
-      box-sizing: border-box;
+    .app-dashboard-sort-option:hover,
+    .app-dashboard-fuel-option:hover{
+      background: var(--menu-hover);
     }
-    .app-dashboard-filter-field-label{
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--metric-k);
+    .app-dashboard-sort-option:focus-visible,
+    .app-dashboard-fuel-option:focus-visible{
+      outline: 2px solid rgba(255, 106, 0, 0.45);
+      outline-offset: 0;
     }
-    .app-dashboard-filter-countries{
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: min(56vh, 320px);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding-right: 2px;
-    }
-    .app-dashboard-filter-country{
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-family: var(--font);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-    .app-dashboard-filter-country input{
-      margin: 0;
-      flex-shrink: 0;
-      accent-color: var(--orange, #ff6a00);
-    }
-    .app-dashboard-filter-country-name{
-      min-width: 0;
-    }
-    .app-dashboard-filter-btn:focus-visible{
+    .app-dashboard-fuel-trigger:focus-visible,
+    .app-dashboard-sort-trigger:focus-visible{
       outline: 2px solid rgba(255, 106, 0, 0.45);
       outline-offset: 2px;
     }
     .app-dashboard-table-outer{
       margin: 0 8px;
-      overflow-x: hidden;
+      /* `overflow: hidden` breaks `position: sticky` on thead in many browsers */
+      overflow: visible;
       max-width: 100%;
       border-radius: 12px;
       border: none;
@@ -1392,7 +1442,9 @@
       max-width: 100%;
       table-layout: fixed;
       min-width: 0;
-      border-collapse: collapse;
+      /* `collapse` breaks sticky header backgrounds in WebKit/Blink — rows bleed through. */
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 0.72rem;
     }
     .app-dashboard-th{
@@ -1419,6 +1471,44 @@
     .app-dashboard-th--name{
       width: 38%;
     }
+    .app-dashboard-th--sortable{
+      padding: 4px 3px;
+    }
+    .app-dashboard-col-head-btn{
+      margin: 0;
+      padding: 2px 0;
+      width: 100%;
+      box-sizing: border-box;
+      border: none;
+      background: transparent;
+      font: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      color: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-dashboard-th--sortable.app-dashboard-th--name .app-dashboard-col-head-btn{
+      text-align: left;
+    }
+    .app-dashboard-th--sortable.app-dashboard-th--price .app-dashboard-col-head-btn{
+      text-align: right;
+    }
+    .app-dashboard-col-head-btn:hover{
+      color: var(--text);
+    }
+    .app-dashboard-th--sortable .app-dashboard-col-head-btn--active,
+    .app-dashboard-th--sortable .app-dashboard-col-head-btn--active:hover{
+      color: var(--text);
+      font-weight: 700;
+    }
+    .app-dashboard-col-head-btn:focus-visible{
+      outline: 2px solid rgba(255, 106, 0, 0.45);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
     .app-dashboard-th--price{
       text-align: right;
       width: 24%;
@@ -1428,6 +1518,17 @@
       min-width: 0;
       width: 32%;
     }
+    .app-dashboard-table tbody{
+      position: relative;
+      z-index: 0;
+    }
+    .app-dashboard-table thead th{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      background-clip: padding-box;
+    }
     .app-dashboard-th--period{
       text-transform: none;
       vertical-align: bottom;
@@ -1435,6 +1536,7 @@
     }
     .app-dashboard-period-head{
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
       align-items: center;
       min-width: 0;
@@ -1449,8 +1551,8 @@
       padding: 3px 5px 3px 6px;
       border-radius: 6px;
       border: none;
-      background: var(--surface);
-      color: var(--text);
+      background: transparent;
+      color: var(--metric-k);
       font-family: var(--font);
       font-size: 0.62rem;
       font-weight: 600;
@@ -1462,6 +1564,14 @@
       gap: 2px;
       max-width: 100%;
     }
+    .app-dashboard-period-btn:hover{
+      color: var(--text);
+    }
+    .app-dashboard-period-btn--active,
+    .app-dashboard-period-btn--active:hover{
+      color: var(--text);
+      font-weight: 700;
+    }
     .app-dashboard-period-btn::after{
       content: '▾';
       font-size: 0.65em;
@@ -1471,18 +1581,6 @@
     .app-dashboard-period-btn:focus-visible{
       outline: 2px solid rgba(255, 106, 0, 0.45);
       outline-offset: 2px;
-    }
-    .app-dashboard-period-menu{
-      position: absolute;
-      top: calc(100% + 4px);
-      right: 0;
-      z-index: 60;
-      min-width: 4.5rem;
-      padding: 4px;
-      border-radius: 10px;
-      background: var(--surface);
-      border: 1px solid var(--hairline);
-      box-shadow: var(--shadow);
     }
     .app-dashboard-period-option{
       display: block;
@@ -1538,6 +1636,11 @@
       margin-top: 0.1em;
       border-radius: 50%;
       box-sizing: border-box;
+    }
+    .app-dashboard-flag.fi{
+      overflow: hidden;
+      background-size: cover;
+      background-position: 50% 50%;
     }
     .app-dashboard-flag--placeholder{
       background: color-mix(in srgb, var(--muted) 35%, var(--surface));

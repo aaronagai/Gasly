@@ -13,13 +13,6 @@
       --shadow-2: 0 18px 54px rgba(0,0,0,0.12);
       --orange: #ff6a00;
       --orange-2: #ff4d00;
-      /* Highlights panel — shifted toward red-orange */
-      --highlights-red: #e53512;
-      --highlights-red-deep: #c42a0e;
-      /* Translucent layers so backdrop-filter can frost the map */
-      --highlights-glass-sheen: rgba(255, 255, 255, 0.07);
-      --highlights-glass-mix-top: 74%;
-      --highlights-glass-mix-bot: 80%;
       /* Glass panels — translucent so backdrop-filter blurs the globe */
       --term-glass-stroke: rgba(255, 255, 255, 0.62);
       --term-glass-stroke-outer: rgba(0, 0, 0, 0.12);
@@ -74,6 +67,8 @@
       --term-chart-tooltip-title: rgba(0, 0, 0, 0.9);
       --term-chart-tooltip-body: rgba(0, 0, 0, 0.75);
       --term-chart-line-muted: #111827;
+      /* Highlight (`.info`): frosted glass, slightly darker / greyer than chart `--term-glass-fill` */
+      --term-highlight-glass: rgba(222, 221, 219, 0.38);
 
       /* Resizable layout; JS resizer overrides these vars. */
       --leftW: clamp(240px, 26vw, 360px);
@@ -98,7 +93,6 @@
         --metric-v: rgba(255, 255, 255, 0.92);
         --shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
         --shadow-2: 0 20px 56px rgba(0, 0, 0, 0.55);
-        --highlights-glass-sheen: rgba(255, 255, 255, 0.06);
         --term-glass-stroke: rgba(255, 255, 255, 0.18);
         --term-glass-stroke-outer: rgba(0, 0, 0, 0.55);
         --term-glass-fill: rgba(32, 32, 32, 0.48);
@@ -1294,17 +1288,13 @@
       height: 100% !important;
       display: block;
     }
+    /* Highlight panel: translucent grey frost (blur still shows map); dark mode below. */
     .info {
-      background-color: transparent;
-      background-image:
-        linear-gradient(180deg, var(--highlights-glass-sheen) 0%, transparent 40%),
-        linear-gradient(
-          165deg,
-          color-mix(in srgb, var(--highlights-red) var(--highlights-glass-mix-top), transparent) 0%,
-          color-mix(in srgb, var(--highlights-red-deep) var(--highlights-glass-mix-bot), transparent) 100%
-        );
-      backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
-      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(185%);
+      background-color: var(--term-highlight-glass);
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 46%);
+      background-repeat: no-repeat;
+      backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--term-glass-blur)) saturate(175%);
       color: var(--term-info-fg);
       padding: 28px 26px;
       position: relative;
@@ -1349,7 +1339,7 @@
       grid-column: 1 / -1;
       align-items: baseline;
       padding-top: 10px;
-      border-top: 1px solid color-mix(in srgb, var(--highlights-red-deep) 45%, rgba(0, 0, 0, 0.2));
+      border-top: 1px solid var(--hairline);
     }
     .kv .k {
       opacity: 0.72;

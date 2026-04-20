@@ -16,7 +16,8 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=39" />
+  <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
+  <link rel="stylesheet" href="assets/app.css?v=61" />
 </head>
 <body>
   <div class="app-dashboard app-dashboard--page" id="app-dashboard" aria-hidden="false">
@@ -27,65 +28,58 @@
         </svg>
       </a>
       <div class="app-dashboard-top-brand-row">
-        <a href="index.html" class="app-dashboard-brand site-wordmark site-wordmark-lockup" aria-label="PetrolPrice.xyz home">
+        <div class="app-dashboard-brand site-wordmark site-wordmark-lockup">
           <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
           <span>petrolprice.xyz</span>
-        </a>
+        </div>
         <span class="header-context-sep" aria-hidden="true">|</span>
         <span class="header-context-label" aria-current="page">Dashboard</span>
       </div>
     </header>
     <div class="app-dashboard-scroll">
-      <p class="app-dashboard-sub" id="app-dashboard-sub">Live retail prices in USD per litre (FX from Currency sheet) · change vs observation on or before each period</p>
       <div class="app-dashboard-toolbar">
         <div class="app-dashboard-toolbar-field">
-          <label for="app-dashboard-fuel" class="app-dashboard-toolbar-label">Fuel</label>
-          <select id="app-dashboard-fuel" class="app-dashboard-fuel-select" aria-label="Petrol or diesel grade">
-            <option value="default">Default by region</option>
-            <option value="mid">Mid-grade unleaded</option>
-            <option value="premium">Premium unleaded</option>
-            <option value="entry">Entry unleaded (91–92)</option>
-            <option value="diesel">Diesel</option>
-          </select>
-        </div>
-        <div class="app-dashboard-toolbar-field app-dashboard-toolbar-field--filter">
-          <div class="app-dashboard-filter-wrap" id="app-dashboard-filter">
+          <div class="app-dashboard-fuel-dropdown" id="app-dashboard-fuel" data-fuel="mid">
             <button
               type="button"
-              id="app-dashboard-filter-trigger"
-              class="app-dashboard-filter-btn"
+              id="app-dashboard-fuel-trigger"
+              class="app-dashboard-fuel-trigger"
+              aria-haspopup="dialog"
+              aria-controls="app-dashboard-fuel-sheet"
               aria-expanded="false"
-              aria-haspopup="true"
-              aria-controls="app-dashboard-filter-panel"
+              aria-label="Petrol type"
             >
-              <svg class="app-dashboard-filter-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path
-                  d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Filter
+              <span class="app-dashboard-fuel-trigger-label">Mid-grade (92-95)</span>
             </button>
-            <div id="app-dashboard-filter-panel" class="app-dashboard-filter-panel" role="dialog" aria-label="Filter by country" hidden>
-              <div class="app-dashboard-filter-field-label" id="app-dashboard-filter-countries-label">Countries</div>
-              <div id="app-dashboard-filter-countries" class="app-dashboard-filter-countries" role="group" aria-labelledby="app-dashboard-filter-countries-label"></div>
-            </div>
           </div>
         </div>
         <div class="app-dashboard-toolbar-field">
-          <label for="app-dashboard-sort" class="app-dashboard-toolbar-label">Sort</label>
-          <select id="app-dashboard-sort" class="app-dashboard-sort-select" aria-label="Sort table">
-            <option value="default">Default order</option>
-            <option value="region_az">Region A–Z</option>
-            <option value="region_za">Region Z–A</option>
-            <option value="price_low">Price: low to high</option>
-            <option value="price_high">Price: high to low</option>
-            <option value="change_high">Change %: highest first</option>
-            <option value="change_low">Change %: lowest first</option>
-          </select>
+          <div class="app-dashboard-sort-dropdown" id="app-dashboard-sort" data-sort="price_low">
+            <button
+              type="button"
+              id="app-dashboard-sort-trigger"
+              class="app-dashboard-sort-trigger"
+              aria-haspopup="dialog"
+              aria-controls="app-dashboard-sort-sheet"
+              aria-expanded="false"
+              aria-label="Sort"
+            >
+              <span class="app-dashboard-sort-trigger-row">
+                <span class="app-dashboard-sort-trigger-icon" aria-hidden="true" hidden>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M5 5v9M2 12l3 3 3-3M19 19V10M16 12l3-3 3 3"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="app-dashboard-sort-trigger-label">Price: low to high</span>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
       <div class="app-dashboard-table-outer">
@@ -93,32 +87,49 @@
           <thead>
             <tr>
               <th class="app-dashboard-th app-dashboard-th--rank">#</th>
-              <th class="app-dashboard-th app-dashboard-th--name">Region</th>
-              <th class="app-dashboard-th app-dashboard-th--price" title="Price (USD per litre)">USD/L</th>
+              <th class="app-dashboard-th app-dashboard-th--name app-dashboard-th--sortable" id="app-dashboard-th-region-col" scope="col">
+                <button
+                  type="button"
+                  class="app-dashboard-col-head-btn"
+                  id="app-dashboard-th-region"
+                  aria-label="Sort by region, A to Z or Z to A"
+                >
+                  Region
+                </button>
+              </th>
+              <th
+                class="app-dashboard-th app-dashboard-th--price app-dashboard-th--sortable"
+                id="app-dashboard-th-price-col"
+                scope="col"
+                title="Price (USD per litre)"
+              >
+                <button
+                  type="button"
+                  class="app-dashboard-col-head-btn"
+                  id="app-dashboard-th-price"
+                  aria-label="Sort by price, high to low or low to high"
+                >
+                  USD/L
+                </button>
+              </th>
               <th
                 class="app-dashboard-th app-dashboard-th--chg app-dashboard-th--period"
+                id="app-dashboard-th-period-col"
                 scope="col"
-                aria-label="Change vs period"
               >
                 <div class="app-dashboard-period-head">
-                  <div class="app-dashboard-period-dropdown" id="app-dashboard-period" data-period="y">
+                  <div class="app-dashboard-period-dropdown" id="app-dashboard-period" data-period="m">
                     <button
                       type="button"
                       id="app-dashboard-period-trigger"
                       class="app-dashboard-period-btn"
-                      aria-haspopup="listbox"
+                      aria-haspopup="dialog"
+                      aria-controls="app-dashboard-period-sheet"
                       aria-expanded="false"
-                      aria-label="Timeframe for change"
+                      aria-label="Timeframe for percent change"
                     >
-                      1Y
+                      1M %
                     </button>
-                    <div id="app-dashboard-period-menu" class="app-dashboard-period-menu" role="listbox" hidden>
-                      <button type="button" role="option" class="app-dashboard-period-option" data-period="w">1W</button>
-                      <button type="button" role="option" class="app-dashboard-period-option" data-period="m">1M</button>
-                      <button type="button" role="option" class="app-dashboard-period-option" data-period="3m">3M</button>
-                      <button type="button" role="option" class="app-dashboard-period-option" data-period="y">1Y</button>
-                      <button type="button" role="option" class="app-dashboard-period-option" data-period="ytd">YTD</button>
-                    </div>
                   </div>
                 </div>
               </th>
@@ -128,6 +139,115 @@
         </table>
       </div>
       <p class="app-dashboard-foot" id="app-dashboard-status" aria-live="polite"></p>
+    </div>
+
+    <div
+      id="app-dashboard-fuel-sheet"
+      class="app-dashboard-fuel-sheet app-dashboard-bottom-sheet"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        type="button"
+        class="app-dashboard-fuel-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+        id="app-dashboard-fuel-backdrop"
+        tabindex="-1"
+        aria-label="Close petrol type options"
+      ></button>
+      <div
+        class="app-dashboard-fuel-sheet-panel app-dashboard-bottom-sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-dashboard-fuel-sheet-title"
+      >
+        <div class="app-dashboard-fuel-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-fuel-sheet-handle" role="presentation">
+          <span class="app-dashboard-fuel-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+        </div>
+        <h2 id="app-dashboard-fuel-sheet-title" class="app-dashboard-fuel-sheet-title app-dashboard-bottom-sheet-title">Petrol type</h2>
+        <div id="app-dashboard-fuel-menu" class="app-dashboard-fuel-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-fuel-sheet-title">
+          <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="entry">Entry (90-91)</button>
+          <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="mid">Mid-grade (92-95)</button>
+          <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="premium">Premium (97+)</button>
+          <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="diesel">Diesel</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="app-dashboard-sort-sheet"
+      class="app-dashboard-sort-sheet app-dashboard-bottom-sheet"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        type="button"
+        class="app-dashboard-sort-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+        id="app-dashboard-sort-backdrop"
+        tabindex="-1"
+        aria-label="Close sort options"
+      ></button>
+      <div
+        class="app-dashboard-sort-sheet-panel app-dashboard-bottom-sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-dashboard-sort-sheet-title"
+      >
+        <div class="app-dashboard-sort-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-sort-sheet-handle" role="presentation">
+          <span class="app-dashboard-sort-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+        </div>
+        <h2 id="app-dashboard-sort-sheet-title" class="app-dashboard-sort-sheet-title app-dashboard-bottom-sheet-title">Sort By</h2>
+        <div id="app-dashboard-sort-menu" class="app-dashboard-sort-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-sort-sheet-title">
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="default">Default order</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="region_az">Region A–Z</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="region_za">Region Z–A</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="price_low">Price: low to high</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="price_high">Price: high to low</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="change_high">Change %: highest first</button>
+          <button type="button" role="option" class="app-dashboard-sort-option" data-sort="change_low">Change %: lowest first</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="app-dashboard-period-sheet"
+      class="app-dashboard-period-sheet app-dashboard-bottom-sheet"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        type="button"
+        class="app-dashboard-period-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+        id="app-dashboard-period-backdrop"
+        tabindex="-1"
+        aria-label="Close timeframe options"
+      ></button>
+      <div
+        class="app-dashboard-period-sheet-panel app-dashboard-bottom-sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-dashboard-period-sheet-title"
+      >
+        <div
+          class="app-dashboard-period-sheet-handle app-dashboard-bottom-sheet-handle"
+          id="app-dashboard-period-sheet-handle"
+          role="presentation"
+        >
+          <span class="app-dashboard-period-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+        </div>
+        <h2 id="app-dashboard-period-sheet-title" class="app-dashboard-period-sheet-title app-dashboard-bottom-sheet-title">Timeframe</h2>
+        <div
+          id="app-dashboard-period-menu"
+          class="app-dashboard-period-sheet-list app-dashboard-bottom-sheet-list"
+          role="listbox"
+          aria-labelledby="app-dashboard-period-sheet-title"
+        >
+          <button type="button" role="option" class="app-dashboard-period-option" data-period="w">1W %</button>
+          <button type="button" role="option" class="app-dashboard-period-option" data-period="m">1M %</button>
+          <button type="button" role="option" class="app-dashboard-period-option" data-period="3m">3M %</button>
+          <button type="button" role="option" class="app-dashboard-period-option" data-period="y">1Y %</button>
+          <button type="button" role="option" class="app-dashboard-period-option" data-period="ytd">YTD %</button>
+        </div>
+      </div>
     </div>
   </div>
 
