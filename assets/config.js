@@ -139,10 +139,11 @@ const USD_RATES = {
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
 
+/** Indonesia sheet column titles may include grades (e.g. `Pertalite 90`); `canonicalFuelHeader` maps them to these keys. */
 const ID_FUELS = [
-  { key: 'pertalite',      label: 'Pertalite' },
-  { key: 'pertamax',       label: 'Pertamax' },
-  { key: 'pertamax_turbo', label: 'Pertamax Turbo' },
+  { key: 'pertalite',      label: 'Pertalite 90' },
+  { key: 'pertamax',       label: 'Pertamax 92' },
+  { key: 'pertamax_turbo', label: 'Pertamax Turbo 98' },
   { key: 'dexlite',        label: 'Dexlite' },
   { key: 'pertamina_dex',  label: 'Pertamina Dex' },
 ];

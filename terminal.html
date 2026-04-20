@@ -143,7 +143,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="assets/config.js"></script>
+  <script src="assets/config.js?v=idfuels-2"></script>
   <script src="assets/utils.js"></script>
   <script src="assets/terminal-map-mapkit.js"></script>
   <script src="assets/terminal-map-openfreemap.js"></script>
@@ -958,9 +958,10 @@
         const sliceRows = slice.map(r => ({ ...r, __label: fmtDate(r.date) }));
         const labels = sliceRows.map(r => r.__label);
         const keys = [
-          { key: 'gasoline', label: 'Gasoline' },
+          { key: 'gasoline', label: 'Regular (RON 91)' },
+          { key: 'gasoline_premium', label: 'Premium (RON 95)' },
+          { key: 'vpower_gasoline', label: 'V-Power (RON 97)' },
           { key: 'diesel', label: 'Diesel' },
-          { key: 'vpower_gasoline', label: 'V-Power Gasoline' },
           { key: 'vpower_diesel', label: 'V-Power Diesel' },
         ];
         const datasets = buildChartSeries(sliceRows, keys, labels);
@@ -972,9 +973,10 @@
           infoTitle: 'Brunei',
           infoSub: `As of ${fmtDate(rSel.date)} · Brunei`,
           infoLines: [
-            ['Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Regular (RON 91)', fmtTerminalPerL('BND', parseFloat(rSel.gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Premium (RON 95)', fmtTerminalPerL('BND', parseFloat(rSel.gasoline_premium), 2), fmtTerminalDeltaPerL('BND', rSel.gasoline_premium, rPrev?.gasoline_premium, 2)],
+            ['V-Power (RON 97)', fmtTerminalPerL('BND', parseFloat(rSel.vpower_gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
             ['Diesel', fmtTerminalPerL('BND', parseFloat(rSel.diesel), 2), fmtTerminalDeltaPerL('BND', rSel.diesel, rPrev?.diesel, 2)],
-            ['V-Power Gasoline', fmtTerminalPerL('BND', parseFloat(rSel.vpower_gasoline), 2), fmtTerminalDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
             ['V-Power Diesel', fmtTerminalPerL('BND', parseFloat(rSel.vpower_diesel), 2), fmtTerminalDeltaPerL('BND', rSel.vpower_diesel, rPrev?.vpower_diesel, 2)],
           ],
         });

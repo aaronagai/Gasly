@@ -219,9 +219,11 @@ const MS_PER_DAY = 86400000;
 var _dashboardDataCache = null;
 var _dashboardPeriodBound = false;
 var _dashboardFuelBound = false;
+var _dashboardCountryBound = false;
 var _dashboardSortBound = false;
 var _dashboardColumnHeadersBound = false;
 const DASHBOARD_FUEL_STATUS_LABELS = {
+  all: 'All types',
   entry: 'Entry (90-91)',
   mid: 'Mid-grade (92-95)',
   premium: 'Premium (97+)',
@@ -230,21 +232,29 @@ const DASHBOARD_FUEL_STATUS_LABELS = {
 
 /** Full labels for fuel trigger + bottom sheet. */
 const DASHBOARD_FUEL_DISPLAY_LABELS = {
+  all: 'All types',
   entry: 'Entry (90-91)',
   mid: 'Mid-grade (92-95)',
   premium: 'Premium (97+)',
   diesel: 'Diesel',
 };
 
-const DASHBOARD_FUEL_KEYS = new Set(['entry', 'mid', 'premium', 'diesel']);
+/** Petrol tiers expanded when fuel = `all` (order matches sheet option list below `all`). */
+const DASHBOARD_FUEL_PRESETS_ALL = Object.freeze(['entry', 'mid', 'premium', 'diesel']);
+
+const DASHBOARD_FUEL_KEYS = new Set(['all', 'entry', 'mid', 'premium', 'diesel']);
 
 function dashboardSheetsSyncBodyScroll() {
   try {
     const sortS = document.getElementById('app-dashboard-sort-sheet');
     const fuelS = document.getElementById('app-dashboard-fuel-sheet');
+    const countryS = document.getElementById('app-dashboard-country-sheet');
     const periodS = document.getElementById('app-dashboard-period-sheet');
     const anyOpen =
-      (sortS && !sortS.hidden) || (fuelS && !fuelS.hidden) || (periodS && !periodS.hidden);
+      (sortS && !sortS.hidden) ||
+      (fuelS && !fuelS.hidden) ||
+      (countryS && !countryS.hidden) ||
+      (periodS && !periodS.hidden);
     document.body.style.overflow = anyOpen ? 'hidden' : '';
   } catch (_) {}
 }
@@ -278,6 +288,17 @@ function dashboardClosePeriodSheetIfOpen() {
     periodS.hidden = true;
     periodS.setAttribute('aria-hidden', 'true');
     if (periodT) periodT.setAttribute('aria-expanded', 'false');
+    dashboardSheetsSyncBodyScroll();
+  }
+}
+
+function dashboardCloseCountrySheetIfOpen() {
+  const countryS = document.getElementById('app-dashboard-country-sheet');
+  const countryT = document.getElementById('app-dashboard-country-trigger');
+  if (countryS && !countryS.hidden) {
+    countryS.hidden = true;
+    countryS.setAttribute('aria-hidden', 'true');
+    if (countryT) countryT.setAttribute('aria-expanded', 'false');
     dashboardSheetsSyncBodyScroll();
   }
 }
@@ -437,6 +458,7 @@ function wireAppDashboardPeriodSelect() {
   function openMenu() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseFuelSheetIfOpen();
+    dashboardCloseCountrySheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
@@ -507,6 +529,7 @@ function wireAppDashboardColumnHeaders() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseFuelSheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
+    dashboardCloseCountrySheetIfOpen();
     const cur = getDashboardSortMode();
     const next = cur === 'region_az' ? 'region_za' : 'region_az';
     applyDashboardSort(next);
@@ -517,9 +540,175 @@ function wireAppDashboardColumnHeaders() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseFuelSheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
+    dashboardCloseCountrySheetIfOpen();
     const cur = getDashboardSortMode();
     const next = cur === 'price_high' ? 'price_low' : 'price_high';
     applyDashboardSort(next);
+  });
+}
+
+function readStoredDashboardCountryId() {
+  try {
+    const s = localStorage.getItem('app_dashboard_country');
+    if (s == null || s === '') return null;
+    const id = +s;
+    if (Number.isFinite(id) && typeof COUNTRIES !== 'undefined' && COUNTRIES[id]) return id;
+  } catch (_) {}
+  return null;
+}
+
+function persistDashboardCountryId(id) {
+  try {
+    if (id == null) localStorage.removeItem('app_dashboard_country');
+    else localStorage.setItem('app_dashboard_country', String(id));
+  } catch (_) {}
+}
+
+function getDashboardCountryFilterId() {
+  const wrap = document.getElementById('app-dashboard-country');
+  if (wrap) {
+    const v = wrap.getAttribute('data-country');
+    if (v == null || String(v).trim() === '') return null;
+    const id = +v;
+    if (Number.isFinite(id) && typeof COUNTRIES !== 'undefined' && COUNTRIES[id]) return id;
+  }
+  return readStoredDashboardCountryId();
+}
+
+function syncDashboardCountrySheetSelection(selectedId) {
+  const menu = document.getElementById('app-dashboard-country-menu');
+  if (!menu) return;
+  const want = selectedId == null ? '' : String(selectedId);
+  menu.querySelectorAll('.app-dashboard-country-option').forEach(function (btn) {
+    const raw = btn.getAttribute('data-country');
+    const v = raw != null ? String(raw).trim() : '';
+    btn.setAttribute('aria-selected', v === want ? 'true' : 'false');
+  });
+}
+
+function wireAppDashboardCountryFilter() {
+  const wrap = document.getElementById('app-dashboard-country');
+  const trigger = document.getElementById('app-dashboard-country-trigger');
+  const menu = document.getElementById('app-dashboard-country-menu');
+  const sheet = document.getElementById('app-dashboard-country-sheet');
+  const backdrop = document.getElementById('app-dashboard-country-backdrop');
+  const handle = document.getElementById('app-dashboard-country-sheet-handle');
+  const labelEl = wrap && wrap.querySelector('.app-dashboard-country-trigger-label');
+  if (!wrap || !trigger || !menu || !sheet || !backdrop || !labelEl || _dashboardCountryBound) return;
+  _dashboardCountryBound = true;
+
+  if (!menu.querySelector('.app-dashboard-country-option')) {
+    const frag = document.createDocumentFragment();
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.setAttribute('role', 'option');
+    allBtn.className = 'app-dashboard-country-option';
+    allBtn.setAttribute('data-country', '');
+    allBtn.textContent = 'All countries';
+    frag.appendChild(allBtn);
+    if (typeof COUNTRIES !== 'undefined') {
+      Object.keys(COUNTRIES)
+        .map((k) => +k)
+        .filter((id) => Number.isFinite(id) && COUNTRIES[id])
+        .sort((a, b) => String(COUNTRIES[a].name).localeCompare(String(COUNTRIES[b].name)))
+        .forEach(function (id) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('role', 'option');
+          btn.className = 'app-dashboard-country-option';
+          btn.setAttribute('data-country', String(id));
+          btn.textContent = COUNTRIES[id].name;
+          frag.appendChild(btn);
+        });
+    }
+    menu.appendChild(frag);
+  }
+
+  function applyCountry(countryId) {
+    const id =
+      countryId == null || countryId === '' || countryId === 'all'
+        ? null
+        : +countryId;
+    if (
+      id != null &&
+      (!Number.isFinite(id) || typeof COUNTRIES === 'undefined' || !COUNTRIES[id])
+    )
+      return;
+    if (id == null) {
+      wrap.setAttribute('data-country', '');
+    } else {
+      wrap.setAttribute('data-country', String(id));
+    }
+    labelEl.textContent = id == null ? 'All countries' : COUNTRIES[id].name;
+    persistDashboardCountryId(id);
+    syncDashboardCountrySheetSelection(id);
+    if (_dashboardDataCache) renderAppDashboardTbody();
+  }
+
+  function syncFromStorage() {
+    const stored = readStoredDashboardCountryId();
+    applyCountry(stored == null ? null : stored);
+  }
+
+  function openMenu() {
+    dashboardCloseSortSheetIfOpen();
+    dashboardCloseFuelSheetIfOpen();
+    dashboardClosePeriodSheetIfOpen();
+    sheet.hidden = false;
+    sheet.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+    dashboardSheetsSyncBodyScroll();
+  }
+
+  function closeMenu() {
+    sheet.hidden = true;
+    sheet.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+    dashboardSheetsSyncBodyScroll();
+  }
+
+  function toggleMenu() {
+    if (sheet.hidden) openMenu();
+    else closeMenu();
+  }
+
+  syncFromStorage();
+
+  trigger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  backdrop.addEventListener('click', function () {
+    closeMenu();
+  });
+
+  if (handle) {
+    handle.addEventListener('click', function () {
+      closeMenu();
+    });
+  }
+
+  menu.querySelectorAll('.app-dashboard-country-option').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const raw = btn.getAttribute('data-country');
+      const v = raw != null ? String(raw).trim() : '';
+      applyCountry(v === '' ? null : v);
+      closeMenu();
+      try {
+        trigger.focus();
+      } catch (_) {}
+    });
+  });
+
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && sheet && !sheet.hidden) {
+      closeMenu();
+      try {
+        trigger.focus();
+      } catch (_) {}
+    }
   });
 }
 
@@ -527,14 +716,14 @@ function readStoredDashboardFuel() {
   try {
     const s = localStorage.getItem('app_dashboard_fuel');
     if (s === 'default') return 'mid';
-    if (s === 'mid' || s === 'premium' || s === 'entry' || s === 'diesel') return s;
+    if (s === 'all' || s === 'mid' || s === 'premium' || s === 'entry' || s === 'diesel') return s;
   } catch (_) {}
   return 'mid';
 }
 
 function persistDashboardFuel(key) {
   try {
-    if (key === 'mid' || key === 'premium' || key === 'entry' || key === 'diesel') {
+    if (key === 'all' || key === 'mid' || key === 'premium' || key === 'entry' || key === 'diesel') {
       localStorage.setItem('app_dashboard_fuel', key);
     }
   } catch (_) {}
@@ -578,6 +767,7 @@ function wireAppDashboardFuelSelect() {
 
   function openMenu() {
     dashboardCloseSortSheetIfOpen();
+    dashboardCloseCountrySheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
@@ -736,6 +926,7 @@ function wireAppDashboardSortSelect() {
 
   function openMenu() {
     dashboardCloseFuelSheetIfOpen();
+    dashboardCloseCountrySheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
@@ -864,7 +1055,12 @@ function renderAppDashboardTbody() {
   const tbody = document.getElementById('app-dashboard-tbody');
   const statusEl = document.getElementById('app-dashboard-status');
   if (!tbody || !_dashboardDataCache) return;
-  const { list, caches } = _dashboardDataCache;
+  const { list: fullList, caches } = _dashboardDataCache;
+  let list = fullList;
+  const countryFilterId = getDashboardCountryFilterId();
+  if (countryFilterId != null) {
+    list = list.filter((r) => +r.countryId === +countryFilterId);
+  }
   const period = getDashboardPeriodKey();
   tbody.innerHTML = '';
   const frag = document.createDocumentFragment();
@@ -872,10 +1068,18 @@ function renderAppDashboardTbody() {
   const fuelLabel = DASHBOARD_FUEL_STATUS_LABELS[fuelPreset] || '';
   const sortMode = getDashboardSortMode();
   const sortLabel = DASHBOARD_SORT_STATUS_LABELS[sortMode] || '';
+  const countryStatus =
+    countryFilterId == null ? 'all countries' : `${dashboardCountryName(countryFilterId)} only`;
 
-  let enriched = list.map((row, originalIndex) => {
-    const meta = dashboardFuelMetaForRow(row, fuelPreset);
-    const displayLabel = dashboardRowDisplayLabel(row, fuelPreset);
+  const rowJobs =
+    fuelPreset === 'all'
+      ? list.flatMap((row) => DASHBOARD_FUEL_PRESETS_ALL.map((p) => ({ row, preset: p })))
+      : list.map((row) => ({ row, preset: fuelPreset }));
+
+  let enriched = rowJobs.map((job, originalIndex) => {
+    const { row, preset } = job;
+    const meta = dashboardFuelMetaForRow(row, preset);
+    const displayLabel = dashboardRowDisplayLabel(row, preset);
     const series = dashboardFilterSeries(row, caches);
     const st = dashboardRowStats(series, meta.key, meta.sym, meta.dec);
     const usdSort = dashboardLatestUsdForSort(series, meta.key, meta.sym);
@@ -925,7 +1129,7 @@ function renderAppDashboardTbody() {
   tbody.appendChild(frag);
   if (statusEl) {
     const shown = enriched.length;
-    statusEl.textContent = `${shown} regions · ${fuelLabel} · sort: ${sortLabel} · prices USD/L · sheet/API columns vary by market`;
+    statusEl.textContent = `${shown} regions · ${countryStatus} · ${fuelLabel} · sort: ${sortLabel} · prices USD/L · sheet/API columns vary by market`;
   }
 }
 
@@ -1005,9 +1209,9 @@ function dashboardFuelMetaForRow(row, preset) {
   }
   if (cid === 96) {
     if (p === 'diesel') return { key: 'diesel', sym: 'BND', dec: 2 };
-    if (p === 'mid') return { key: 'gasoline', sym: 'BND', dec: 2 };
-    if (p === 'premium') return { key: 'vpower_gasoline', sym: 'BND', dec: 2 };
     if (p === 'entry') return { key: 'gasoline', sym: 'BND', dec: 2 };
+    if (p === 'mid') return { key: 'gasoline_premium', sym: 'BND', dec: 2 };
+    if (p === 'premium') return { key: 'vpower_gasoline', sym: 'BND', dec: 2 };
     return { key: 'gasoline', sym: 'BND', dec: 2 };
   }
   if (cid === 764) {
@@ -1026,9 +1230,9 @@ function dashboardFuelMetaForRow(row, preset) {
   }
   if (cid === 360) {
     if (p === 'diesel') return { key: 'dexlite', sym: 'IDR', dec: 0 };
-    if (p === 'mid') return { key: 'pertalite', sym: 'IDR', dec: 0 };
-    if (p === 'premium') return { key: 'pertamax', sym: 'IDR', dec: 0 };
     if (p === 'entry') return { key: 'pertalite', sym: 'IDR', dec: 0 };
+    if (p === 'mid') return { key: 'pertamax', sym: 'IDR', dec: 0 };
+    if (p === 'premium') return { key: 'pertamax_turbo', sym: 'IDR', dec: 0 };
     return { key: 'pertalite', sym: 'IDR', dec: 0 };
   }
   if (cid === 116) {
@@ -1068,17 +1272,20 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   diesel_euro2: 'Diesel Euro 2',
   ron95: 'RON95',
   ron97: 'RON97',
-  ron95_budi95: 'RON95',
+  /** data.gov.my `ron95_budi95` — subsidised BUDI tier, not standard pump RON95 */
+  ron95_budi95: 'BUDI95',
   ron92: 'RON92',
   ron91: 'RON91',
   ron98: 'RON98',
   gasoline: 'Gasoline',
-  vpower_gasoline: 'V-Power Gasoline',
+  gasoline_premium: 'Premium (RON 95)',
+  vpower_gasoline: 'V-Power (RON 97)',
   gasohol_95: 'Gasohol 95',
   gasohol_91: 'Gasohol 91',
   e85: 'E85',
-  pertalite: 'Pertalite',
-  pertamax: 'Pertamax',
+  pertalite: 'Pertalite 90',
+  pertamax: 'Pertamax 92',
+  pertamax_turbo: 'Pertamax Turbo 98',
   dexlite: 'Dexlite',
   ron95_v: 'RON95 (V)',
   ron95_iii: 'RON95 (III)',
@@ -1086,8 +1293,19 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   gasoline_95: 'Gasoline 95',
 };
 
-function dashboardFuelTypeShortLabel(priceKey) {
+function dashboardFuelTypeShortLabel(priceKey, countryId) {
   const k = String(priceKey || '');
+  const cid = countryId != null ? +countryId : NaN;
+  if (cid === 96) {
+    const bn = {
+      gasoline: 'Regular (RON 91)',
+      gasoline_premium: 'Premium (RON 95)',
+      vpower_gasoline: 'V-Power (RON 97)',
+      diesel: 'Diesel',
+      vpower_diesel: 'V-Power Diesel',
+    };
+    if (Object.prototype.hasOwnProperty.call(bn, k)) return bn[k];
+  }
   const lab = DASHBOARD_FUEL_TYPE_LABELS[k];
   if (lab) return lab;
   return k ? k.replace(/_/g, ' ') : '—';
@@ -1134,7 +1352,7 @@ function dashboardRowDisplayLabel(row, fuelPreset) {
   const country = dashboardCountryName(+row.countryId);
   const place = dashboardRegionOrProviderPart(row);
   const meta = dashboardFuelMetaForRow(row, fuelPreset);
-  const ft = dashboardFuelTypeShortLabel(meta.key);
+  const ft = dashboardFuelTypeShortLabel(meta.key, row.countryId);
   return `${country} - ${place} (${ft})`;
 }
 
@@ -1259,6 +1477,7 @@ async function loadAndRenderAppDashboard() {
   const tbody = document.getElementById('app-dashboard-tbody');
   const statusEl = document.getElementById('app-dashboard-status');
   if (!tbody) return;
+  wireAppDashboardCountryFilter();
   wireAppDashboardPeriodSelect();
   wireAppDashboardFuelSelect();
   wireAppDashboardSortSelect();

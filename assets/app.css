@@ -1079,6 +1079,7 @@
       .app-dashboard .app-dashboard-period-option:hover{
         background: #f1f5f9;
       }
+      .app-dashboard .app-dashboard-country-trigger,
       .app-dashboard .app-dashboard-fuel-trigger,
       .app-dashboard .app-dashboard-sort-trigger{
         border: none;
@@ -1090,7 +1091,8 @@
         box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.12);
       }
       .app-dashboard .app-dashboard-sort-option:hover,
-      .app-dashboard .app-dashboard-fuel-option:hover{
+      .app-dashboard .app-dashboard-fuel-option:hover,
+      .app-dashboard .app-dashboard-country-option:hover{
         background: #f1f5f9;
       }
     }
@@ -1243,12 +1245,18 @@
       min-width: 0;
       flex: 0 0 auto;
     }
+    .app-dashboard-country-dropdown,
     .app-dashboard-fuel-dropdown,
     .app-dashboard-sort-dropdown{
       position: relative;
       display: inline-block;
       min-width: 0;
       box-sizing: border-box;
+    }
+    .app-dashboard-toolbar-field .app-dashboard-country-dropdown{
+      width: 9.25rem;
+      max-width: min(9.25rem, 40vw);
+      flex-shrink: 1;
     }
     .app-dashboard-toolbar-field .app-dashboard-fuel-dropdown{
       width: 10.5rem;
@@ -1261,6 +1269,7 @@
       flex-shrink: 1;
     }
     .app-dashboard-sort-trigger,
+    .app-dashboard-country-trigger,
     .app-dashboard-fuel-trigger{
       margin: 0;
       width: 100%;
@@ -1299,6 +1308,7 @@
       display: block;
     }
     .app-dashboard-sort-trigger-label,
+    .app-dashboard-country-trigger-label,
     .app-dashboard-fuel-trigger-label{
       flex: 1 1 auto;
       min-width: 0;
@@ -1307,6 +1317,7 @@
       white-space: nowrap;
     }
     .app-dashboard-sort-trigger::after,
+    .app-dashboard-country-trigger::after,
     .app-dashboard-fuel-trigger::after{
       content: '▾';
       flex-shrink: 0;
@@ -1394,7 +1405,8 @@
       padding: 0 8px 4px;
     }
     .app-dashboard-sort-option,
-    .app-dashboard-fuel-option{
+    .app-dashboard-fuel-option,
+    .app-dashboard-country-option{
       display: block;
       width: 100%;
       margin: 0;
@@ -1416,15 +1428,18 @@
       border-bottom: none;
     }
     .app-dashboard-sort-option:hover,
-    .app-dashboard-fuel-option:hover{
+    .app-dashboard-fuel-option:hover,
+    .app-dashboard-country-option:hover{
       background: var(--menu-hover);
     }
     .app-dashboard-sort-option:focus-visible,
-    .app-dashboard-fuel-option:focus-visible{
+    .app-dashboard-fuel-option:focus-visible,
+    .app-dashboard-country-option:focus-visible{
       outline: 2px solid rgba(255, 106, 0, 0.45);
       outline-offset: 0;
     }
     .app-dashboard-fuel-trigger:focus-visible,
+    .app-dashboard-country-trigger:focus-visible,
     .app-dashboard-sort-trigger:focus-visible{
       outline: 2px solid rgba(255, 106, 0, 0.45);
       outline-offset: 2px;

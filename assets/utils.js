@@ -47,6 +47,12 @@ function canonicalFuelHeader(h) {
   if (/^province$/i.test(raw)) return 'province';
   if (/provider$/i.test(raw) || /daily provider/i.test(raw)) return 'provider';
   if (/brunei.*seasonally gasoline/i.test(raw) && !/premium/i.test(raw)) return 'gasoline';
+  /* Indonesia: headers may include RON (e.g. "Pertalite 90") — map to stable row keys. */
+  if (/^pertamax\s+turbo\b/i.test(raw)) return 'pertamax_turbo';
+  if (/^pertamax\b/i.test(raw)) return 'pertamax';
+  if (/^pertalite\b/i.test(raw)) return 'pertalite';
+  if (/^dexlite\b/i.test(raw)) return 'dexlite';
+  if (/^pertamina\s*dex\b/i.test(raw)) return 'pertamina_dex';
   const slug = low.replace(/\s+/g, '_');
   const known = new Set([
     'ron91', 'ron92', 'ron95', 'ron98', 'diesel', 'gasoline', 'premium', 'gasoline_premium',

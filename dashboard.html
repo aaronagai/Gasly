@@ -17,7 +17,7 @@
   />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
-  <link rel="stylesheet" href="assets/app.css?v=39" />
+  <link rel="stylesheet" href="assets/app.css?v=63" />
 </head>
 <body>
   <div class="app-dashboard app-dashboard--page" id="app-dashboard" aria-hidden="false">
@@ -38,6 +38,21 @@
     </header>
     <div class="app-dashboard-scroll">
       <div class="app-dashboard-toolbar">
+        <div class="app-dashboard-toolbar-field">
+          <div class="app-dashboard-country-dropdown" id="app-dashboard-country" data-country="">
+            <button
+              type="button"
+              id="app-dashboard-country-trigger"
+              class="app-dashboard-country-trigger"
+              aria-haspopup="dialog"
+              aria-controls="app-dashboard-country-sheet"
+              aria-expanded="false"
+              aria-label="Filter by country"
+            >
+              <span class="app-dashboard-country-trigger-label">All countries</span>
+            </button>
+          </div>
+        </div>
         <div class="app-dashboard-toolbar-field">
           <div class="app-dashboard-fuel-dropdown" id="app-dashboard-fuel" data-fuel="mid">
             <button
@@ -142,6 +157,42 @@
     </div>
 
     <div
+      id="app-dashboard-country-sheet"
+      class="app-dashboard-country-sheet app-dashboard-bottom-sheet"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        type="button"
+        class="app-dashboard-country-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+        id="app-dashboard-country-backdrop"
+        tabindex="-1"
+        aria-label="Close country filter"
+      ></button>
+      <div
+        class="app-dashboard-country-sheet-panel app-dashboard-bottom-sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-dashboard-country-sheet-title"
+      >
+        <div
+          class="app-dashboard-country-sheet-handle app-dashboard-bottom-sheet-handle"
+          id="app-dashboard-country-sheet-handle"
+          role="presentation"
+        >
+          <span class="app-dashboard-country-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+        </div>
+        <h2 id="app-dashboard-country-sheet-title" class="app-dashboard-country-sheet-title app-dashboard-bottom-sheet-title">Country</h2>
+        <div
+          id="app-dashboard-country-menu"
+          class="app-dashboard-country-sheet-list app-dashboard-bottom-sheet-list"
+          role="listbox"
+          aria-labelledby="app-dashboard-country-sheet-title"
+        ></div>
+      </div>
+    </div>
+
+    <div
       id="app-dashboard-fuel-sheet"
       class="app-dashboard-fuel-sheet app-dashboard-bottom-sheet"
       hidden
@@ -165,6 +216,7 @@
         </div>
         <h2 id="app-dashboard-fuel-sheet-title" class="app-dashboard-fuel-sheet-title app-dashboard-bottom-sheet-title">Petrol type</h2>
         <div id="app-dashboard-fuel-menu" class="app-dashboard-fuel-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-fuel-sheet-title">
+          <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="all">All types</button>
           <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="entry">Entry (90-91)</button>
           <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="mid">Mid-grade (92-95)</button>
           <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="premium">Premium (97+)</button>
@@ -251,7 +303,7 @@
     </div>
   </div>
 
-  <script src="assets/config.js"></script>
+  <script src="assets/config.js?v=idfuels-2"></script>
   <script src="assets/utils.js"></script>
   <script src="assets/app-dashboard-core.js"></script>
   <script>

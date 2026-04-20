@@ -169,7 +169,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="assets/config.js"></script>
+  <script src="assets/config.js?v=idfuels-2"></script>
   <script src="assets/utils.js"></script>
   <script src="assets/app-dashboard-core.js"></script>
   <script src="assets/app-map-openfreemap.js"></script>
@@ -696,9 +696,10 @@
           titleEl.textContent = cname;
           subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
           renderHiRows([
-            ['Gasoline', fmtHiPerL('BND', rSel.gasoline, 2), fmtDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Regular (RON 91)', fmtHiPerL('BND', rSel.gasoline, 2), fmtDeltaPerL('BND', rSel.gasoline, rPrev?.gasoline, 2)],
+            ['Premium (RON 95)', fmtHiPerL('BND', rSel.gasoline_premium, 2), fmtDeltaPerL('BND', rSel.gasoline_premium, rPrev?.gasoline_premium, 2)],
+            ['V-Power (RON 97)', fmtHiPerL('BND', rSel.vpower_gasoline, 2), fmtDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
             ['Diesel', fmtHiPerL('BND', rSel.diesel, 2), fmtDeltaPerL('BND', rSel.diesel, rPrev?.diesel, 2)],
-            ['V-Power Gasoline', fmtHiPerL('BND', rSel.vpower_gasoline, 2), fmtDeltaPerL('BND', rSel.vpower_gasoline, rPrev?.vpower_gasoline, 2)],
             ['V-Power Diesel', fmtHiPerL('BND', rSel.vpower_diesel, 2), fmtDeltaPerL('BND', rSel.vpower_diesel, rPrev?.vpower_diesel, 2)],
           ]);
           if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
@@ -706,9 +707,10 @@
           const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
           const chartKeys = [
-            { key: 'gasoline', label: 'Gasoline' },
+            { key: 'gasoline', label: 'Regular (RON 91)' },
+            { key: 'gasoline_premium', label: 'Premium (RON 95)' },
+            { key: 'vpower_gasoline', label: 'V-Power (RON 97)' },
             { key: 'diesel', label: 'Diesel' },
-            { key: 'vpower_gasoline', label: 'V-Power Gasoline' },
             { key: 'vpower_diesel', label: 'V-Power Diesel' },
           ];
           if (labels.length) {
@@ -804,8 +806,14 @@
           const { row: rSel, prev: rPrev } = selectLatestHighlightRow(cityRows);
           titleEl.textContent = city;
           subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
+          /* Inline grades so highlights stay correct even if an old cached config.js lacks `ID_FUELS` updates. */
+          const ID_HI_LABELS = {
+            pertalite: 'Pertalite 90',
+            pertamax: 'Pertamax 92',
+            pertamax_turbo: 'Pertamax Turbo 98',
+          };
           const pairs = ID_FUELS.map((f) => [
-            f.label,
+            Object.prototype.hasOwnProperty.call(ID_HI_LABELS, f.key) ? ID_HI_LABELS[f.key] : f.label,
             fmtHiIDR(rSel[f.key]),
             fmtDeltaIDR(rSel[f.key], rPrev ? rPrev[f.key] : NaN),
           ]);
@@ -814,7 +822,10 @@
 
           const sliceRows = rowsForPriceChart(cityRows).map(r => ({ ...r, __label: fmtDate(r.date) }));
           const labels = sliceRows.map(r => r.__label);
-          const chartKeys = ID_FUELS.map(f => ({ key: f.key, label: f.label }));
+          const chartKeys = ID_FUELS.map((f) => ({
+            key: f.key,
+            label: Object.prototype.hasOwnProperty.call(ID_HI_LABELS, f.key) ? ID_HI_LABELS[f.key] : f.label,
+          }));
           if (labels.length) {
             updateChart({
               labels,
