@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=36" />
+  <link rel="stylesheet" href="assets/app.css?v=39" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -141,17 +141,13 @@
           <div class="app-settings-row">
             <div class="app-settings-copy">
               <div class="app-settings-label">Highlight prices in USD</div>
-              <p class="app-settings-hint">
-                Uses live rates from the <strong>Currency</strong> tab in the same Google Sheet. Turn off to show each
-                country’s local currency in the highlight card.
-              </p>
             </div>
             <label class="app-settings-switch">
               <input type="checkbox" id="app-settings-usd" />
               <span class="app-settings-switch-ui" aria-hidden="true"></span>
             </label>
           </div>
-          <a class="app-settings-home-link" href="index.html">PetrolPrice home</a>
+          <a class="app-settings-home-link" href="index.html" aria-label="PetrolPrice home"><span class="app-settings-home-link__bk" aria-hidden="true">&lt;</span> PetrolPrice home</a>
         </div>
       </div>
     </div>
