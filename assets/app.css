@@ -1120,6 +1120,9 @@
       flex: 1 1 auto;
       justify-content: flex-start;
     }
+    .app-dashboard-top .header-context-label{
+      font-weight: 400;
+    }
     .app-dashboard-brand{
       min-width: 0;
       max-width: 100%;
