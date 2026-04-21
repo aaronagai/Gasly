@@ -1983,6 +1983,10 @@
 
     /* Settings (highlight USD toggle) */
     /* Settings pull-up sheet — rides on top of the shared .app-dashboard-bottom-sheet* base. */
+    .app-settings-sheet{
+      /* Sit behind the liquid nav (z-index 140) so the nav pill remains tappable. */
+      z-index: 130;
+    }
     .app-settings-sheet .app-dashboard-bottom-sheet-panel{
       /* Taller than the dashboard sheets since the content is sparse and
          the sheet should feel like a proper settings surface, not a menu. */
@@ -2020,10 +2024,13 @@
       outline-offset: 2px;
     }
     .app-settings-sheet-body{
-      padding: 6px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+      /* Extra bottom padding so content isn't tucked behind the liquid nav pill. */
+      padding: 6px 20px calc(120px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 18px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .app-settings-sheet-row{
       display: flex;
