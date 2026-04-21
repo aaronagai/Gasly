@@ -1983,6 +1983,12 @@
 
     /* Settings (highlight USD toggle) */
     /* Settings pull-up sheet — rides on top of the shared .app-dashboard-bottom-sheet* base. */
+    .app-settings-sheet .app-dashboard-bottom-sheet-panel{
+      /* Taller than the dashboard sheets since the content is sparse and
+         the sheet should feel like a proper settings surface, not a menu. */
+      min-height: min(60vh, 520px);
+      max-height: min(85vh, 680px);
+    }
     .app-settings-sheet-header{
       display: flex;
       align-items: center;
