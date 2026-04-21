@@ -1210,6 +1210,7 @@ function dashboardFuelMetaForRow(row, preset) {
   if (p === 'premium_diesel') {
     if (cid === 96) return { key: 'vpower_diesel', sym: 'BND', dec: 2 };
     if (cid === 360) return { key: 'pertamina_dex', sym: 'IDR', dec: 0 };
+    if (cid === 104) return { key: 'premium_diesel', sym: 'MMK', dec: 0 };
     return { key: '__none__', sym: 'USD', dec: 2 };
   }
 
@@ -1300,6 +1301,8 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   gasoline: 'Gasoline',
   gasoline_premium: 'Premium (RON 95)',
   vpower_gasoline: 'V-Power (RON 97)',
+  vpower_diesel: 'V-Power Diesel',
+  premium_diesel: 'Premium Diesel',
   gasohol_95: 'Gasohol 95',
   gasohol_91: 'Gasohol 91',
   e85: 'E85',

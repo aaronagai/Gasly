@@ -159,7 +159,9 @@ function normalizeMyanmarSheetRows(rows) {
   if (!rows || !rows.length) return [];
   let curDate = '';
   const filled = rows.map((r) => {
-    const d = r.date != null ? String(r.date).trim() : '';
+    /* Sheet header may be `p` or `date` depending on how the tab was last edited. */
+    const raw = r.date != null ? r.date : r.p;
+    const d = raw != null ? String(raw).trim() : '';
     if (d) curDate = d;
     return { ...r, date: curDate };
   });
