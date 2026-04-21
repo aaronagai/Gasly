@@ -1206,6 +1206,7 @@ function dashboardFuelMetaForRow(row, preset) {
 
   if (p === 'premium_diesel') {
     if (cid === 96) return { key: 'vpower_diesel', sym: 'BND', dec: 2 };
+    if (cid === 360) return { key: 'pertamina_dex', sym: 'IDR', dec: 0 };
     return { key: '__none__', sym: 'USD', dec: 2 };
   }
 
@@ -1303,6 +1304,7 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   pertamax: 'Pertamax 92',
   pertamax_turbo: 'Pertamax Turbo 98',
   dexlite: 'Dexlite',
+  pertamina_dex: 'Pertamina Dex',
   ron95_v: 'RON95 (V)',
   ron95_iii: 'RON95 (III)',
   ron92_ii: 'RON92 (II)',
