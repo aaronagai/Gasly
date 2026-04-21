@@ -1915,8 +1915,10 @@
       min-width: 0;
       overflow: visible;
       white-space: normal;
-      word-break: break-word;
-      hyphens: auto;
+      /* Wrap at word boundaries only; avoid hyphenating mid-word (e.g. "Semenan-jung"). */
+      word-break: normal;
+      overflow-wrap: break-word;
+      hyphens: manual;
       line-height: 1.25;
     }
     .app-dashboard-td--price{
