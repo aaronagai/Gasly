@@ -1086,9 +1086,18 @@ function renderAppDashboardTbody() {
     const st = dashboardRowStats(series, meta.key, meta.sym, meta.dec);
     const usdSort = dashboardLatestUsdForSort(series, meta.key, meta.sym);
     const pctSort = dashboardPctForPeriod(st, period);
-    return { row, originalIndex, st, usdSort, pctSort, displayLabel };
+    return { row, originalIndex, st, usdSort, pctSort, displayLabel, priceKey: meta.key };
   });
   enriched = enriched.filter((e) => dashboardRowHasUsdSpot(e.st));
+  if (fuelPreset === 'all') {
+    const seen = new Set();
+    enriched = enriched.filter((e) => {
+      const key = `${e.row.countryId}|${e.row.myRegion || ''}|${e.row.sgProvider || ''}|${e.row.idCity || ''}|${e.row.province || ''}|${e.priceKey}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
   enriched.sort((a, b) => compareDashboardSortRows(a, b, sortMode));
 
   enriched.forEach((item, displayIdx) => {
