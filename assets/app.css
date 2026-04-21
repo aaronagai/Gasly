@@ -1641,6 +1641,10 @@
       min-height: 0;
       padding: 0 8px 4px;
     }
+    .app-dashboard-country-sheet-list{
+      /* Dead space so the last country isn't flush against the sheet edge / home indicator. */
+      padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    }
     .app-dashboard-sort-option,
     .app-dashboard-fuel-option,
     .app-dashboard-country-option{
