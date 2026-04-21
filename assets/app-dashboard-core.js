@@ -239,8 +239,10 @@ const DASHBOARD_FUEL_DISPLAY_LABELS = {
   diesel: 'Diesel',
 };
 
-/** Petrol tiers expanded when fuel = `all` (order matches sheet option list below `all`). */
-const DASHBOARD_FUEL_PRESETS_ALL = Object.freeze(['entry', 'mid', 'premium', 'diesel']);
+/** Petrol tiers expanded when fuel = `all` (order matches sheet option list below `all`).
+ * `premium_diesel` is an internal-only preset for countries with a second diesel tier
+ * (e.g. Brunei V-Power Diesel); rows without a matching column get filtered by the spot check. */
+const DASHBOARD_FUEL_PRESETS_ALL = Object.freeze(['entry', 'mid', 'premium', 'diesel', 'premium_diesel']);
 
 const DASHBOARD_FUEL_KEYS = new Set(['all', 'entry', 'mid', 'premium', 'diesel']);
 
@@ -1189,9 +1191,14 @@ function dashboardPriceMetaForRow(row) {
  * Unknown presets fall back to mid-grade.
  */
 function dashboardFuelMetaForRow(row, preset) {
-  const p = ['mid', 'premium', 'entry', 'diesel'].includes(preset) ? preset : 'mid';
+  const p = ['mid', 'premium', 'entry', 'diesel', 'premium_diesel'].includes(preset) ? preset : 'mid';
   const cid = +row.countryId;
   const myEast = cid === 458 && row.myRegion === 'SabahSarawak';
+
+  if (p === 'premium_diesel') {
+    if (cid === 96) return { key: 'vpower_diesel', sym: 'BND', dec: 2 };
+    return { key: '__none__', sym: 'USD', dec: 2 };
+  }
 
   if (cid === 458) {
     if (p === 'diesel') return { key: myEast ? 'diesel_eastmsia' : 'diesel', sym: 'MYR', dec: 2 };
