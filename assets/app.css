@@ -1982,69 +1982,29 @@
     }
 
     /* Settings (highlight USD toggle) */
-    .app-settings-modal{
-      position: fixed;
-      inset: 0;
-      z-index: 210;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.22s ease, visibility 0.22s;
-    }
-    .app-settings-modal.app-settings-modal--open{
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    .app-settings-backdrop{
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .app-settings-dialog{
-      position: relative;
-      z-index: 1;
-      width: min(100%, 400px);
-      max-height: min(90dvh, 560px);
-      overflow: auto;
-      border-radius: 16px;
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      -webkit-overflow-scrolling: touch;
-    }
-    .app-settings-header{
+    /* Settings pull-up sheet — rides on top of the shared .app-dashboard-bottom-sheet* base. */
+    .app-settings-sheet-header{
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 14px 14px 8px 18px;
+      padding: 2px 14px 10px 20px;
     }
-    .app-settings-heading{
-      margin: 0;
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .app-settings-sheet-header .app-settings-sheet-title{
+      padding: 0;
+      text-align: left;
     }
     .app-settings-close{
       flex-shrink: 0;
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       margin: 0;
       padding: 0;
       border: none;
       border-radius: 999px;
       background: var(--menu-hover);
       color: var(--text);
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       line-height: 1;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
@@ -2053,26 +2013,27 @@
       outline: 2px solid var(--orange);
       outline-offset: 2px;
     }
-    .app-settings-body{
-      padding: 4px 18px 20px;
+    .app-settings-sheet-body{
+      padding: 6px 20px calc(24px + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
-    .app-settings-row{
+    .app-settings-sheet-row{
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 16px;
     }
-    .app-settings-copy{
+    .app-settings-sheet-copy{
       flex: 1;
       min-width: 0;
     }
-    .app-settings-label{
+    .app-settings-sheet-label{
       font-size: 1rem;
       font-weight: 600;
       letter-spacing: -0.01em;
+      color: var(--text);
     }
     .app-settings-home-link{
       display: inline-flex;

@@ -17,7 +17,7 @@
   />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
-  <link rel="stylesheet" href="assets/app.css?v=119" />
+  <link rel="stylesheet" href="assets/app.css?v=120" />
 </head>
 <body>
   <div class="app-dashboard app-dashboard--page" id="app-dashboard" aria-hidden="false">
@@ -332,7 +332,7 @@
         </span>
         <span class="app-liquid-nav__label">Dashboard</span>
       </a>
-      <a href="app.html?settings=1" class="app-liquid-nav__item">
+      <button type="button" class="app-liquid-nav__item" id="app-liquid-nav-open-settings" aria-haspopup="dialog" aria-controls="app-settings-sheet" aria-expanded="false">
         <span class="app-liquid-nav__icon-wrap" aria-hidden="true">
           <svg class="app-liquid-nav__icon app-liquid-nav__icon--muted" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -354,13 +354,55 @@
           </svg>
         </span>
         <span class="app-liquid-nav__label">Settings</span>
-      </a>
+      </button>
     </div>
   </nav>
+
+  <div
+    id="app-settings-sheet"
+    class="app-settings-sheet app-dashboard-bottom-sheet"
+    hidden
+    aria-hidden="true"
+  >
+    <button
+      type="button"
+      class="app-settings-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+      id="app-settings-backdrop"
+      tabindex="-1"
+      aria-label="Close settings"
+    ></button>
+    <div
+      class="app-settings-sheet-panel app-dashboard-bottom-sheet-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="app-settings-sheet-title"
+    >
+      <div class="app-settings-sheet-handle app-dashboard-bottom-sheet-handle" id="app-settings-sheet-handle" role="presentation">
+        <span class="app-settings-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+      </div>
+      <div class="app-settings-sheet-header">
+        <h2 id="app-settings-sheet-title" class="app-settings-sheet-title app-dashboard-bottom-sheet-title">Settings</h2>
+        <button type="button" class="app-settings-close" id="app-settings-close" aria-label="Close settings">×</button>
+      </div>
+      <div class="app-settings-sheet-body">
+        <div class="app-settings-sheet-row">
+          <div class="app-settings-sheet-copy">
+            <div class="app-settings-sheet-label">Highlight prices in USD</div>
+          </div>
+          <label class="app-settings-switch">
+            <input type="checkbox" id="app-settings-usd" />
+            <span class="app-settings-switch-ui" aria-hidden="true"></span>
+          </label>
+        </div>
+        <a class="app-settings-home-link" href="index.html" aria-label="PetrolPrice home"><span class="app-settings-home-link__bk" aria-hidden="true">&lt;</span> PetrolPrice home</a>
+      </div>
+    </div>
+  </div>
 
   <script src="assets/config.js?v=idfuels-2"></script>
   <script src="assets/utils.js?v=110"></script>
   <script src="assets/app-dashboard-core.js?v=110"></script>
+  <script src="assets/app-settings.js?v=120"></script>
   <script>
     window.addEventListener('load', function () {
       void loadAppCurrencyRates()
@@ -368,6 +410,13 @@
         .then(function () {
           return loadAndRenderAppDashboard();
         });
+      initAppSettingsSheet({
+        onUsdToggle: function () {
+          try {
+            if (typeof renderAppDashboardTbody === 'function') renderAppDashboardTbody();
+          } catch (_) {}
+        },
+      });
     });
   </script>
   <script src="assets/app-liquid-nav-drag.js?v=85"></script>

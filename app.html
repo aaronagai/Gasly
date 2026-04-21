@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=105" />
+  <link rel="stylesheet" href="assets/app.css?v=120" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -108,22 +108,36 @@
       </div>
     </div>
 
-    <div class="app-settings-modal" id="app-settings-modal" aria-hidden="true">
-      <div class="app-settings-backdrop" aria-hidden="true"></div>
+    <div
+      id="app-settings-sheet"
+      class="app-settings-sheet app-dashboard-bottom-sheet"
+      hidden
+      aria-hidden="true"
+    >
+      <button
+        type="button"
+        class="app-settings-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+        id="app-settings-backdrop"
+        tabindex="-1"
+        aria-label="Close settings"
+      ></button>
       <div
-        class="app-settings-dialog"
+        class="app-settings-sheet-panel app-dashboard-bottom-sheet-panel"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="app-settings-heading"
+        aria-labelledby="app-settings-sheet-title"
       >
-        <div class="app-settings-header">
-          <h2 class="app-settings-heading" id="app-settings-heading">Settings</h2>
-          <button type="button" class="app-settings-close" id="app-settings-close" aria-label="Close">×</button>
+        <div class="app-settings-sheet-handle app-dashboard-bottom-sheet-handle" id="app-settings-sheet-handle" role="presentation">
+          <span class="app-settings-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
         </div>
-        <div class="app-settings-body">
-          <div class="app-settings-row">
-            <div class="app-settings-copy">
-              <div class="app-settings-label">Highlight prices in USD</div>
+        <div class="app-settings-sheet-header">
+          <h2 id="app-settings-sheet-title" class="app-settings-sheet-title app-dashboard-bottom-sheet-title">Settings</h2>
+          <button type="button" class="app-settings-close" id="app-settings-close" aria-label="Close settings">×</button>
+        </div>
+        <div class="app-settings-sheet-body">
+          <div class="app-settings-sheet-row">
+            <div class="app-settings-sheet-copy">
+              <div class="app-settings-sheet-label">Highlight prices in USD</div>
             </div>
             <label class="app-settings-switch">
               <input type="checkbox" id="app-settings-usd" />
@@ -218,6 +232,7 @@
   <script src="assets/utils.js"></script>
   <script src="assets/app-dashboard-core.js"></script>
   <script src="assets/app-map-openfreemap.js"></script>
+  <script src="assets/app-settings.js?v=120"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA fuels — from config.js
@@ -2022,66 +2037,17 @@
       });
     }
 
-    function initAppSettingsModal() {
-      const modal = document.getElementById('app-settings-modal');
-      const backdrop = modal?.querySelector('.app-settings-backdrop');
-      const closeBtn = document.getElementById('app-settings-close');
-      const chk = document.getElementById('app-settings-usd');
-      if (!modal || !chk) return;
-
-      function syncToggle() {
-        try {
-          chk.checked = localStorage.getItem('app_highlight_usd') === '1';
-        } catch (_) {
-          chk.checked = false;
-        }
-      }
-
-      function openModal() {
-        syncToggle();
-        modal.classList.add('app-settings-modal--open');
-        modal.setAttribute('aria-hidden', 'false');
-      }
-
-      function closeModal() {
-        modal.classList.remove('app-settings-modal--open');
-        modal.setAttribute('aria-hidden', 'true');
-        try {
-          document.getElementById('app-liquid-nav-open-settings')?.focus();
-        } catch (_) {}
-      }
-
-      window.__appOpenSettingsModal = openModal;
-      window.__appCloseSettingsModal = closeModal;
-
-      document.getElementById('app-liquid-nav-open-settings')?.addEventListener('click', openModal);
-      backdrop?.addEventListener('click', closeModal);
-      closeBtn?.addEventListener('click', closeModal);
-      chk.addEventListener('change', () => {
-        try {
-          localStorage.setItem('app_highlight_usd', chk.checked ? '1' : '0');
-        } catch (_) {}
-        refreshHighlights(selected).catch(() => {});
-      });
-      syncToggle();
-    }
+    /* Settings sheet init is wired below via initAppSettingsSheet() from assets/app-settings.js. */
 
     // Init
     initSheet();
     initSingaporeProviderMenu();
     void initSearch();
-    initAppSettingsModal();
-    (function maybeOpenSettingsFromQuery() {
-      try {
-        const p = new URLSearchParams(window.location.search);
-        if (p.get('settings') !== '1') return;
-        if (typeof window.__appOpenSettingsModal !== 'function') return;
-        window.__appOpenSettingsModal();
-        p.delete('settings');
-        const q = p.toString();
-        window.history.replaceState({}, '', window.location.pathname + (q ? '?' + q : '') + window.location.hash);
-      } catch (_) {}
-    })();
+    initAppSettingsSheet({
+      onUsdToggle: function () {
+        refreshHighlights(selected).catch(function () {});
+      },
+    });
     initExportStoryModal();
     initCardExport();
 
