@@ -1092,7 +1092,10 @@ function renderAppDashboardTbody() {
   if (fuelPreset === 'all') {
     const seen = new Set();
     enriched = enriched.filter((e) => {
-      const key = `${e.row.countryId}|${e.row.myRegion || ''}|${e.row.sgProvider || ''}|${e.row.idCity || ''}|${e.row.province || ''}|${e.priceKey}`;
+      const r = e.row;
+      const regionTag =
+        r.myRegion || r.sgProvider || r.idCity || r.laProvince || r.mmRegion || r.vnArea || '';
+      const key = `${r.countryId}|${regionTag}|${e.priceKey}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -1191,7 +1194,7 @@ function dashboardPriceMetaForRow(row) {
   if (cid === 116) return { key: 'ron92', sym: 'KHR', dec: 0 };
   if (cid === 104) return { key: 'ron92', sym: 'MMK', dec: 0 };
   if (cid === 704) return { key: 'ron95_v', sym: 'VND', dec: 0 };
-  if (cid === 418) return { key: 'gasoline', sym: 'LAK', dec: 0 };
+  if (cid === 418) return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
   return { key: 'ron95', sym: 'MYR', dec: 2 };
 }
 
@@ -1275,7 +1278,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'diesel') return { key: 'diesel', sym: 'LAK', dec: 0 };
     if (p === 'mid') return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
     if (p === 'premium') return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
-    if (p === 'entry') return { key: 'gasoline', sym: 'LAK', dec: 0 };
+    if (p === 'entry') return { key: 'gasoline_91', sym: 'LAK', dec: 0 };
     return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
   }
   return { key: 'ron95', sym: 'MYR', dec: 2 };
@@ -1308,6 +1311,7 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   ron95_v: 'RON95 (V)',
   ron95_iii: 'RON95 (III)',
   ron92_ii: 'RON92 (II)',
+  gasoline_91: 'Gasoline 91',
   gasoline_95: 'Gasoline 95',
 };
 
