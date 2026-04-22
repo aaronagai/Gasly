@@ -1449,6 +1449,17 @@ function dashboardFilterSeries(row, c) {
     const r = (c.laRows || []).filter((x) => normalizeSheetString(x.province) === pn);
     return sortRowsByDate(r);
   }
+  if (cid === 802) {
+    const snap = c.vicSnapshot;
+    if (!snap || !snap.mins) return [];
+    const t = snap.fetchedAt != null ? +snap.fetchedAt : Date.now();
+    const dateStr = new Date(t).toISOString().slice(0, 10);
+    const row = { date: dateStr };
+    for (const k of Object.keys(snap.mins)) {
+      if (Object.prototype.hasOwnProperty.call(snap.mins, k)) row[k] = snap.mins[k];
+    }
+    return sortRowsByDate([row]);
+  }
   return [];
 }
 
@@ -1504,6 +1515,7 @@ async function preloadDashboardCaches() {
     laRows,
     mmRows,
     vnRows,
+    vicSnapshot,
   ] = await Promise.all([
     ensureMalaysiaRows().catch(() => []),
     ensureSheetRows(SG_SHEET_URL).catch(() => []),
@@ -1515,8 +1527,14 @@ async function preloadDashboardCaches() {
     ensureSheetRows(LA_SHEET_URL).catch(() => []),
     ensureSheetRows(MM_SHEET_URL).catch(() => []),
     ensureSheetRows(VN_SHEET_URL).catch(() => []),
+    typeof ensureVicServoSnapshot === 'function'
+      ? ensureVicServoSnapshot().catch((err) => {
+        console.warn('Dashboard Victoria (Fair Fuel) snapshot:', err);
+        return null;
+      })
+      : Promise.resolve(null),
   ]);
-  return { myRows, sgRows, bnRows, thRows, phRows, idRows, khRows, laRows, mmRows, vnRows };
+  return { myRows, sgRows, bnRows, thRows, phRows, idRows, khRows, laRows, mmRows, vnRows, vicSnapshot };
 }
 
 async function loadAndRenderAppDashboard() {
