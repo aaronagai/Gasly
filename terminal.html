@@ -1351,10 +1351,11 @@
           });
           renderRightChart({ labels, datasets, countryId: 802, animate: true });
         } catch (e) {
-          const msg =
+          const fromObj =
             e && e.body && (e.body.error || (typeof e.body === 'string' && e.body))
               ? (e.body.error || e.body)
-              : (e && e.message) || 'Request failed';
+              : null;
+          const msg = (e && e.message) || fromObj || 'Request failed';
           setRightPanel({
             kicker: 'Victoria (Servo Saver)',
             titleA: COUNTRIES[802] && COUNTRIES[802].name,
@@ -1362,7 +1363,7 @@
             subtag: '',
             infoTitle: COUNTRIES[802] && COUNTRIES[802].name,
             infoSub: 'Could not load live feed',
-            infoLines: [['Error', String(msg).slice(0, 200), '-']],
+            infoLines: [['Error', String(msg).replace(/\s+/g, ' ').slice(0, 420), '-']],
           });
           destroyRightChart();
         }

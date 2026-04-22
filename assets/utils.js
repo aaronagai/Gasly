@@ -1507,13 +1507,22 @@ async function ensureVicServoSnapshot() {
   try {
     json = text ? JSON.parse(text) : null;
   } catch (_) {
-    const e = new Error('Invalid JSON from Servo Saver proxy');
+    const e = new Error(
+      `Invalid JSON from Servo Saver proxy (HTTP ${res.status}): ${String(text).replace(/\s+/g, ' ').slice(0, 200)}`,
+    );
     e.status = res.status;
     e.body = String(text).slice(0, 400);
     throw e;
   }
   if (!res.ok) {
-    const e = new Error('Servo Saver proxy request failed');
+    const parts = [`HTTP ${res.status}`];
+    if (json && typeof json === 'object') {
+      if (json.error) parts.push(String(json.error));
+      if (json.message && String(json.message) !== String(json.error)) parts.push(String(json.message));
+    } else if (text) {
+      parts.push(String(text).replace(/\s+/g, ' ').slice(0, 180));
+    }
+    const e = new Error(`Servo Saver: ${parts.join(' — ')}`);
     e.status = res.status;
     e.body = json;
     throw e;

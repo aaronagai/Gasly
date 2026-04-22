@@ -3,7 +3,7 @@
  * (Fair Fuel Open Data API Documentation — Service Victoria, Oct 2025).
  *
  * Set in the project’s environment (never commit secrets):
- * - `SERVO_SAVER_CONSUMER_ID` — API Consumer ID (header `x-consumer-id`)
+ * - `SERVO_SAVER_CONSUMER_ID` (or `SERVO_SAVER_API_KEY`) — API Consumer ID (header `x-consumer-id`)
  * - `SERVO_SAVER_PATH` (optional) — must start with `/`, default `/open-data/v1/fuel/prices`
  * - `SERVO_SAVER_BASE` (optional) — origin only, default `https://api.fuel.service.vic.gov.au`
  * - `SERVO_SAVER_USER_AGENT` (optional) — default `petrolprice.xyz/1.0` (header `User-Agent` is required by the API)
@@ -24,10 +24,16 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const key = process.env.SERVO_SAVER_CONSUMER_ID;
-  const base = String(
+  const key = process.env.SERVO_SAVER_CONSUMER_ID || process.env.SERVO_SAVER_API_KEY;
+  let base = String(
     process.env.SERVO_SAVER_BASE || 'https://api.fuel.service.vic.gov.au',
   ).replace(/\/+$/, '');
+  try {
+    const u = new URL(base);
+    base = u.origin;
+  } catch (_) {
+    /* use base string as before */
+  }
   const pathStr = String(process.env.SERVO_SAVER_PATH || '/open-data/v1/fuel/prices').trim();
   const userAgent = String(
     process.env.SERVO_SAVER_USER_AGENT || 'petrolprice.xyz/1.0',
