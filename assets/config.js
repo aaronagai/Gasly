@@ -109,14 +109,16 @@ const COUNTRIES = {
   116: { name: 'Cambodia' },
   418: { name: 'Laos' },
   104: { name: 'Myanmar' },
+  /** Victoria (AU) — live station feed via Service Victoria Servo Saver Open API (proxied; see `api/servo-saver.js`). */
+  802: { name: 'Victoria' },
 };
 
 /**
  * USD conversion: multiply local price/L by this for USD/L.
  * Overwritten at runtime from the **Currency** sheet (`country_name` + `fx_rate`; see `mergeCurrencySheetRowsIntoUsdRates`).
  * Sheet `country_name` slugs → ISO: malaysia MYR, singapore SGD, brunei BND, indonesia IDR, thailand THB,
- * philippines PHP, vietnam VND, myanmar MMK, cambodia KHR, laos LAK.
- * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK.
+ * philippines PHP, vietnam VND, myanmar MMK, cambodia KHR, laos LAK, victoria / australia AUD.
+ * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK, 802 AUD.
  *
  * **Spreadsheet format:** Put **plain numbers** in `fx_rate` (optional `RM` / `$` prefix is stripped).
  * The value must be **USD per 1 unit of local currency** (e.g. ~0.25 for MYR, ~0.00006 for IDR). If you paste
@@ -135,6 +137,8 @@ const USD_RATES = {
   LAK: 0.0000455166136,
   MMK: 0.00047,
   VND: 0.0000379795,
+  /** AUD: USD per 1 AUD (Victoria; same as RBA/FX — refresh via Currency sheet). */
+  AUD: 0.64,
 };
 
 const CHART_COLORS = ['#ff6a00', '#2563eb', '#16a34a', '#a855f7', '#ef4444', '#0ea5e9'];
@@ -194,6 +198,19 @@ const LA_FUELS = [
   { key: 'gasoline', label: 'Gasoline' },
   { key: 'gasoline_95', label: 'Gasoline 95' },
   { key: 'diesel', label: 'Diesel' },
+];
+
+/** Victoria — `extractVicMinPricesFromServoJson` in utils.js maps API labels to these keys. */
+const VIC_FUELS = [
+  { key: 'ulp', label: 'U91' },
+  { key: 'e10', label: 'E10' },
+  { key: 'p95', label: 'P95' },
+  { key: 'p98', label: 'P98' },
+  { key: 'diesel', label: 'Diesel' },
+  { key: 'diesel_premium', label: 'Premium diesel' },
+  { key: 'e85', label: 'E85' },
+  { key: 'lpg', label: 'LPG' },
+  { key: 'adblue', label: 'AdBlue' },
 ];
 
 /** Malaysia pricing regions. */
@@ -305,6 +322,16 @@ const COUNTRY_OVERVIEW_FALLBACK = {
       [['Refinery Intake', '-'], null],
       [['Export Value', '-'], ['Import Value', '-']],
       [['Status', 'Net Importer'], null],
+    ],
+  },
+  802: {
+    oilContext:
+      "Australia's most populous state, with a large on-road economy; domestic crude is modest, so the state is integrated into the Asia-Pacific import market for transport fuels, while pump prices are visible through Victoria's retail reporting scheme.",
+    metricRows: [
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refining', 'SE trade hub'], null],
+      [['Data', 'Servo Saver (VIC)'], null],
+      [['Status', 'Price transparency'], null],
     ],
   },
 };

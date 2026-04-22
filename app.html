@@ -24,6 +24,10 @@
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <div class="app">
@@ -235,8 +239,8 @@
   <script src="assets/app-settings.js?v=120"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
+    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA/VIC fuels — from config.js
+    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
     // buildSearchRegionsList, labelVietnamArea, appHighlightUsdOn, getAppUsdMultiplier, loadAppCurrencyRates, loadAndRenderAppDashboard — assets/app-dashboard-core.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -457,6 +461,7 @@
       104: 'MMK',
       704: 'VND',
       418: 'LAK',
+      802: 'AUD',
     };
 
     function chartOptions(countryId, chartUsdMode = false) {
@@ -531,6 +536,9 @@
                   if (Math.abs(n) >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
                   if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
                   return formatNumberCommas(Math.round(n), 0, 0);
+                }
+                if (countryId === 802) {
+                  return formatNumberCommas(parseFloat(n.toFixed(2)), 0, 2);
                 }
                 return formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6);
               },
@@ -1015,6 +1023,52 @@
           if (labels.length) {
             updateChart({ labels, datasets: buildChartSeries(sliceRows, chartKeys, labels), countryId: 418 });
           } else emptyChart();
+          return;
+        }
+
+        if (cid === 802) {
+          const snap = await ensureVicServoSnapshot();
+          if (!alive()) return;
+          const mins = snap.mins || {};
+          const hasMin = Object.keys(mins).length > 0;
+          const vf = typeof VIC_FUELS !== 'undefined' ? VIC_FUELS : [];
+          titleEl.textContent = cname;
+          if (!hasMin && snap.hint) {
+            subEl.textContent = snap.hint;
+          } else {
+            const subBits = [
+              hasMin && snap.stationCount ? `≥ ${snap.stationCount} sites` : hasMin ? 'lowest in response' : null,
+              snap.asOf,
+            ].filter((x) => x != null && x !== '');
+            subEl.textContent = subBits.length ? subBits.join(' · ') : `AUD/L · ${cname}`;
+          }
+          const pairs = [];
+          for (const f of vf) {
+            if (mins[f.key] == null) continue;
+            pairs.push([f.label, fmtHiPerL('AUD', mins[f.key], 2), '']);
+          }
+          if (pairs.length) {
+            renderHiRows(pairs);
+            if (chartKicker) chartKicker.textContent = `${cname} — lowest pump price in this response`;
+            const row0 = { __label: 'VIC' };
+            const chartKeys = [];
+            for (const f of vf) {
+              if (mins[f.key] == null) continue;
+              row0[f.key] = mins[f.key];
+              chartKeys.push({ key: f.key, label: f.label });
+            }
+            const sliceRows = [row0, { ...row0, __label: ' ' }];
+            const labels = ['VIC', ' '];
+            updateChart({
+              labels,
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
+              countryId: 802,
+            });
+          } else {
+            renderHiRows([['Data', snap.hint || 'No prices parsed from API (check SERVO_SAVER_PATH)']]);
+            if (chartKicker) chartKicker.textContent = `${cname}`;
+            emptyChart();
+          }
           return;
         }
 

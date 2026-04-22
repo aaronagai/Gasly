@@ -20,6 +20,10 @@
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/terminal.css -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <div class="sidebar-hover">
@@ -148,8 +152,8 @@
   <script src="assets/terminal-map-mapkit.js"></script>
   <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
-    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
+    // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA/VIC fuels — from config.js
+    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
     // Per-country selected index for the highlights pager (all non-Malaysia).
@@ -612,6 +616,11 @@
                   if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
                   return formatNumberCommas(Math.round(n), 0, 0);
                 }
+                if (countryId === 802) {
+                  const n2 = Number(v);
+                  if (!Number.isFinite(n2)) return v;
+                  return formatNumberCommas(parseFloat(n2.toFixed(2)), 0, 2);
+                }
                 const n = Number(v);
                 return Number.isFinite(n)
                   ? formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6)
@@ -663,7 +672,7 @@
 
       const CHART_CCY = {
         360: 'IDR', 458: 'MYR', 702: 'SGD', 96: 'BND', 764: 'THB', 608: 'PHP',
-        116: 'KHR', 418: 'LAK', 104: 'MMK', 704: 'VND',
+        116: 'KHR', 418: 'LAK', 104: 'MMK', 704: 'VND', 802: 'AUD',
       };
       const ccyKey = CHART_CCY[countryId];
       const usdMult =
@@ -1296,6 +1305,69 @@
         if (typeof window.__terminalSyncPager === 'function') window.__terminalSyncPager();
         return;
       }
+
+      if (countryId === 802) {
+        try {
+          const snap = await ensureVicServoSnapshot();
+          const mins = snap.mins || {};
+          const hasMin = Object.keys(mins).length > 0;
+          const vf = typeof VIC_FUELS !== 'undefined' ? VIC_FUELS : [];
+          if (!hasMin) {
+            setRightPanel({
+              kicker: 'Victoria (Servo Saver)',
+              titleA: COUNTRIES[802].name,
+              titleB: 'Overview',
+              subtag: '',
+              infoTitle: COUNTRIES[802].name,
+              infoSub: snap.hint || 'Set SERVO_SAVER_CONSUMER_ID and SERVO_SAVER_PATH on the server, or check the API response.',
+              infoLines: [['Status', 'No prices parsed', '-']],
+            });
+            destroyRightChart();
+            return;
+          }
+          const subBits = [snap.stationCount ? `≥ ${snap.stationCount} sites` : 'lowest in response', snap.asOf].filter(
+            (x) => x != null && x !== '',
+          );
+          const row0 = { __label: 'VIC' };
+          const chartKeys = [];
+          for (const f of vf) {
+            if (mins[f.key] == null) continue;
+            row0[f.key] = mins[f.key];
+            chartKeys.push({ key: f.key, label: f.label });
+          }
+          const sliceRows = [row0, { ...row0, __label: ' ' }];
+          const labels = ['VIC', ' '];
+          const datasets = buildChartSeries(sliceRows, chartKeys, labels);
+          setRightPanel({
+            kicker: 'Victoria (Servo Saver)',
+            titleA: COUNTRIES[802].name,
+            titleB: 'Overview',
+            subtag: legendHtml(datasets),
+            infoTitle: COUNTRIES[802].name,
+            infoSub: subBits.length ? subBits.join(' · ') : 'AUD/L',
+            infoLines: vf
+              .filter((f) => mins[f.key] != null)
+              .map((f) => [f.label, fmtTerminalPerL('AUD', mins[f.key], 2), '']),
+          });
+          renderRightChart({ labels, datasets, countryId: 802, animate: true });
+        } catch (e) {
+          const msg =
+            e && e.body && (e.body.error || (typeof e.body === 'string' && e.body))
+              ? (e.body.error || e.body)
+              : (e && e.message) || 'Request failed';
+          setRightPanel({
+            kicker: 'Victoria (Servo Saver)',
+            titleA: COUNTRIES[802] && COUNTRIES[802].name,
+            titleB: 'Overview',
+            subtag: '',
+            infoTitle: COUNTRIES[802] && COUNTRIES[802].name,
+            infoSub: 'Could not load live feed',
+            infoLines: [['Error', String(msg).slice(0, 200), '-']],
+          });
+          destroyRightChart();
+        }
+        return;
+      }
     }
 
     function applyTerminalLeftOverview(ov, oilEl, metricsEl) {
@@ -1588,6 +1660,9 @@
       rows.push({ id: 96, label: `${COUNTRIES[96].name} - National` });
       rows.push({ id: 764, label: `${COUNTRIES[764].name} - National` });
       rows.push({ id: 608, label: `${COUNTRIES[608].name} - National` });
+      if (COUNTRIES[802]) {
+        rows.push({ id: 802, label: `${COUNTRIES[802].name} - state snapshot` });
+      }
       let vnRowsT = [];
       try {
         vnRowsT = await ensureSheetRows(VN_SHEET_URL);

@@ -25,6 +25,9 @@ async function buildSearchRegionsList() {
   rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
   rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
   rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
+  if (COUNTRIES[802]) {
+    rows.push({ countryId: 802, label: `${COUNTRIES[802].name} - state snapshot` });
+  }
   let vnRows = [];
   try {
     vnRows = await ensureSheetRows(VN_SHEET_URL);
@@ -337,6 +340,7 @@ const DASHBOARD_COUNTRY_FLAG_ISO2 = {
   116: 'kh',
   418: 'la',
   104: 'mm',
+  802: 'au',
 };
 
 function dashboardFlagIso2ForCountryId(countryId) {
@@ -1195,6 +1199,7 @@ function dashboardPriceMetaForRow(row) {
   if (cid === 104) return { key: 'ron92', sym: 'MMK', dec: 0 };
   if (cid === 704) return { key: 'ron95_v', sym: 'VND', dec: 0 };
   if (cid === 418) return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
+  if (cid === 802) return { key: 'p95', sym: 'AUD', dec: 2 };
   return { key: 'ron95', sym: 'MYR', dec: 2 };
 }
 
@@ -1211,6 +1216,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (cid === 96) return { key: 'vpower_diesel', sym: 'BND', dec: 2 };
     if (cid === 360) return { key: 'pertamina_dex', sym: 'IDR', dec: 0 };
     if (cid === 104) return { key: 'premium_diesel', sym: 'MMK', dec: 0 };
+    if (cid === 802) return { key: 'diesel_premium', sym: 'AUD', dec: 2 };
     return { key: '__none__', sym: 'USD', dec: 2 };
   }
 
@@ -1282,6 +1288,13 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'entry') return { key: 'gasoline_91', sym: 'LAK', dec: 0 };
     return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
   }
+  if (cid === 802) {
+    if (p === 'diesel') return { key: 'diesel', sym: 'AUD', dec: 2 };
+    if (p === 'entry') return { key: 'ulp', sym: 'AUD', dec: 2 };
+    if (p === 'mid') return { key: 'p95', sym: 'AUD', dec: 2 };
+    if (p === 'premium') return { key: 'p98', sym: 'AUD', dec: 2 };
+    return { key: 'p95', sym: 'AUD', dec: 2 };
+  }
   return { key: 'ron95', sym: 'MYR', dec: 2 };
 }
 
@@ -1316,6 +1329,14 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   ron92_ii: 'RON92 (II)',
   gasoline_91: 'Gasoline 91',
   gasoline_95: 'Gasoline 95',
+  ulp: 'U91',
+  e10: 'E10',
+  p95: 'P95',
+  p98: 'P98',
+  diesel_premium: 'Premium diesel',
+  e85: 'E85',
+  lpg: 'LPG',
+  adblue: 'AdBlue',
 };
 
 function dashboardFuelTypeShortLabel(priceKey, countryId) {
@@ -1368,7 +1389,7 @@ function dashboardRegionOrProviderPart(row) {
     const p = row.laProvince != null && String(row.laProvince).trim();
     return p || 'National';
   }
-  if (cid === 96 || cid === 764 || cid === 608 || cid === 116) return 'National';
+  if (cid === 96 || cid === 764 || cid === 608 || cid === 116 || cid === 802) return 'National';
   return 'National';
 }
 

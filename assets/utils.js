@@ -1056,8 +1056,10 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     ['myanmar', 'MMK'],
     ['cambodia', 'KHR'],
     ['laos', 'LAK'],
+    ['victoria', 'AUD'],
+    ['australia', 'AUD'],
   ]);
-  const CCY_CODES = ['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND'];
+  const CCY_CODES = ['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD'];
 
   function normName(s) {
     return normalizeSheetString(s).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1077,6 +1079,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     if (nk.endsWith('myanmar')) return 'MMK';
     if (nk.endsWith('cambodia')) return 'KHR';
     if (nk.endsWith('laos')) return 'LAK';
+    if (nk === 'au' || nk.endsWith('australia') || nk === 'victoria' || nk.endsWith('victoriaau')) {
+      return 'AUD';
+    }
     return null;
   }
   function rateFromRow(r) {
@@ -1209,4 +1214,317 @@ async function ensureSheetRows(url) {
 
   _sheetCache.set(url, { rows, t: now });
   return rows;
+}
+
+// ── Victoria (Servo Saver) snapshot ───────────────────────────────────────────
+
+let _vicServoCache = { t: 0, data: null };
+const VIC_SERVO_CACHE_TTL_MS = 30 * 1000;
+
+/**
+ * Heuristic: API may return AUD/L (1.x) or c/L (50–300).
+ * @param {number} n
+ * @returns {number|null}
+ */
+function audPerLFromRaw(n) {
+  const x = typeof n === 'number' ? n : parseFloat(String(n).replace(/,/g, ''));
+  if (!Number.isFinite(x) || x <= 0) return null;
+  if (x >= 40 && x < 500) return x / 100;
+  if (x < 35) return x;
+  if (x >= 500) return null;
+  return x / 100;
+}
+
+/**
+ * Map free-text or API fuel labels to `VIC_FUELS` keys in config.
+ * @param {string} s
+ * @returns {string|null}
+ */
+function mapVicFuelNameToKey(s) {
+  const t = String(s || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!t) return null;
+  if (/\blpg\b|liquefied petroleum/.test(t)) return 'lpg';
+  if (/\bad\s*blue|adblue|\bdef\b|diesel exhaust|aqueous urea/i.test(t)) return 'adblue';
+  if (/\b(ultimate|speedway\s*)?98|ron\s*98|p98|e\s*98|premium\s*98|ultra\s*98\b/.test(t) && !/\b95\b/.test(t))
+    return 'p98';
+  if (/\b(95|e\s*95|p95|ron\s*95|premium(\s*unleaded)?\s*95)\b/.test(t) && !/\b98\b/.test(t)) return 'p95';
+  if (/\b(e\s*10|e10|ulp|u91|unleaded\s*91|91\s*ron|regular|standard\s*unleaded|standard)\b/.test(t))
+    return 'ulp';
+  if (/\b(85|e\s*85)\b/.test(t)) return 'e85';
+  if (/\bdiesel\b/.test(t) && /premium|ultimate|ultimate\s*diesel|v\s*power/i.test(t) && !/adblue|blue/i.test(t))
+    return 'diesel_premium';
+  if (/\bdiesel\b/.test(t) && !/adblue|blue|exhaust/i.test(t)) return 'diesel';
+  return null;
+}
+
+/**
+ * Infer VIC key from a plain object key (camelCase or snake) and value.
+ * @param {string} k
+ * @param {*} v
+ * @returns {string|null}
+ */
+function mapVicFuelObjectKeyToPriceKey(k, v) {
+  if (v != null && typeof v === 'object') return null;
+  const n = audPerLFromRaw(v);
+  if (n == null) return null;
+  const l = String(k).toLowerCase();
+  if (/unleaded|ulp|e10|ron91|ron\s*91|u91|gasoline_91|petrol_91/.test(l) && !/95|98|premium\s*9[58]/.test(l))
+    return 'ulp';
+  if (/p95|ron95|ron_95|premium_95|unleaded_95|95/.test(l) && !/98|92/.test(l)) return 'p95';
+  if (/p98|ron98|ron_98|premium_98|98/.test(l)) return 'p98';
+  if (/diesel|gas.?oil|d\.\s*oil/.test(l) && /premium|ultimate|vpower|v\s*-?power|hi\s*ft/i.test(l))
+    return 'diesel_premium';
+  if (/diesel|distillate|gasoil/.test(l) && !/adblue|blue|exhaust|water/i.test(l)) return 'diesel';
+  if (/e85|flex|ethanol\s*85/.test(l)) return 'e85';
+  if (/lpg|autogas|propane/.test(l)) return 'lpg';
+  if (/adblue|ad\s*blue|urea|def\b/.test(l)) return 'adblue';
+  return null;
+}
+
+/**
+ * Map Fair Fuel Open Data `fuelType` codes (see API doc §7.7) to `VIC_FUELS` keys.
+ * @param {string} code
+ * @returns {string|null}
+ */
+function mapFairFuelOpenDataTypeCodeToVicKey(code) {
+  const c = String(code || '').toUpperCase().trim();
+  const m = {
+    U91: 'ulp',
+    E10: 'e10',
+    P95: 'p95',
+    P98: 'p98',
+    DSL: 'diesel',
+    PDSL: 'diesel_premium',
+    E85: 'e85',
+    B20: 'diesel',
+    LPG: 'lpg',
+    LNG: 'lpg',
+    CNG: 'lpg',
+  };
+  return m[c] || null;
+}
+
+/**
+ * Extract minimum AUD/L from API JSON (Fair Fuel Open Data `fuelPriceDetails`, or legacy heuristics).
+ * @param {*} json
+ * @returns {{ mins: Record<string, number>, stationCount: number, asOf: string, hint?: string }}
+ */
+function extractVicMinPricesFromServoJson(json) {
+  const mins = Object.create(null);
+
+  if (json && Array.isArray(json.fuelPriceDetails) && json.fuelPriceDetails.length) {
+    let nAvail = 0;
+    for (const row of json.fuelPriceDetails) {
+      const prices = row.fuelPrices;
+      if (!Array.isArray(prices)) continue;
+      for (const fp of prices) {
+        if (fp == null) continue;
+        if (fp.isAvailable === false) continue;
+        const vkey = mapFairFuelOpenDataTypeCodeToVicKey(fp.fuelType);
+        if (!vkey) continue;
+        const cpl = fp.price;
+        const aud = audPerLFromRaw(cpl);
+        if (aud == null) continue;
+        nAvail += 1;
+        if (mins[vkey] == null || aud < mins[vkey]) mins[vkey] = aud;
+      }
+    }
+    const asOf = json.asAt || json.asOf || json.lastUpdated || '';
+    if (nAvail) {
+      return {
+        mins,
+        stationCount: json.fuelPriceDetails.length,
+        asOf: String(asOf || ''),
+        hint: undefined,
+      };
+    }
+  }
+
+  const consider = (key, rawPrice) => {
+    const k = mapVicFuelNameToKey(key) || mapVicFuelObjectKeyToPriceKey(key, rawPrice);
+    if (!k) return;
+    const p = audPerLFromRaw(rawPrice);
+    if (p == null) return;
+    if (mins[k] == null || p < mins[k]) mins[k] = p;
+  };
+
+  const stationTally = { n: 0, seen: new Set() };
+  const rememberStation = (id) => {
+    if (id == null) return;
+    const s = String(id);
+    if (stationTally.seen.has(s)) return;
+    stationTally.seen.add(s);
+    stationTally.n += 1;
+  };
+
+  function visitFuelEntry(typeField, priceField) {
+    const t = typeField;
+    const p = priceField;
+    if (t == null) return;
+    if (p == null) return;
+    if (typeof t === 'object' && t != null) {
+      consider(t.name || t.label || t.fuelName || t.type || t, p);
+    } else {
+      consider(t, p);
+    }
+  }
+
+  function visitRecord(o, depth) {
+    if (depth > 10 || o == null) return;
+    if (Array.isArray(o)) {
+      for (const it of o) visitRecord(it, depth + 1);
+      return;
+    }
+    if (typeof o !== 'object') return;
+
+    if (o.siteId != null) rememberStation(o.siteId);
+    if (o.stationId != null) rememberStation(o.stationId);
+    if (o.id != null && (o.name != null || o.brandName != null || o.address)) rememberStation(o.id);
+
+    for (const [k, v] of Object.entries(o)) {
+      const keyL = k.toLowerCase();
+      if (
+        (keyL.includes('price') && !keyL.includes('cap')) ||
+        /amount|unitprice|perlitre|per_litre|dollarsper|aud/i.test(k)
+      ) {
+        if (v != null && (typeof v === 'number' || (typeof v === 'string' && asNum(v) != null))) {
+          consider(k, v);
+        }
+        const mapped = mapVicFuelObjectKeyToPriceKey(k, v);
+          if (mapped) {
+            const p2 = audPerLFromRaw(v);
+            if (p2 != null) {
+              if (mins[mapped] == null || p2 < mins[mapped]) mins[mapped] = p2;
+            }
+          }
+      }
+    }
+
+    for (const arrKey of [
+      'fuels',
+      'fuelPrices',
+      'fuel_prices',
+      'prices',
+      'productPrices',
+      'products',
+      'availableFuels',
+    ]) {
+      const a = o[arrKey];
+      if (!Array.isArray(a)) continue;
+      for (const row of a) {
+        if (row == null) continue;
+        if (typeof row === 'object') {
+          const price =
+            row.price ??
+            row.unitPrice ??
+            row.amount ??
+            row.value ??
+            row.cpl ??
+            row.centsPerLitre ??
+            row.centsPerLiter;
+          const typ =
+            row.fuelName ??
+            row.fuelType ??
+            row.fuelTypeName ??
+            row.fuelTypeDescription ??
+            row.name ??
+            row.type ??
+            row.label ??
+            row.code ??
+            row.grade;
+          if (typ != null || price != null) visitFuelEntry(typ, price);
+        }
+      }
+    }
+    for (const sub of Object.values(o)) {
+      if (Array.isArray(sub) && sub.length && typeof sub[0] === 'object') {
+        for (const it of sub) visitRecord(it, depth + 1);
+      } else if (sub && typeof sub === 'object' && !Array.isArray(sub)) {
+        visitRecord(sub, depth + 1);
+      }
+    }
+  }
+
+  for (const top of [
+    json,
+    json && json.data,
+    json && json.result,
+    json && json.items,
+  ]) {
+    if (Array.isArray(top) && top.length) {
+      for (const row of top) visitRecord(row, 0);
+      break;
+    }
+  }
+  for (const k of [
+    'stations',
+    'fuelStations',
+    'data',
+    'results',
+    'items',
+    'records',
+    'value',
+  ]) {
+    if (json && k in json && Array.isArray(json[k]) && json[k].length) {
+      for (const row of json[k]) visitRecord(row, 0);
+    }
+  }
+  if (!Object.keys(mins).length) {
+    visitRecord(json, 0);
+  }
+
+  let asOf = '';
+  try {
+    asOf = String(
+      (json && (json.asAt || json.asat || json.asOf || json.lastUpdated || json.published)) || '',
+    );
+  } catch (_) {}
+
+  const hint =
+    !Object.keys(mins).length && !stationTally.n
+      ? 'Could not read fuel prices from the API JSON — check SERVO_SAVER_PATH and compare with the PDF schema.'
+      : !Object.keys(mins).length
+        ? 'Received JSON but no pump prices were parsed; the response shape may differ from what the app expects. Compare with the PDF.'
+        : undefined;
+
+  return { mins, stationCount: stationTally.n, asOf, hint };
+}
+
+/**
+ * Cached `GET /api/servo-saver` (same-origin proxy on Vercel) + parse.
+ * @returns {Promise<{ json: object, mins: object, stationCount: number, asOf: string, hint?: string, fetchedAt: number }>}
+ */
+async function ensureVicServoSnapshot() {
+  if (_vicServoCache.data && Date.now() - _vicServoCache.t < VIC_SERVO_CACHE_TTL_MS) {
+    return _vicServoCache.data;
+  }
+  const res = await fetch('/api/servo-saver', { cache: 'no-store' });
+  const text = await res.text();
+  let json;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch (_) {
+    const e = new Error('Invalid JSON from Servo Saver proxy');
+    e.status = res.status;
+    e.body = String(text).slice(0, 400);
+    throw e;
+  }
+  if (!res.ok) {
+    const e = new Error('Servo Saver proxy request failed');
+    e.status = res.status;
+    e.body = json;
+    throw e;
+  }
+  const toParse = Array.isArray(json) ? json : json;
+  const parsed = extractVicMinPricesFromServoJson(toParse);
+  const out = {
+    json: Array.isArray(json) ? { items: json } : json || {},
+    ...parsed,
+    fetchedAt: Date.now(),
+  };
+  _vicServoCache = { t: Date.now(), data: out };
+  return out;
 }
