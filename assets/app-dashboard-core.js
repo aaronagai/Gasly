@@ -1351,6 +1351,12 @@ function dashboardFuelTypeShortLabel(priceKey, countryId) {
     };
     if (Object.prototype.hasOwnProperty.call(bn, k)) return bn[k];
   }
+  if (cid === 802 && typeof VIC_FUELS !== 'undefined') {
+    for (let i = 0; i < VIC_FUELS.length; i++) {
+      const f = VIC_FUELS[i];
+      if (f && f.key === k) return f.label;
+    }
+  }
   const lab = DASHBOARD_FUEL_TYPE_LABELS[k];
   if (lab) return lab;
   return k ? k.replace(/_/g, ' ') : '—';
