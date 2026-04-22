@@ -85,13 +85,28 @@ module.exports = async function handler(req, res) {
     });
 
     const text = await ures.text();
-    res.status(ures.status);
-    const ct = ures.headers.get('content-type') || 'application/json; charset=utf-8';
-    res.setHeader('Content-Type', ct);
+    res.setHeader('X-PetrolPrice-Proxy', 'fair-fuel');
     if (ures.status === 204) {
+      res.status(204);
       res.end();
       return;
     }
+    if (ures.status === 404 && !String(text).trim()) {
+      res.status(404);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(
+        JSON.stringify({
+          error:
+            'Fair Fuel API returned 404 (no route). In Vercel, set SERVO_SAVER_PATH to /open-data/v1/fuel/prices or remove it to use the default. Only set SERVO_SAVER_BASE to the origin, e.g. https://api.fuel.service.vic.gov.au',
+          resolvedUrl: upstream,
+          source: 'petrolprice-proxy',
+        }),
+      );
+      return;
+    }
+    res.status(ures.status);
+    const ct = ures.headers.get('content-type') || 'application/json; charset=utf-8';
+    res.setHeader('Content-Type', ct);
     res.end(text);
   } catch (err) {
     res.status(502);

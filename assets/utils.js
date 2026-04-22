@@ -1519,6 +1519,7 @@ async function ensureVicServoSnapshot() {
     if (json && typeof json === 'object') {
       if (json.error) parts.push(String(json.error));
       if (json.message && String(json.message) !== String(json.error)) parts.push(String(json.message));
+      if (json.resolvedUrl) parts.push(`URL: ${json.resolvedUrl}`);
     } else if (text) {
       parts.push(String(text).replace(/\s+/g, ' ').slice(0, 180));
     }
