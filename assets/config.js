@@ -202,14 +202,14 @@ const LA_FUELS = [
 
 /** Victoria — `extractVicMinPricesFromServoJson` in utils.js maps API labels to these keys. */
 const VIC_FUELS = [
-  { key: 'ulp', label: 'U91' },
-  { key: 'e10', label: 'E10' },
-  { key: 'p95', label: 'P95' },
-  { key: 'p98', label: 'P98' },
+  { key: 'ulp', label: 'Regular Unleaded 91' },
+  { key: 'e10', label: 'Regular E10' },
+  { key: 'p95', label: 'Premium Unleaded 95' },
+  { key: 'p98', label: 'Premium Unleaded 98' },
   { key: 'diesel', label: 'Diesel' },
-  { key: 'diesel_premium', label: 'Premium diesel' },
+  { key: 'diesel_premium', label: 'Premium Diesel' },
   { key: 'e85', label: 'E85' },
-  { key: 'lpg', label: 'LPG' },
+  { key: 'lpg', label: 'LPG (Autogas)' },
   { key: 'adblue', label: 'AdBlue' },
 ];
 

@@ -1329,13 +1329,12 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   ron92_ii: 'RON92 (II)',
   gasoline_91: 'Gasoline 91',
   gasoline_95: 'Gasoline 95',
-  ulp: 'U91',
-  e10: 'E10',
-  p95: 'P95',
-  p98: 'P98',
-  diesel_premium: 'Premium diesel',
-  e85: 'E85',
-  lpg: 'LPG',
+  ulp: 'Regular Unleaded 91',
+  e10: 'Regular E10',
+  p95: 'Premium Unleaded 95',
+  p98: 'Premium Unleaded 98',
+  diesel_premium: 'Premium Diesel',
+  lpg: 'LPG (Autogas)',
   adblue: 'AdBlue',
 };
 
@@ -1389,7 +1388,9 @@ function dashboardRegionOrProviderPart(row) {
     const p = row.laProvince != null && String(row.laProvince).trim();
     return p || 'National';
   }
-  if (cid === 96 || cid === 764 || cid === 608 || cid === 116 || cid === 802) return 'National';
+  /* Victoria: single-state live feed; not a “national” sub-region. */
+  if (cid === 802) return '';
+  if (cid === 96 || cid === 764 || cid === 608 || cid === 116) return 'National';
   return 'National';
 }
 
@@ -1399,6 +1400,9 @@ function dashboardRowDisplayLabel(row, fuelPreset) {
   const place = dashboardRegionOrProviderPart(row);
   const meta = dashboardFuelMetaForRow(row, fuelPreset);
   const ft = dashboardFuelTypeShortLabel(meta.key, row.countryId);
+  if (+row.countryId === 802) {
+    return `${country} (${ft})`;
+  }
   return `${country} - ${place} (${ft})`;
 }
 
