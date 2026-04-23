@@ -581,19 +581,26 @@ function wireAppDashboardColumnHeaders() {
   });
 }
 
+/**
+ * Country ids that act as UI groups in the dashboard filter (not real data rows).
+ * Selecting a group id should match any row whose `countryId` is in the associated list.
+ * 36 (Australia) groups NSW (801) + Victoria (802).
+ */
+const DASHBOARD_COUNTRY_GROUPS = Object.freeze({ 36: Object.freeze([801, 802]) });
+
+function isDashboardSelectableCountryId(id) {
+  if (!Number.isFinite(id)) return false;
+  if (typeof COUNTRIES === 'undefined' || !COUNTRIES[id]) return false;
+  if (DASHBOARD_COUNTRY_GROUPS[id]) return true;
+  return !COUNTRIES[id].searchGroupOnly;
+}
+
 function readStoredDashboardCountryId() {
   try {
     const s = localStorage.getItem('app_dashboard_country');
     if (s == null || s === '') return null;
     const id = +s;
-    if (
-      Number.isFinite(id) &&
-      typeof COUNTRIES !== 'undefined' &&
-      COUNTRIES[id] &&
-      !COUNTRIES[id].searchGroupOnly
-    ) {
-      return id;
-    }
+    if (isDashboardSelectableCountryId(id)) return id;
   } catch (_) {}
   return null;
 }
@@ -611,14 +618,7 @@ function getDashboardCountryFilterId() {
     const v = wrap.getAttribute('data-country');
     if (v == null || String(v).trim() === '') return null;
     const id = +v;
-    if (
-      Number.isFinite(id) &&
-      typeof COUNTRIES !== 'undefined' &&
-      COUNTRIES[id] &&
-      !COUNTRIES[id].searchGroupOnly
-    ) {
-      return id;
-    }
+    if (isDashboardSelectableCountryId(id)) return id;
   }
   return readStoredDashboardCountryId();
 }
@@ -657,7 +657,7 @@ function wireAppDashboardCountryFilter() {
     if (typeof COUNTRIES !== 'undefined') {
       Object.keys(COUNTRIES)
         .map((k) => +k)
-        .filter((id) => Number.isFinite(id) && COUNTRIES[id] && !COUNTRIES[id].searchGroupOnly)
+        .filter((id) => isDashboardSelectableCountryId(id))
         .sort((a, b) => String(COUNTRIES[a].name).localeCompare(String(COUNTRIES[b].name)))
         .forEach(function (id) {
           const btn = document.createElement('button');
@@ -677,11 +677,7 @@ function wireAppDashboardCountryFilter() {
       countryId == null || countryId === '' || countryId === 'all'
         ? null
         : +countryId;
-    if (
-      id != null &&
-      (!Number.isFinite(id) || typeof COUNTRIES === 'undefined' || !COUNTRIES[id] || COUNTRIES[id].searchGroupOnly)
-    )
-      return;
+    if (id != null && !isDashboardSelectableCountryId(id)) return;
     if (id == null) {
       wrap.setAttribute('data-country', '');
     } else {
@@ -1107,7 +1103,13 @@ function renderAppDashboardTbody() {
   let list = fullList;
   const countryFilterId = getDashboardCountryFilterId();
   if (countryFilterId != null) {
-    list = list.filter((r) => +r.countryId === +countryFilterId);
+    const groupIds = DASHBOARD_COUNTRY_GROUPS[countryFilterId];
+    if (groupIds) {
+      const allow = new Set(groupIds.map((n) => +n));
+      list = list.filter((r) => allow.has(+r.countryId));
+    } else {
+      list = list.filter((r) => +r.countryId === +countryFilterId);
+    }
   }
   const period = getDashboardPeriodKey();
   tbody.innerHTML = '';
