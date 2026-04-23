@@ -50,6 +50,8 @@ const LA_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq
 const MM_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Myanmar`;
 const VN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Vietnam`;
 const ID_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Indonesia`;
+/** Google Sheet tab name is `Hong Kong` (per-row `date` + `provider` + price columns; same provider pattern as Singapore). */
+const HK_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('Hong Kong')}`;
 
 /**
  * FX for app highlight USD mode. Tab **Currency**: row 1 = headers; one row per ISO code.
@@ -99,8 +101,12 @@ const SEA = new Set([96, 104, 116, 360, 418, 458, 608, 626, 702, 704, 764]);
 
 /** Live countries — sheet- or API-backed price feeds. */
 const COUNTRIES = {
+  /** Search / UI parent only: NSW (801) and Victoria (802) show under this group; not a map or data target. */
+  36: { name: 'Australia', searchGroupOnly: true },
   458: { name: 'Malaysia' },
   702: { name: 'Singapore' },
+  /** Hong Kong — Google Sheet tab `Hong Kong` (HKD/L, per `provider` rows). ISO numeric 344. */
+  344: { name: 'Hong Kong' },
   96:  { name: 'Brunei' },
   360: { name: 'Indonesia' },
   764: { name: 'Thailand' },
@@ -120,7 +126,7 @@ const COUNTRIES = {
  * Overwritten at runtime from the **Currency** sheet (`country_name` + `fx_rate`; see `mergeCurrencySheetRowsIntoUsdRates`).
  * Sheet `country_name` slugs → ISO: malaysia MYR, singapore SGD, brunei BND, indonesia IDR, thailand THB,
  * philippines PHP, vietnam VND, myanmar MMK, cambodia KHR, laos LAK, victoria / australia AUD.
- * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK, 801 AUD, 802 AUD.
+ * App uses those codes per country: 458 MYR, 702 SGD, 344 HKD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK, 801 AUD, 802 AUD.
  *
  * **Spreadsheet format:** Put **plain numbers** in `fx_rate` (optional `RM` / `$` prefix is stripped).
  * The value must be **USD per 1 unit of local currency** (e.g. ~0.25 for MYR, ~0.00006 for IDR). If you paste
@@ -131,6 +137,8 @@ const COUNTRIES = {
 const USD_RATES = {
   MYR: 0.2527648,
   SGD: 0.7870299,
+  /** Hong Kong: USD per 1 HKD (refresh via Currency sheet). */
+  HKD: 0.128,
   BND: 0.7862731,
   IDR: 0.0000582988399,
   THB: 0.03122073,
@@ -203,6 +211,13 @@ const LA_FUELS = [
 ];
 
 /** Victoria & NSW — station APIs in utils / `api/*` map free-text or FuelCode to these keys. */
+/** Hong Kong sheet columns (`date`, `provider`, …). */
+const HK_FUELS = [
+  { key: 'standard_petrol', label: 'Standard petrol' },
+  { key: 'premium_petrol', label: 'Premium petrol' },
+  { key: 'diesel', label: 'Diesel' },
+];
+
 const VIC_FUELS = [
   { key: 'ulp', label: 'Regular Unleaded 91' },
   { key: 'e10', label: 'Regular E10' },
@@ -254,6 +269,16 @@ const COUNTRY_OVERVIEW_FALLBACK = {
       [['Refinery Intake', '~1.22M bpd'], null],
       [['Export Value', 'USD 13.07bil'], ['Import Value', 'USD 32.77bil']],
       [['Status', 'Net Importer'], null],
+    ],
+  },
+  344: {
+    oilContext:
+      'Dense city economy with no domestic crude production; all transport fuels are imported, and retail prices follow international benchmarks with local market competition among major brands.',
+    metricRows: [
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refining', 'Import only'], null],
+      [['Data', 'Sheet (HK)'], null],
+      [['Status', 'Open market'], null],
     ],
   },
   702: {

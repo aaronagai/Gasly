@@ -228,6 +228,21 @@ function resolveSingaporeProviderSelection(rows) {
   return hit || list[0];
 }
 
+/** Hong Kong sheet uses the same `provider` column pattern as Singapore; storage key is separate. */
+function resolveHongKongProviderSelection(rows) {
+  const list = sortedSingaporeProviders(rows);
+  if (!list.length) return '';
+  let stored = '';
+  try {
+    stored = typeof localStorage !== 'undefined' ? (localStorage.getItem('terminal_hk_provider') || '') : '';
+  } catch (_) {
+    stored = '';
+  }
+  const w = normalizeSheetString(stored);
+  const hit = list.find((p) => normalizeSheetString(p) === w);
+  return hit || list[0];
+}
+
 /**
  * Legacy: one row per date with mean prices across providers (when the sheet has no provider column).
  */
@@ -686,7 +701,7 @@ function resolveOverviewCountryId(row) {
   const want = normalizeSheetString(nameRaw).toLowerCase();
   for (const [idStr, meta] of Object.entries(COUNTRIES)) {
     const id = +idStr;
-    if (!Number.isFinite(id) || !meta?.name) continue;
+    if (!Number.isFinite(id) || !meta?.name || meta.searchGroupOnly) continue;
     if (normalizeSheetString(meta.name).toLowerCase() === want) return id;
   }
   return null;
@@ -1059,8 +1074,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     ['victoria', 'AUD'],
     ['australia', 'AUD'],
     ['newsouthwales', 'AUD'],
+    ['hongkong', 'HKD'],
   ]);
-  const CCY_CODES = ['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD'];
+  const CCY_CODES = ['MYR', 'SGD', 'HKD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD'];
 
   function normName(s) {
     return normalizeSheetString(s).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1085,6 +1101,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     }
     if (nk === 'nsw' || nk.includes('newsouthwales')) {
       return 'AUD';
+    }
+    if (nk === 'hk' || nk.includes('hongkong')) {
+      return 'HKD';
     }
     return null;
   }
@@ -1204,7 +1223,7 @@ async function ensureSheetRows(url) {
       rows = parseCSV(text, { headerRowIndex: headerIdx });
     }
 
-    if (url.includes('sheet=Singapore')) {
+    if (url.includes('sheet=Singapore') || url.includes('Hong%20Kong')) {
       const norm = normalizeSingaporeSheetRows(rows);
       rows = sortedSingaporeProviders(norm).length ? norm : aggregateSingaporeProviderRows(rows);
     }

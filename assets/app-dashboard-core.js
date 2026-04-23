@@ -26,10 +26,18 @@ async function buildSearchRegionsList() {
   rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
   rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
   if (COUNTRIES[801]) {
-    rows.push({ countryId: 801, label: `${COUNTRIES[801].name} - state snapshot` });
+    rows.push({
+      countryId: 801,
+      searchGroupId: 36,
+      label: `Australia - ${COUNTRIES[801].name}`,
+    });
   }
   if (COUNTRIES[802]) {
-    rows.push({ countryId: 802, label: `${COUNTRIES[802].name} - state snapshot` });
+    rows.push({
+      countryId: 802,
+      searchGroupId: 36,
+      label: `Australia - ${COUNTRIES[802].name}`,
+    });
   }
   let vnRows = [];
   try {
@@ -82,6 +90,21 @@ async function buildSearchRegionsList() {
     });
   } else {
     rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
+  }
+
+  let hkRows = [];
+  try {
+    hkRows = await ensureSheetRows(HK_SHEET_URL);
+  } catch (_) {
+    hkRows = [];
+  }
+  const hkProvs = sortedSingaporeProviders(hkRows);
+  if (hkProvs.length) {
+    hkProvs.forEach((p) => {
+      rows.push({ countryId: 344, label: `${COUNTRIES[344].name} - ${p}`, hkProvider: p });
+    });
+  } else if (COUNTRIES[344]) {
+    rows.push({ countryId: 344, label: `${COUNTRIES[344].name} - National` });
   }
 
   Object.keys(LA_PROVINCE_LONLAT)
@@ -345,6 +368,7 @@ const DASHBOARD_COUNTRY_FLAG_ISO2 = {
   104: 'mm',
   801: 'au',
   802: 'au',
+  344: 'hk',
 };
 
 function dashboardFlagIso2ForCountryId(countryId) {
@@ -562,7 +586,14 @@ function readStoredDashboardCountryId() {
     const s = localStorage.getItem('app_dashboard_country');
     if (s == null || s === '') return null;
     const id = +s;
-    if (Number.isFinite(id) && typeof COUNTRIES !== 'undefined' && COUNTRIES[id]) return id;
+    if (
+      Number.isFinite(id) &&
+      typeof COUNTRIES !== 'undefined' &&
+      COUNTRIES[id] &&
+      !COUNTRIES[id].searchGroupOnly
+    ) {
+      return id;
+    }
   } catch (_) {}
   return null;
 }
@@ -580,7 +611,14 @@ function getDashboardCountryFilterId() {
     const v = wrap.getAttribute('data-country');
     if (v == null || String(v).trim() === '') return null;
     const id = +v;
-    if (Number.isFinite(id) && typeof COUNTRIES !== 'undefined' && COUNTRIES[id]) return id;
+    if (
+      Number.isFinite(id) &&
+      typeof COUNTRIES !== 'undefined' &&
+      COUNTRIES[id] &&
+      !COUNTRIES[id].searchGroupOnly
+    ) {
+      return id;
+    }
   }
   return readStoredDashboardCountryId();
 }
@@ -619,7 +657,7 @@ function wireAppDashboardCountryFilter() {
     if (typeof COUNTRIES !== 'undefined') {
       Object.keys(COUNTRIES)
         .map((k) => +k)
-        .filter((id) => Number.isFinite(id) && COUNTRIES[id])
+        .filter((id) => Number.isFinite(id) && COUNTRIES[id] && !COUNTRIES[id].searchGroupOnly)
         .sort((a, b) => String(COUNTRIES[a].name).localeCompare(String(COUNTRIES[b].name)))
         .forEach(function (id) {
           const btn = document.createElement('button');
@@ -641,7 +679,7 @@ function wireAppDashboardCountryFilter() {
         : +countryId;
     if (
       id != null &&
-      (!Number.isFinite(id) || typeof COUNTRIES === 'undefined' || !COUNTRIES[id])
+      (!Number.isFinite(id) || typeof COUNTRIES === 'undefined' || !COUNTRIES[id] || COUNTRIES[id].searchGroupOnly)
     )
       return;
     if (id == null) {
@@ -1102,7 +1140,7 @@ function renderAppDashboardTbody() {
     enriched = enriched.filter((e) => {
       const r = e.row;
       const regionTag =
-        r.myRegion || r.sgProvider || r.idCity || r.laProvince || r.mmRegion || r.vnArea || '';
+        r.myRegion || r.sgProvider || r.hkProvider || r.idCity || r.laProvince || r.mmRegion || r.vnArea || '';
       const key = `${r.countryId}|${regionTag}|${e.priceKey}`;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -1195,6 +1233,7 @@ function dashboardPriceMetaForRow(row) {
       : { key: 'ron95', sym: 'MYR', dec: 2 };
   }
   if (cid === 702) return { key: 'ron95', sym: 'SGD', dec: 2 };
+  if (cid === 344) return { key: 'premium_petrol', sym: 'HKD', dec: 2 };
   if (cid === 96) return { key: 'gasoline', sym: 'BND', dec: 2 };
   if (cid === 764) return { key: 'gasohol_95', sym: 'THB', dec: 2 };
   if (cid === 608) return { key: 'ron95', sym: 'PHP', dec: 2 };
@@ -1223,6 +1262,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (cid === 104) return { key: 'premium_diesel', sym: 'MMK', dec: 0 };
     if (cid === 801) return { key: 'diesel_premium', sym: 'AUD', dec: 2 };
     if (cid === 802) return { key: 'diesel_premium', sym: 'AUD', dec: 2 };
+    if (cid === 344) return { key: 'diesel', sym: 'HKD', dec: 2 };
     return { key: '__none__', sym: 'USD', dec: 2 };
   }
 
@@ -1239,6 +1279,12 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'premium') return { key: 'ron98', sym: 'SGD', dec: 2 };
     if (p === 'entry') return { key: 'ron92', sym: 'SGD', dec: 2 };
     return { key: 'ron95', sym: 'SGD', dec: 2 };
+  }
+  if (cid === 344) {
+    if (p === 'diesel' || p === 'premium_diesel') return { key: 'diesel', sym: 'HKD', dec: 2 };
+    if (p === 'entry') return { key: 'standard_petrol', sym: 'HKD', dec: 2 };
+    if (p === 'mid' || p === 'premium') return { key: 'premium_petrol', sym: 'HKD', dec: 2 };
+    return { key: 'premium_petrol', sym: 'HKD', dec: 2 };
   }
   if (cid === 96) {
     if (p === 'diesel') return { key: 'diesel', sym: 'BND', dec: 2 };
@@ -1335,6 +1381,8 @@ var DASHBOARD_FUEL_TYPE_LABELS = {
   ron92_ii: 'RON92 (II)',
   gasoline_91: 'Gasoline 91',
   gasoline_95: 'Gasoline 95',
+  standard_petrol: 'Standard petrol',
+  premium_petrol: 'Premium petrol',
   ulp: 'Regular Unleaded 91',
   e10: 'Regular E10',
   p95: 'Premium Unleaded 95',
@@ -1379,6 +1427,10 @@ function dashboardRegionOrProviderPart(row) {
   }
   if (cid === 702) {
     const p = row.sgProvider != null && String(row.sgProvider).trim();
+    return p || 'National';
+  }
+  if (cid === 344) {
+    const p = row.hkProvider != null && String(row.hkProvider).trim();
     return p || 'National';
   }
   if (cid === 360) {
@@ -1434,6 +1486,14 @@ function dashboardFilterSeries(row, c) {
     let r = c.sgRows || [];
     if (row.sgProvider) {
       const want = normalizeSheetString(row.sgProvider);
+      r = r.filter((x) => normalizeSheetString(x.provider) === want);
+    }
+    return sortRowsByDate(r);
+  }
+  if (cid === 344) {
+    let r = c.hkRows || [];
+    if (row.hkProvider) {
+      const want = normalizeSheetString(row.hkProvider);
       r = r.filter((x) => normalizeSheetString(x.provider) === want);
     }
     return sortRowsByDate(r);
@@ -1534,6 +1594,7 @@ async function preloadDashboardCaches() {
   const [
     myRows,
     sgRows,
+    hkRows,
     bnRows,
     thRows,
     phRows,
@@ -1547,6 +1608,7 @@ async function preloadDashboardCaches() {
   ] = await Promise.all([
     ensureMalaysiaRows().catch(() => []),
     ensureSheetRows(SG_SHEET_URL).catch(() => []),
+    ensureSheetRows(HK_SHEET_URL).catch(() => []),
     ensureSheetRows(BN_SHEET_URL).catch(() => []),
     ensureSheetRows(TH_SHEET_URL).catch(() => []),
     ensureSheetRows(PH_SHEET_URL).catch(() => []),
@@ -1568,7 +1630,21 @@ async function preloadDashboardCaches() {
       })
       : Promise.resolve(null),
   ]);
-  return { myRows, sgRows, bnRows, thRows, phRows, idRows, khRows, laRows, mmRows, vnRows, vicSnapshot, nswSnapshot };
+  return {
+    myRows,
+    sgRows,
+    hkRows,
+    bnRows,
+    thRows,
+    phRows,
+    idRows,
+    khRows,
+    laRows,
+    mmRows,
+    vnRows,
+    vicSnapshot,
+    nswSnapshot,
+  };
 }
 
 async function loadAndRenderAppDashboard() {
