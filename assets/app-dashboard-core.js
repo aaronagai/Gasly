@@ -25,6 +25,9 @@ async function buildSearchRegionsList() {
   rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
   rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
   rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
+  if (COUNTRIES[801]) {
+    rows.push({ countryId: 801, label: `${COUNTRIES[801].name} - state snapshot` });
+  }
   if (COUNTRIES[802]) {
     rows.push({ countryId: 802, label: `${COUNTRIES[802].name} - state snapshot` });
   }
@@ -340,6 +343,7 @@ const DASHBOARD_COUNTRY_FLAG_ISO2 = {
   116: 'kh',
   418: 'la',
   104: 'mm',
+  801: 'au',
   802: 'au',
 };
 
@@ -1199,6 +1203,7 @@ function dashboardPriceMetaForRow(row) {
   if (cid === 104) return { key: 'ron92', sym: 'MMK', dec: 0 };
   if (cid === 704) return { key: 'ron95_v', sym: 'VND', dec: 0 };
   if (cid === 418) return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
+  if (cid === 801) return { key: 'p95', sym: 'AUD', dec: 2 };
   if (cid === 802) return { key: 'p95', sym: 'AUD', dec: 2 };
   return { key: 'ron95', sym: 'MYR', dec: 2 };
 }
@@ -1216,6 +1221,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (cid === 96) return { key: 'vpower_diesel', sym: 'BND', dec: 2 };
     if (cid === 360) return { key: 'pertamina_dex', sym: 'IDR', dec: 0 };
     if (cid === 104) return { key: 'premium_diesel', sym: 'MMK', dec: 0 };
+    if (cid === 801) return { key: 'diesel_premium', sym: 'AUD', dec: 2 };
     if (cid === 802) return { key: 'diesel_premium', sym: 'AUD', dec: 2 };
     return { key: '__none__', sym: 'USD', dec: 2 };
   }
@@ -1288,7 +1294,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'entry') return { key: 'gasoline_91', sym: 'LAK', dec: 0 };
     return { key: 'gasoline_95', sym: 'LAK', dec: 0 };
   }
-  if (cid === 802) {
+  if (cid === 801 || cid === 802) {
     if (p === 'diesel') return { key: 'diesel', sym: 'AUD', dec: 2 };
     if (p === 'entry') return { key: 'ulp', sym: 'AUD', dec: 2 };
     if (p === 'mid') return { key: 'p95', sym: 'AUD', dec: 2 };
@@ -1351,7 +1357,7 @@ function dashboardFuelTypeShortLabel(priceKey, countryId) {
     };
     if (Object.prototype.hasOwnProperty.call(bn, k)) return bn[k];
   }
-  if (cid === 802 && typeof VIC_FUELS !== 'undefined') {
+  if ((cid === 801 || cid === 802) && typeof VIC_FUELS !== 'undefined') {
     for (let i = 0; i < VIC_FUELS.length; i++) {
       const f = VIC_FUELS[i];
       if (f && f.key === k) return f.label;
@@ -1394,8 +1400,8 @@ function dashboardRegionOrProviderPart(row) {
     const p = row.laProvince != null && String(row.laProvince).trim();
     return p || 'National';
   }
-  /* Victoria: single-state live feed; not a “national” sub-region. */
-  if (cid === 802) return '';
+  /* NSW & Victoria: single-state live feed; not a “national” sub-region. */
+  if (cid === 801 || cid === 802) return '';
   if (cid === 96 || cid === 764 || cid === 608 || cid === 116) return 'National';
   return 'National';
 }
@@ -1406,7 +1412,7 @@ function dashboardRowDisplayLabel(row, fuelPreset) {
   const place = dashboardRegionOrProviderPart(row);
   const meta = dashboardFuelMetaForRow(row, fuelPreset);
   const ft = dashboardFuelTypeShortLabel(meta.key, row.countryId);
-  if (+row.countryId === 802) {
+  if (+row.countryId === 801 || +row.countryId === 802) {
     return `${country} (${ft})`;
   }
   return `${country} - ${place} (${ft})`;
@@ -1470,6 +1476,17 @@ function dashboardFilterSeries(row, c) {
     }
     return sortRowsByDate([row]);
   }
+  if (cid === 801) {
+    const snap = c.nswSnapshot;
+    if (!snap || !snap.mins) return [];
+    const t = snap.fetchedAt != null ? +snap.fetchedAt : Date.now();
+    const dateStr = new Date(t).toISOString().slice(0, 10);
+    const r = { date: dateStr };
+    for (const k of Object.keys(snap.mins)) {
+      if (Object.prototype.hasOwnProperty.call(snap.mins, k)) r[k] = snap.mins[k];
+    }
+    return sortRowsByDate([r]);
+  }
   return [];
 }
 
@@ -1526,6 +1543,7 @@ async function preloadDashboardCaches() {
     mmRows,
     vnRows,
     vicSnapshot,
+    nswSnapshot,
   ] = await Promise.all([
     ensureMalaysiaRows().catch(() => []),
     ensureSheetRows(SG_SHEET_URL).catch(() => []),
@@ -1543,8 +1561,14 @@ async function preloadDashboardCaches() {
         return null;
       })
       : Promise.resolve(null),
+    typeof ensureNswFuelSnapshot === 'function'
+      ? ensureNswFuelSnapshot().catch((err) => {
+        console.warn('Dashboard NSW (FuelCheck) snapshot:', err);
+        return null;
+      })
+      : Promise.resolve(null),
   ]);
-  return { myRows, sgRows, bnRows, thRows, phRows, idRows, khRows, laRows, mmRows, vnRows, vicSnapshot };
+  return { myRows, sgRows, bnRows, thRows, phRows, idRows, khRows, laRows, mmRows, vnRows, vicSnapshot, nswSnapshot };
 }
 
 async function loadAndRenderAppDashboard() {

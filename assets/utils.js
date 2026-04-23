@@ -1058,6 +1058,7 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     ['laos', 'LAK'],
     ['victoria', 'AUD'],
     ['australia', 'AUD'],
+    ['newsouthwales', 'AUD'],
   ]);
   const CCY_CODES = ['MYR', 'SGD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD'];
 
@@ -1080,6 +1081,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     if (nk.endsWith('cambodia')) return 'KHR';
     if (nk.endsWith('laos')) return 'LAK';
     if (nk === 'au' || nk.endsWith('australia') || nk === 'victoria' || nk.endsWith('victoriaau')) {
+      return 'AUD';
+    }
+    if (nk === 'nsw' || nk.includes('newsouthwales')) {
       return 'AUD';
     }
     return null;
@@ -1536,5 +1540,57 @@ async function ensureVicServoSnapshot() {
     fetchedAt: Date.now(),
   };
   _vicServoCache = { t: Date.now(), data: out };
+  return out;
+}
+
+// ── New South Wales (FuelCheck via api.nsw) snapshot ─────────────────────────
+
+let _nswFuelCache = { t: 0, data: null };
+const NSW_FUEL_CACHE_TTL_MS = 30 * 1000;
+
+/**
+ * Cached `GET /api/nsw-fuel` — server returns `{ ok, mins, stationCount, asOf, hint? }` (no multi‑MB dump to the client).
+ * @returns {Promise<{ mins: object, stationCount: number, asOf: string, hint?: string, fetchedAt: number }>}
+ */
+async function ensureNswFuelSnapshot() {
+  if (_nswFuelCache.data && Date.now() - _nswFuelCache.t < NSW_FUEL_CACHE_TTL_MS) {
+    return _nswFuelCache.data;
+  }
+  const res = await fetch('/api/nsw-fuel', { cache: 'no-store' });
+  const text = await res.text();
+  let json;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch (_) {
+    const e = new Error(
+      `Invalid JSON from NSW Fuel proxy (HTTP ${res.status}): ${String(text).replace(/\s+/g, ' ').slice(0, 200)}`,
+    );
+    e.status = res.status;
+    e.body = String(text).slice(0, 400);
+    throw e;
+  }
+  if (!res.ok || !json || json.ok !== true) {
+    const parts = [`HTTP ${res.status}`];
+    if (json && typeof json === 'object') {
+      if (json.error) parts.push(String(json.error));
+      if (json.message && String(json.message) !== String(json.error)) parts.push(String(json.message));
+      if (json.resolvedUrl) parts.push(`URL: ${json.resolvedUrl}`);
+    } else if (text) {
+      parts.push(String(text).replace(/\s+/g, ' ').slice(0, 180));
+    }
+    const e = new Error(`NSW Fuel: ${parts.join(' — ')}`);
+    e.status = res.status;
+    e.body = json;
+    throw e;
+  }
+  const mins = json.mins && typeof json.mins === 'object' ? json.mins : {};
+  const out = {
+    mins,
+    stationCount: +json.stationCount || 0,
+    asOf: String(json.asOf || ''),
+    hint: json.hint,
+    fetchedAt: json.fetchedAt != null ? +json.fetchedAt : Date.now(),
+  };
+  _nswFuelCache = { t: Date.now(), data: out };
   return out;
 }

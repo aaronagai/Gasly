@@ -45,12 +45,19 @@ python3 -m http.server 8080
 
 ## Deployment
 
-Deployed via **GitHub Pages** from the `main` branch root.
+The public site is deployed on **Vercel** (API routes under `api/` are serverless functions). A plain static host (e.g. **GitHub Pages**) will not run those proxies, so **Victoria (Fair Fuel)** and **New South Wales (FuelCheck / API.NSW)** need Vercel or a similar host.
 
-To deploy your own fork:
-1. Fork this repo
-2. Go to **Settings → Pages → Source**: `main` branch, `/ (root)`
-3. Your live URL will be `https://<your-username>.github.io/PetrolPrice.xyz`
+### Vercel environment variables (no secrets in the repo)
+
+| Variable | Used for |
+|----------|----------|
+| `SERVO_SAVER_CONSUMER_ID` | Victoria Fair Fuel API (`api/servo-saver.js`) — consumer id header `x-consumer-id` |
+| `NSW_FUEL_API_KEY` | API.NSW Fuel product — client id for OAuth (alias: `NSW_FUEL_KEY`) |
+| `NSW_FUEL_API_SECRET` | API.NSW Fuel product — client secret for OAuth (alias: `NSW_FUEL_SECRET`) |
+
+Optional: `SERVO_SAVER_PATH`, `NSW_FUEL_PRICES_PATH` (defaults are set in the respective `api/*.js` files). If API credentials were ever pasted in a screenshot or chat, **rotate the secret** in the [API.NSW](https://api.nsw.gov.au) portal and update Vercel.
+
+To deploy a fork on **GitHub Pages** (static only), omit or stub the Australia live feeds, or use your own backend that mirrors these proxies.
 
 ## Project Structure
 

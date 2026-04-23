@@ -109,6 +109,8 @@ const COUNTRIES = {
   116: { name: 'Cambodia' },
   418: { name: 'Laos' },
   104: { name: 'Myanmar' },
+  /** New South Wales (AU) — live FuelCheck feed via API.NSW / OneGov (proxied; see `api/nsw-fuel.js`). */
+  801: { name: 'New South Wales' },
   /** Victoria (AU) — live station feed via Service Victoria Servo Saver Open API (proxied; see `api/servo-saver.js`). */
   802: { name: 'Victoria' },
 };
@@ -118,7 +120,7 @@ const COUNTRIES = {
  * Overwritten at runtime from the **Currency** sheet (`country_name` + `fx_rate`; see `mergeCurrencySheetRowsIntoUsdRates`).
  * Sheet `country_name` slugs → ISO: malaysia MYR, singapore SGD, brunei BND, indonesia IDR, thailand THB,
  * philippines PHP, vietnam VND, myanmar MMK, cambodia KHR, laos LAK, victoria / australia AUD.
- * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK, 802 AUD.
+ * App uses those codes per country: 458 MYR, 702 SGD, 96 BND, 360 IDR, 764 THB, 608 PHP, 116 KHR, 104 MMK, 704 VND, 418 LAK, 801 AUD, 802 AUD.
  *
  * **Spreadsheet format:** Put **plain numbers** in `fx_rate` (optional `RM` / `$` prefix is stripped).
  * The value must be **USD per 1 unit of local currency** (e.g. ~0.25 for MYR, ~0.00006 for IDR). If you paste
@@ -200,7 +202,7 @@ const LA_FUELS = [
   { key: 'diesel', label: 'Diesel' },
 ];
 
-/** Victoria — `extractVicMinPricesFromServoJson` in utils.js maps API labels to these keys. */
+/** Victoria & NSW — station APIs in utils / `api/*` map free-text or FuelCode to these keys. */
 const VIC_FUELS = [
   { key: 'ulp', label: 'Regular Unleaded 91' },
   { key: 'e10', label: 'Regular E10' },
@@ -322,6 +324,16 @@ const COUNTRY_OVERVIEW_FALLBACK = {
       [['Refinery Intake', '-'], null],
       [['Export Value', '-'], ['Import Value', '-']],
       [['Status', 'Net Importer'], null],
+    ],
+  },
+  801: {
+    oilContext:
+      "Australia's most populous state, with an economy concentrated on services, mining, and port logistics; almost all transport fuels are imported or refined from imported crude, and retail prices are published in real time through the NSW FuelCheck scheme.",
+    metricRows: [
+      [['BOPD', '-'], ['1P Reserves', '-']],
+      [['Refining', 'Import-led'], null],
+      [['Data', 'FuelCheck (NSW)'], null],
+      [['Status', 'Price transparency'], null],
     ],
   },
   802: {

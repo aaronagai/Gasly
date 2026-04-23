@@ -232,15 +232,15 @@
 
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-  <script src="assets/config.js?v=idfuels-3"></script>
-  <script src="assets/utils.js"></script>
+  <script src="assets/config.js?v=idfuels-4"></script>
+  <script src="assets/utils.js?v=nsw-1"></script>
   <script src="assets/app-dashboard-core.js"></script>
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="assets/app-settings.js?v=120"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA/VIC fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, ensureNswFuelSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, rowsForPriceChart, selectLatestHighlightRow, fmtDateFromRow, asNum, buildChartSeries — from utils.js
     // buildSearchRegionsList, labelVietnamArea, appHighlightUsdOn, getAppUsdMultiplier, loadAppCurrencyRates, loadAndRenderAppDashboard — assets/app-dashboard-core.js
 
     /** ISO id → name for map hover/hit (same set as terminal). */
@@ -461,6 +461,7 @@
       104: 'MMK',
       704: 'VND',
       418: 'LAK',
+      801: 'AUD',
       802: 'AUD',
     };
 
@@ -537,7 +538,7 @@
                   if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
                   return formatNumberCommas(Math.round(n), 0, 0);
                 }
-                if (countryId === 802) {
+                if (countryId === 801 || countryId === 802) {
                   return formatNumberCommas(parseFloat(n.toFixed(2)), 0, 2);
                 }
                 return formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6);
@@ -1023,6 +1024,52 @@
           if (labels.length) {
             updateChart({ labels, datasets: buildChartSeries(sliceRows, chartKeys, labels), countryId: 418 });
           } else emptyChart();
+          return;
+        }
+
+        if (cid === 801) {
+          const snap = await ensureNswFuelSnapshot();
+          if (!alive()) return;
+          const mins = snap.mins || {};
+          const hasMin = Object.keys(mins).length > 0;
+          const vf = typeof VIC_FUELS !== 'undefined' ? VIC_FUELS : [];
+          titleEl.textContent = cname;
+          if (!hasMin && snap.hint) {
+            subEl.textContent = snap.hint;
+          } else {
+            const subBits = [
+              hasMin && snap.stationCount ? `≥ ${snap.stationCount} sites` : hasMin ? 'lowest in response' : null,
+              snap.asOf,
+            ].filter((x) => x != null && x !== '');
+            subEl.textContent = subBits.length ? subBits.join(' · ') : `AUD/L · ${cname}`;
+          }
+          const pairs = [];
+          for (const f of vf) {
+            if (mins[f.key] == null) continue;
+            pairs.push([f.label, fmtHiPerL('AUD', mins[f.key], 2), '']);
+          }
+          if (pairs.length) {
+            renderHiRows(pairs);
+            if (chartKicker) chartKicker.textContent = `${cname} — lowest pump price in this response`;
+            const row0 = { __label: 'NSW' };
+            const chartKeys = [];
+            for (const f of vf) {
+              if (mins[f.key] == null) continue;
+              row0[f.key] = mins[f.key];
+              chartKeys.push({ key: f.key, label: f.label });
+            }
+            const sliceRows = [row0, { ...row0, __label: ' ' }];
+            const labels = ['NSW', ' '];
+            updateChart({
+              labels,
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
+              countryId: 801,
+            });
+          } else {
+            renderHiRows([['Data', snap.hint || 'No prices parsed (check NSW_FUEL_API_KEY on server)']]);
+            if (chartKicker) chartKicker.textContent = `${cname}`;
+            emptyChart();
+          }
           return;
         }
 
