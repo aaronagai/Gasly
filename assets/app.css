@@ -1727,7 +1727,7 @@
     }
     .app-dashboard-th--rank{
       width: 1.65rem;
-      text-align: right;
+      text-align: left;
       font-size: 0.55rem;
       padding-left: 2px;
       padding-right: 2px;
@@ -1877,7 +1877,7 @@
       color: var(--text);
     }
     .app-dashboard-td--rank{
-      text-align: right;
+      text-align: left;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
       font-size: 0.62rem;

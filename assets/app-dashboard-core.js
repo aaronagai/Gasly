@@ -588,10 +588,18 @@ function wireAppDashboardColumnHeaders() {
  */
 const DASHBOARD_COUNTRY_GROUPS = Object.freeze({ 36: Object.freeze([801, 802]) });
 
+/**
+ * Country ids that exist in data/config but should NOT appear as standalone options in
+ * the dashboard country filter (they're surfaced through a group entry instead).
+ * 801 (NSW) and 802 (Victoria) roll up under 36 (Australia).
+ */
+const DASHBOARD_COUNTRY_HIDDEN_FROM_FILTER = Object.freeze(new Set([801, 802]));
+
 function isDashboardSelectableCountryId(id) {
   if (!Number.isFinite(id)) return false;
   if (typeof COUNTRIES === 'undefined' || !COUNTRIES[id]) return false;
   if (DASHBOARD_COUNTRY_GROUPS[id]) return true;
+  if (DASHBOARD_COUNTRY_HIDDEN_FROM_FILTER.has(id)) return false;
   return !COUNTRIES[id].searchGroupOnly;
 }
 
