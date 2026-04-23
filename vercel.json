@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/nsw-fuel.js": {
+      "maxDuration": 60
+    }
+  },
   "cleanUrls": true,
   "redirects": [
     { "source": "/about.html", "destination": "/about", "permanent": true },
