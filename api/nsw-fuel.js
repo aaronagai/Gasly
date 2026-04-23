@@ -7,6 +7,8 @@
  * - `NSW_FUEL_PRICES_PATH` (optional) — must start with `/`, default `/FuelPriceCheck/v1/fuel/prices` (NSW only; v2 includes TAS)
  * - `NSW_FUEL_API_ORIGIN` (optional) — default `https://api.onegov.nsw.gov.au`
  * - `NSW_SKIP_FUEL_LOV` (optional) — if `1`, skip the reference-data `fuel/lovs` fetch (numeric `fuelType` → code mapping)
+ * - `NSW_FUEL_SEND_APIKEY_HEADER` (optional) — if `0`, do not send `apikey` on Fuel/LOV requests (default: send consumer key; required by many NSW API products)
+ * - `NSW_FUEL_TRANSACTION_ID` (optional) — `transactionid` header for upstream calls (default: `pp-` + timestamp)
  *
  * Response: compact JSON `{ ok, mins, stationCount, asOf, fetchedAt }` so the browser is not
  * required to download multi‑MB station dumps.
@@ -25,16 +27,72 @@ let _lovIdToCode = { t: 0, map: null };
 const LOV_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 
 function getEnv() {
-  const id =
-    (process.env.NSW_FUEL_API_KEY || process.env.NSW_FUEL_KEY || '').trim() || '';
-  const sec =
-    (process.env.NSW_FUEL_API_SECRET || process.env.NSW_FUEL_SECRET || '').trim() || '';
+  const trimSecret = (s) =>
+    String(s || '')
+      .trim()
+      .replace(/^['"]|['"]$/g, '');
+  const id = trimSecret(process.env.NSW_FUEL_API_KEY || process.env.NSW_FUEL_KEY || '') || '';
+  const sec = trimSecret(process.env.NSW_FUEL_API_SECRET || process.env.NSW_FUEL_SECRET || '') || '';
   let origin = String(process.env.NSW_FUEL_API_ORIGIN || DEFAULT_ORIGIN).replace(/\/+$/, '');
   try {
     origin = new URL(origin).origin;
   } catch (_) {}
   const pathStr = String(process.env.NSW_FUEL_PRICES_PATH || DEFAULT_PRICES).trim();
   return { id, sec, origin, pathStr };
+}
+
+/** TFNSW / API.NSW examples use `dd/MM/yyyy hh:mm:ss tt` in Australia/Sydney. */
+function nswSydneyRequestTimestamp() {
+  return new Date().toLocaleString('en-AU', {
+    timeZone: 'Australia/Sydney',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+}
+
+/**
+ * Consumer key/secret are used for OAuth; many FuelCheck calls also need `apikey` + request metadata (see API.NSW / Postman).
+ * @param {string} bearer
+ * @param {string} apiKey
+ * @returns {Record<string, string>}
+ */
+function nswDataPlaneHeaders(bearer, apiKey) {
+  const sendKey = String(process.env.NSW_FUEL_SEND_APIKEY_HEADER || '1').trim() !== '0';
+  const base = {
+    Authorization: 'Bearer ' + bearer,
+    Accept: 'application/json, */*;q=0.8',
+    'user-agent': String(process.env.NSW_FUEL_USER_AGENT || 'petrolprice.xyz/1.0').trim(),
+    transactionid: String(process.env.NSW_FUEL_TRANSACTION_ID || `pp-${Date.now()}`).replace(/\s+/g, '').slice(0, 64),
+    requesttimestamp: nswSydneyRequestTimestamp(),
+  };
+  if (sendKey && String(apiKey || '').trim()) {
+    base.apikey = String(apiKey).trim();
+  }
+  return base;
+}
+
+/**
+ * @param {any} j
+ * @returns {string|null}
+ */
+function pickAccessTokenFromJson(j) {
+  if (j == null || typeof j !== 'object' || Array.isArray(j)) return null;
+  const a = j.access_token || j.accessToken;
+  if (typeof a === 'string' && a.length > 0) return a;
+  if (j.data && typeof j.data === 'object' && !Array.isArray(j.data)) {
+    const b = j.data.access_token || j.data.accessToken;
+    if (typeof b === 'string' && b.length > 0) return b;
+  }
+  if (j.result && typeof j.result === 'object' && !Array.isArray(j.result)) {
+    const c = j.result.access_token || j.result.accessToken;
+    if (typeof c === 'string' && c.length > 0) return c;
+  }
+  return null;
 }
 
 function audPerLFromRaw(n) {
@@ -283,16 +341,8 @@ function extractMinsAndStations(json, idToCode) {
 async function postClientCredentialsToken(origin, id, sec) {
   const u = new URL(TOKEN_PATH, `${origin}/`);
   const auth = 'Basic ' + Buffer.from(`${id}:${sec}`, 'utf8').toString('base64');
+  /* JSON first — form responses are often `application/x-www-form-urlencoded` with a body echo, not JSON. */
   const attempts = [
-    {
-      label: 'form',
-      headers: {
-        Authorization: auth,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-      },
-      body: 'grant_type=client_credentials',
-    },
     {
       label: 'json',
       headers: {
@@ -301,6 +351,15 @@ async function postClientCredentialsToken(origin, id, sec) {
         Accept: 'application/json',
       },
       body: JSON.stringify({ grant_type: 'client_credentials' }),
+    },
+    {
+      label: 'form',
+      headers: {
+        Authorization: auth,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: 'grant_type=client_credentials',
     },
   ];
 
@@ -313,6 +372,17 @@ async function postClientCredentialsToken(origin, id, sec) {
       cache: 'no-store',
     });
     const text = await res.text();
+    const ttrim = String(text || '').trim();
+    /** OneGov can return 200 with the request body echoed (not OAuth JSON) for bad/unknown keys. */
+    if (ttrim === 'grant_type=client_credentials' || ttrim === '{"grant_type":"client_credentials"}') {
+      last = {
+        err: 'Token URL echoed the request (not a real OAuth token) — key/secret rejected or not subscribed to Fuel API',
+        status: res.status,
+        text: ttrim.slice(0, 80),
+        tokenBodyKeys: [],
+      };
+      continue;
+    }
     let j;
     try {
       j = text ? JSON.parse(text) : {};
@@ -320,27 +390,69 @@ async function postClientCredentialsToken(origin, id, sec) {
       last = { err: `${a.label}: token not JSON (HTTP ${res.status})`, status: res.status, text: text.slice(0, 200) };
       continue;
     }
-    if (res.ok && j.access_token) {
+    if (j && typeof j === 'object' && j.grant_type && !j.error && !j.access_token) {
+      const atEarly = pickAccessTokenFromJson(j);
+      if (!atEarly && Object.keys(j).length <= 2) {
+        last = {
+          err: 'Token response looks like an echo, not access_token (check API.nsw key + secret for Fuel product)',
+          status: res.status,
+          raw: j,
+          tokenBodyKeys: Object.keys(j),
+        };
+        continue;
+      }
+    }
+    const at = pickAccessTokenFromJson(j);
+    if (res.ok && at) {
       const expMs = j.expires_in
         ? Date.now() + Math.max(0, (Number(j.expires_in) - 90) * 1000)
         : Date.now() + 25 * 60 * 1000;
-      return { accessToken: String(j.access_token), expMs: Math.min(expMs, Date.now() + 50 * 60 * 1000) };
+      return { accessToken: at, expMs: Math.min(expMs, Date.now() + 50 * 60 * 1000) };
+    }
+    if (res.ok && (j.error != null || j.Error != null) && !at) {
+      last = {
+        err: j.error_description || j.error || j.Error || 'OAuth error in response body',
+        status: res.status,
+        raw: j,
+        tokenBodyKeys: Object.keys(j).slice(0, 30),
+      };
+      continue;
+    }
+    if (res.ok && !at) {
+      const keys = Object.keys(j);
+      last = {
+        err:
+          keys.length === 0
+            ? 'Empty JSON from token URL (check credentials; redeploy after setting env on Production)'
+            : 'Token JSON had no access_token (unexpected shape)',
+        status: res.status,
+        raw: j,
+        tokenBodyKeys: keys.slice(0, 30),
+      };
+      continue;
     }
     last = {
       err: j.error_description || j.error || j.message || 'No access_token',
       status: res.status,
       raw: j,
+      tokenBodyKeys: j && typeof j === 'object' && !Array.isArray(j) ? Object.keys(j).slice(0, 30) : undefined,
     };
   }
-  return { err: last && last.err ? last.err : 'No access_token', status: last && last.status, raw: last && last.raw };
+  return {
+    err: last && last.err ? last.err : 'No access_token',
+    status: last && last.status,
+    raw: last && last.raw,
+    tokenBodyKeys: last && last.tokenBodyKeys,
+  };
 }
 
 /**
  * @param {string} origin
  * @param {string} token
+ * @param {string} apiKey
  * @returns {Promise<Record<number, string>>}
  */
-async function fetchLovIdToCodeMap(origin, token) {
+async function fetchLovIdToCodeMap(origin, token, apiKey) {
   if (String(process.env.NSW_SKIP_FUEL_LOV || '').trim() === '1') {
     return _lovIdToCode && _lovIdToCode.map ? _lovIdToCode.map : Object.create(null);
   }
@@ -352,10 +464,7 @@ async function fetchLovIdToCodeMap(origin, token) {
     const u = new URL(LOV_PATH, `${origin}/`);
     const lr = await fetch(u.toString(), {
       method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + token,
-        Accept: 'application/json',
-      },
+      headers: nswDataPlaneHeaders(token, apiKey),
       cache: 'no-store',
     });
     if (!lr.ok) return Object.create(null);
@@ -372,7 +481,7 @@ async function getToken(origin, id, sec) {
   if (_token.accessToken && Date.now() < _token.expMs) return { token: _token.accessToken };
   const r = await postClientCredentialsToken(origin, id, sec);
   if (r.err) {
-    return { err: r.err, status: r.status, raw: r.raw };
+    return { err: r.err, status: r.status, raw: r.raw, tokenBodyKeys: r.tokenBodyKeys };
   }
   _token = { accessToken: r.accessToken, expMs: r.expMs };
   return { token: r.accessToken };
@@ -422,6 +531,8 @@ module.exports = async function handler(req, res) {
         message: t.err,
         source: 'petrolprice-proxy',
         upstreamStatus: t.status,
+        tokenResponseKeys: t.tokenBodyKeys,
+        hint: 'Use API.nsw consumer key + secret for the Fuel product; set NSW_FUEL_API_KEY and NSW_FUEL_API_SECRET on the Production Vercel env and redeploy. Empty keys often mean a bad copy/paste or Preview-only envs.',
       }),
     );
     return;
@@ -429,16 +540,12 @@ module.exports = async function handler(req, res) {
 
   const target = new URL(pathStr, `${origin}/`);
   const fetchedAt = Date.now();
-  const idToCodeP = fetchLovIdToCodeMap(origin, t.token);
+  const idToCodeP = fetchLovIdToCodeMap(origin, t.token, id);
 
   try {
     const ures = await fetch(target.toString(), {
       method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + t.token,
-        Accept: 'application/json, */*;q=0.8',
-        'user-agent': String(process.env.NSW_FUEL_USER_AGENT || 'petrolprice.xyz/1.0').trim(),
-      },
+      headers: nswDataPlaneHeaders(t.token, id),
       cache: 'no-store',
     });
     const text = await ures.text();
