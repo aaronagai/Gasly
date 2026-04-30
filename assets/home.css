@@ -1,3 +1,5 @@
+/* Landing page (company home) — legacy index styles.
+   Keep this file stable so /home stays “marketing-first”. */
     :root {
       --bg:         #fafaf8;
       --bg-card:    #ffffff;
@@ -36,28 +38,10 @@
       overflow-x: hidden;
     }
 
-    /* Homepage is now an app-like full viewport experience. */
-    html, body { height: 100%; }
-    body { overflow: hidden; }
-
-    .home {
-      position: fixed;
-      inset: 0;
-      height: 100dvh;
-      width: 100%;
-      overflow: hidden;
-      z-index: 1;
-    }
-
-    header{
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 60;
-      pointer-events: none;
-    }
-    header .logo-block,
-    header .header-actions{
-      pointer-events: auto;
+    .hero {
+      position: relative; z-index: 2;
+      height: 80vh;
+      height: 80svh;
     }
 
     .try-terminal-btn{
@@ -97,7 +81,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Map ──────────────────────────────────────���─────────── */
+    /* ── Map ───────────────────────────────────────────────────── */
     .map-wrap {
       position: absolute; inset: 0; overflow: hidden;
     }
@@ -128,106 +112,13 @@
     }
 
     .map-wrap .maplibregl-ctrl-bottom-right {
-      margin-bottom: 120px;
+      margin-bottom: 8px;
       margin-right: 8px;
     }
 
     /* HTML markers sit in the map container; keep them above the canvas for clicks. */
     .map-wrap .maplibregl-marker {
       z-index: 6;
-    }
-
-    /* ── Dashboard pull-up sheet ───────────────────────────────── */
-    .home-dashboard-sheet{
-      position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      z-index: 20;
-      height: 58vh;
-      max-height: calc(100dvh - 74px);
-      min-height: 160px;
-      border-radius: 18px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.48);
-      backdrop-filter: blur(34px);
-      -webkit-backdrop-filter: blur(34px);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.14);
-    }
-    @media (prefers-color-scheme: dark) {
-      .home-dashboard-sheet{
-        background: rgba(16, 16, 16, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        box-shadow: 0 28px 68px rgba(0,0,0,0.55);
-      }
-    }
-
-    .home-dashboard-sheet--anim{
-      transition: height 200ms cubic-bezier(.2,.8,.2,1);
-    }
-
-    .home-dashboard-handle{
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 26px;
-      border: 0;
-      padding: 0;
-      cursor: ns-resize;
-      background: transparent;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .home-dashboard-handle::before{
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 10px;
-      transform: translateX(-50%);
-      width: 56px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.18);
-    }
-    @media (prefers-color-scheme: dark) {
-      .home-dashboard-handle::before{ background: rgba(255,255,255,0.22); }
-    }
-    body.home-sheet-dragging { cursor: ns-resize; }
-
-    /* Dashboard layout tweaks for home sheet. */
-    .app-dashboard--home{
-      height: 100%;
-      background: transparent;
-      position: relative;
-      padding-top: 18px; /* room for handle */
-    }
-    .app-dashboard--home{
-      inset: auto;
-      z-index: auto;
-      transition: none;
-    }
-    .app-dashboard--home .app-dashboard-scroll{
-      height: 100%;
-    }
-
-    /* Make header CTAs less loud on the new dashboard-first homepage. */
-    .try-terminal-btn.try-terminal-btn--ghost{
-      background: transparent;
-      color: var(--text);
-      box-shadow: none;
-      border: 1px solid rgba(48,48,48,0.12);
-    }
-    @media (prefers-color-scheme: dark) {
-      .try-terminal-btn.try-terminal-btn--ghost{
-        color: var(--text);
-        border: 1px solid rgba(255,255,255,0.16);
-      }
-    }
-    .try-terminal-btn.try-terminal-btn--ghost:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 10px 22px rgba(0,0,0,0.08);
-      filter: none;
     }
 
     .index-map-sg-hit,
@@ -362,9 +253,7 @@
     .tt-status.live { color: var(--accent); }
     .tt-status.soon { color: var(--text-muted); opacity: 0.65; }
 
-    /* ════════════════════���════════════════════════════════��═════
-       MOBILE  (< 640px)
-    ══════════════════════════════════════���════════════════════ */
+    /* ════════════════════ MOBILE (< 640px) ═════════════════════ */
     @media (max-width: 639px) {
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
@@ -408,3 +297,4 @@
         color: var(--text-muted);
       }
     }
+

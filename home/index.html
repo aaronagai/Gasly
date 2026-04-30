@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="application-name" content="PetrolPrice" />
+  <meta name="apple-mobile-web-app-title" content="PetrolPrice" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#131314" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/appicon.png" />
+  <link rel="icon" type="image/png" href="/assets/appicon.png" />
+  <title>PetrolPrice — World Live Fuel Prices</title>
+  <meta name="description" content="Live fuel prices for Southeast Asia — Malaysia, Singapore, Brunei, and Indonesia. Compare petrol and diesel before you drive or travel." />
+  <link rel="canonical" href="https://petrolprice.xyz" />
+
+  <!-- Open Graph + X (Twitter) link preview — image URL must be absolute -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://petrolprice.xyz" />
+  <meta property="og:title" content="PetrolPrice — Live fuel prices in Southeast Asia" />
+  <meta property="og:description" content="Compare live petrol and diesel prices across Malaysia, Singapore, Brunei, and Indonesia." />
+  <meta property="og:image" content="https://petrolprice.xyz/assets/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1376" />
+  <meta property="og:image:height" content="768" />
+  <meta property="og:locale" content="en_GB" />
+  <meta property="og:site_name" content="petrolprice.xyz" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PetrolPrice — Live fuel prices in Southeast Asia" />
+  <meta name="twitter:description" content="Compare live petrol and diesel prices across Malaysia, Singapore, Brunei, and Indonesia." />
+  <meta name="twitter:image" content="https://petrolprice.xyz/assets/og-image.png" />
+  <meta name="twitter:site" content="@aaronagai" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" />
+  </noscript>
+  <link rel="stylesheet" href="/assets/shared.css" />
+  <link rel="stylesheet" href="/assets/home.css?v=1" />
+  <!-- styles: assets/home.css -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <header>
+    <div class="logo-block">
+      <div class="logo-block-lockup-row">
+        <h1 class="site-wordmark site-wordmark-lockup">
+          <img src="/assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
+          <span>petrolprice.xyz</span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a class="try-terminal-btn" href="/app">App</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="map-wrap" id="map-wrap">
+      <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
+      <div class="map-hint">Tap a country with live data to view prices</div>
+      <div class="hero-overlay">
+        <h2 class="hero-headline">Live petrol prices across Southeast Asia <span class="hero-headline-light">and beyond.</span></h2>
+        <p class="hero-subhead">Track real-time petrol and diesel prices across every country in Southeast Asia — from major cities to border crossings.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-row footer-row-top">
+      <div class="footer-brand site-wordmark">petrolprice.xyz</div>
+      <nav class="footer-nav-primary" aria-label="Footer">
+        <a href="/about/">About</a>
+        <a href="/careers/">Careers</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </div>
+    <div class="footer-divider" aria-hidden="true"></div>
+    <div class="footer-row footer-row-bottom">
+      <div class="footer-legal">
+        <span class="footer-copyright">© 2026 petrolprice.xyz. <br class="footer-copyright-break" aria-hidden="true">All rights reserved.</span>
+        <span class="footer-legal-sep" aria-hidden="true">·</span>
+        <a href="#">Privacy Policy</a>
+        <span class="footer-legal-sep" aria-hidden="true">·</span>
+        <a href="#">Terms of Service</a>
+      </div>
+      <div class="footer-contact">
+        <a href="mailto:petrolprice.xyz@gmail.com">petrolprice.xyz@gmail.com</a>
+        <a href="https://x.com/petrolprice_xyz" target="_blank" rel="noopener noreferrer" class="footer-social-x">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span>@petrolprice_xyz</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="tooltip">
+    <span class="tt-country" id="tt-country"></span>
+    <span class="tt-status"  id="tt-status"></span>
+  </div>
+
+  <script defer src="/assets/config.js?v=idfuels-6"></script>
+  <script defer src="/assets/utils.js?v=nsw-3"></script>
+  <script defer src="/assets/index-hero-map.js"></script>
+</body>
+</html>
+

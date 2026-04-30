@@ -49,6 +49,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" />
   </noscript>
   <link rel="stylesheet" href="assets/shared.css" />
+  <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
+  <link rel="stylesheet" href="assets/app.css?v=124" />
   <link rel="stylesheet" href="assets/index.css" />
   <!-- styles: assets/index.css -->
   <!-- Vercel Web Analytics: enabled in the Vercel dashboard; `/_vercel/insights/*` is provided on deploy -->
@@ -67,56 +69,206 @@
         </h1>
       </div>
     </div>
-
-    <div class="header-actions">
-      <a class="try-terminal-btn" href="/terminal">Terminal</a>
-      <a class="try-terminal-btn" href="/app">App</a>
-    </div>
   </header>
 
-  <!-- ── Hero: full viewport ───────────────────��─────────────── -->
-  <div class="hero">
+  <!-- ── Map background + dashboard sheet ─────────────────────── -->
+  <div class="home">
+    <div class="map-wrap" id="map-wrap" aria-hidden="true">
+      <div id="index-hero-map" class="index-hero-map" role="img" aria-label="World map"></div>
+    </div>
 
-    <div class="map-wrap" id="map-wrap">
-      <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
-      <div class="map-hint">Tap a country with live data to view prices</div>
-      <div class="hero-overlay">
-        <h2 class="hero-headline">Live petrol prices across Southeast Asia <span class="hero-headline-light">and beyond.</span></h2>
-        <p class="hero-subhead">Track real-time petrol and diesel prices across every country in Southeast Asia — from major cities to border crossings.</p>
+    <div class="home-dashboard-sheet" id="home-dashboard-sheet" aria-label="Dashboard">
+      <button type="button" class="home-dashboard-handle" id="home-dashboard-handle" aria-label="Drag dashboard"></button>
+
+      <div class="app-dashboard app-dashboard--home app-dashboard--open" id="app-dashboard" aria-hidden="false">
+        <div class="app-dashboard-scroll">
+          <div class="app-dashboard-toolbar">
+            <div class="app-dashboard-toolbar-field">
+              <div class="app-dashboard-fuel-dropdown" id="app-dashboard-fuel" data-fuel="mid">
+                <button
+                  type="button"
+                  id="app-dashboard-fuel-trigger"
+                  class="app-dashboard-fuel-trigger"
+                  aria-haspopup="dialog"
+                  aria-controls="app-dashboard-fuel-sheet"
+                  aria-expanded="false"
+                  aria-label="Petrol type"
+                >
+                  <span class="app-dashboard-fuel-trigger-label">Mid-grade (92-95)</span>
+                </button>
+              </div>
+            </div>
+            <div class="app-dashboard-toolbar-field">
+              <div class="app-dashboard-country-dropdown" id="app-dashboard-country" data-country="">
+                <button
+                  type="button"
+                  id="app-dashboard-country-trigger"
+                  class="app-dashboard-country-trigger"
+                  aria-haspopup="dialog"
+                  aria-controls="app-dashboard-country-sheet"
+                  aria-expanded="false"
+                  aria-label="Filter by country"
+                >
+                  <span class="app-dashboard-country-trigger-label">All countries</span>
+                </button>
+              </div>
+            </div>
+            <div class="app-dashboard-toolbar-field">
+              <div class="app-dashboard-sort-dropdown" id="app-dashboard-sort" data-sort="price_low">
+                <button
+                  type="button"
+                  id="app-dashboard-sort-trigger"
+                  class="app-dashboard-sort-trigger"
+                  aria-haspopup="dialog"
+                  aria-controls="app-dashboard-sort-sheet"
+                  aria-expanded="false"
+                  aria-label="Sort"
+                >
+                  <span class="app-dashboard-sort-trigger-row">
+                    <span class="app-dashboard-sort-trigger-icon" aria-hidden="true" hidden>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M5 5v9M2 12l3 3 3-3M19 19V10M16 12l3-3 3 3"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </span>
+                    <span class="app-dashboard-sort-trigger-label">Price: low to high</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-dashboard-table-outer">
+            <table class="app-dashboard-table" aria-label="All regions and prices">
+              <thead>
+                <tr>
+                  <th class="app-dashboard-th app-dashboard-th--rank">#</th>
+                  <th class="app-dashboard-th app-dashboard-th--name app-dashboard-th--sortable" id="app-dashboard-th-region-col" scope="col">
+                    <button
+                      type="button"
+                      class="app-dashboard-col-head-btn"
+                      id="app-dashboard-th-region"
+                      aria-label="Sort by region, A to Z or Z to A"
+                    >
+                      Region
+                    </button>
+                  </th>
+                  <th
+                    class="app-dashboard-th app-dashboard-th--price app-dashboard-th--sortable"
+                    id="app-dashboard-th-price-col"
+                    scope="col"
+                    title="Price (USD per litre)"
+                  >
+                    <button
+                      type="button"
+                      class="app-dashboard-col-head-btn"
+                      id="app-dashboard-th-price"
+                      aria-label="Sort by price, high to low or low to high"
+                    >
+                      USD/L
+                    </button>
+                  </th>
+                  <th
+                    class="app-dashboard-th app-dashboard-th--chg app-dashboard-th--period"
+                    id="app-dashboard-th-period-col"
+                    scope="col"
+                  >
+                    <div class="app-dashboard-period-head">
+                      <div class="app-dashboard-period-dropdown" id="app-dashboard-period" data-period="m">
+                        <button
+                          type="button"
+                          id="app-dashboard-period-trigger"
+                          class="app-dashboard-period-btn"
+                          aria-haspopup="dialog"
+                          aria-controls="app-dashboard-period-sheet"
+                          aria-expanded="false"
+                          aria-label="Timeframe for percent change"
+                        >
+                          1M %
+                        </button>
+                      </div>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="app-dashboard-tbody"></tbody>
+            </table>
+          </div>
+          <p class="app-dashboard-foot" id="app-dashboard-status" aria-live="polite"></p>
+        </div>
+
+        <!-- bottom sheets reused from dashboard.html -->
+        <div id="app-dashboard-country-sheet" class="app-dashboard-country-sheet app-dashboard-bottom-sheet" hidden aria-hidden="true">
+          <button type="button" class="app-dashboard-country-sheet-backdrop app-dashboard-bottom-sheet-backdrop" id="app-dashboard-country-backdrop" tabindex="-1" aria-label="Close country filter"></button>
+          <div class="app-dashboard-country-sheet-panel app-dashboard-bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="app-dashboard-country-sheet-title">
+            <div class="app-dashboard-country-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-country-sheet-handle" role="presentation">
+              <span class="app-dashboard-country-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+            </div>
+            <h2 id="app-dashboard-country-sheet-title" class="app-dashboard-country-sheet-title app-dashboard-bottom-sheet-title">Country</h2>
+            <div id="app-dashboard-country-menu" class="app-dashboard-country-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-country-sheet-title"></div>
+          </div>
+        </div>
+
+        <div id="app-dashboard-fuel-sheet" class="app-dashboard-fuel-sheet app-dashboard-bottom-sheet" hidden aria-hidden="true">
+          <button type="button" class="app-dashboard-fuel-sheet-backdrop app-dashboard-bottom-sheet-backdrop" id="app-dashboard-fuel-backdrop" tabindex="-1" aria-label="Close petrol type options"></button>
+          <div class="app-dashboard-fuel-sheet-panel app-dashboard-bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="app-dashboard-fuel-sheet-title">
+            <div class="app-dashboard-fuel-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-fuel-sheet-handle" role="presentation">
+              <span class="app-dashboard-fuel-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+            </div>
+            <h2 id="app-dashboard-fuel-sheet-title" class="app-dashboard-fuel-sheet-title app-dashboard-bottom-sheet-title">Petrol type</h2>
+            <div id="app-dashboard-fuel-menu" class="app-dashboard-fuel-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-fuel-sheet-title">
+              <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="all">All types</button>
+              <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="entry">Entry (90-91)</button>
+              <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="mid">Mid-grade (92-95)</button>
+              <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="premium">Premium (97+)</button>
+              <button type="button" role="option" class="app-dashboard-fuel-option" data-fuel="diesel">Diesel</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="app-dashboard-sort-sheet" class="app-dashboard-sort-sheet app-dashboard-bottom-sheet" hidden aria-hidden="true">
+          <button type="button" class="app-dashboard-sort-sheet-backdrop app-dashboard-bottom-sheet-backdrop" id="app-dashboard-sort-backdrop" tabindex="-1" aria-label="Close sort options"></button>
+          <div class="app-dashboard-sort-sheet-panel app-dashboard-bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="app-dashboard-sort-sheet-title">
+            <div class="app-dashboard-sort-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-sort-sheet-handle" role="presentation">
+              <span class="app-dashboard-sort-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+            </div>
+            <h2 id="app-dashboard-sort-sheet-title" class="app-dashboard-sort-sheet-title app-dashboard-bottom-sheet-title">Sort By</h2>
+            <div id="app-dashboard-sort-menu" class="app-dashboard-sort-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-sort-sheet-title">
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="default">Default order</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="region_az">Region A–Z</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="region_za">Region Z–A</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="price_low">Price: low to high</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="price_high">Price: high to low</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="change_high">Change %: highest first</button>
+              <button type="button" role="option" class="app-dashboard-sort-option" data-sort="change_low">Change %: lowest first</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="app-dashboard-period-sheet" class="app-dashboard-period-sheet app-dashboard-bottom-sheet" hidden aria-hidden="true">
+          <button type="button" class="app-dashboard-period-sheet-backdrop app-dashboard-bottom-sheet-backdrop" id="app-dashboard-period-backdrop" tabindex="-1" aria-label="Close timeframe options"></button>
+          <div class="app-dashboard-period-sheet-panel app-dashboard-bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="app-dashboard-period-sheet-title">
+            <div class="app-dashboard-period-sheet-handle app-dashboard-bottom-sheet-handle" id="app-dashboard-period-sheet-handle" role="presentation">
+              <span class="app-dashboard-period-sheet-handle-bar app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+            </div>
+            <h2 id="app-dashboard-period-sheet-title" class="app-dashboard-period-sheet-title app-dashboard-bottom-sheet-title">Timeframe</h2>
+            <div id="app-dashboard-period-menu" class="app-dashboard-period-sheet-list app-dashboard-bottom-sheet-list" role="listbox" aria-labelledby="app-dashboard-period-sheet-title">
+              <button type="button" role="option" class="app-dashboard-period-option" data-period="w">1W %</button>
+              <button type="button" role="option" class="app-dashboard-period-option" data-period="m">1M %</button>
+              <button type="button" role="option" class="app-dashboard-period-option" data-period="3m">3M %</button>
+              <button type="button" role="option" class="app-dashboard-period-option" data-period="y">1Y %</button>
+              <button type="button" role="option" class="app-dashboard-period-option" data-period="ytd">YTD %</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- ── Footer ────────────────────────────────────────────────── -->
-  <footer class="site-footer">
-    <div class="footer-row footer-row-top">
-      <div class="footer-brand site-wordmark">petrolprice.xyz</div>
-      <nav class="footer-nav-primary" aria-label="Footer">
-        <a href="about/">About</a>
-        <a href="careers/">Careers</a>
-        <a href="faq/">FAQ</a>
-      </nav>
-    </div>
-    <div class="footer-divider" aria-hidden="true"></div>
-    <div class="footer-row footer-row-bottom">
-      <div class="footer-legal">
-        <span class="footer-copyright">© 2026 petrolprice.xyz. <br class="footer-copyright-break" aria-hidden="true">All rights reserved.</span>
-        <span class="footer-legal-sep" aria-hidden="true">·</span>
-        <a href="#">Privacy Policy</a>
-        <span class="footer-legal-sep" aria-hidden="true">·</span>
-        <a href="#">Terms of Service</a>
-      </div>
-      <div class="footer-contact">
-        <a href="mailto:petrolprice.xyz@gmail.com">petrolprice.xyz@gmail.com</a>
-        <a href="https://x.com/petrolprice_xyz" target="_blank" rel="noopener noreferrer" class="footer-social-x">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-          <span>@petrolprice_xyz</span>
-        </a>
-      </div>
-    </div>
-  </footer>
 
   <!-- Tooltip -->
   <div id="tooltip">
@@ -126,6 +278,22 @@
 
   <script defer src="assets/config.js?v=idfuels-6"></script>
   <script defer src="assets/utils.js?v=nsw-3"></script>
+  <script defer src="assets/app-dashboard-core.js?v=125"></script>
+  <script defer src="assets/home-dashboard-sheet.js?v=1"></script>
   <script defer src="assets/index-hero-map.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      try {
+        void loadAppCurrencyRates()
+          .catch(function () {})
+          .then(function () {
+            return loadAndRenderAppDashboard();
+          });
+      } catch (_) {}
+      try {
+        if (typeof initHomeDashboardSheet === 'function') initHomeDashboardSheet();
+      } catch (_) {}
+    });
+  </script>
 </body>
 </html>

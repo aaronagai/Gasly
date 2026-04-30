@@ -518,14 +518,18 @@ function wireAppDashboardPeriodSelect() {
     toggleMenu();
   });
 
-  backdrop.addEventListener('click', function () {
+  function closeOnBackdropEvent(e) {
+    try {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    } catch (_) {}
     closeMenu();
-  });
+  }
+  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
+  backdrop.addEventListener('click', closeOnBackdropEvent);
 
   if (handle) {
-    handle.addEventListener('click', function () {
-      closeMenu();
-    });
+    handle.addEventListener('pointerdown', closeOnBackdropEvent);
+    handle.addEventListener('click', closeOnBackdropEvent);
   }
 
   menu.querySelectorAll('.app-dashboard-period-option').forEach(function (btn) {
@@ -731,14 +735,18 @@ function wireAppDashboardCountryFilter() {
     toggleMenu();
   });
 
-  backdrop.addEventListener('click', function () {
+  function closeOnBackdropEvent(e) {
+    try {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    } catch (_) {}
     closeMenu();
-  });
+  }
+  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
+  backdrop.addEventListener('click', closeOnBackdropEvent);
 
   if (handle) {
-    handle.addEventListener('click', function () {
-      closeMenu();
-    });
+    handle.addEventListener('pointerdown', closeOnBackdropEvent);
+    handle.addEventListener('click', closeOnBackdropEvent);
   }
 
   menu.querySelectorAll('.app-dashboard-country-option').forEach(function (btn) {
@@ -846,14 +854,18 @@ function wireAppDashboardFuelSelect() {
     toggleMenu();
   });
 
-  backdrop.addEventListener('click', function () {
+  function closeOnBackdropEvent(e) {
+    try {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    } catch (_) {}
     closeMenu();
-  });
+  }
+  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
+  backdrop.addEventListener('click', closeOnBackdropEvent);
 
   if (handle) {
-    handle.addEventListener('click', function () {
-      closeMenu();
-    });
+    handle.addEventListener('pointerdown', closeOnBackdropEvent);
+    handle.addEventListener('click', closeOnBackdropEvent);
   }
 
   menu.querySelectorAll('.app-dashboard-fuel-option').forEach(function (btn) {
@@ -1005,14 +1017,18 @@ function wireAppDashboardSortSelect() {
     toggleMenu();
   });
 
-  backdrop.addEventListener('click', function () {
+  function closeOnBackdropEvent(e) {
+    try {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    } catch (_) {}
     closeMenu();
-  });
+  }
+  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
+  backdrop.addEventListener('click', closeOnBackdropEvent);
 
   if (handle) {
-    handle.addEventListener('click', function () {
-      closeMenu();
-    });
+    handle.addEventListener('pointerdown', closeOnBackdropEvent);
+    handle.addEventListener('click', closeOnBackdropEvent);
   }
 
   menu.querySelectorAll('.app-dashboard-sort-option').forEach(function (btn) {
