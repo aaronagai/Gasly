@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/aaronagai/PetrolPrice.xyz#readme",
   "dependencies": {
+    "@vercel/speed-insights": "^2.0.0",
     "flag-icons": "^7.5.0"
   }
 }
