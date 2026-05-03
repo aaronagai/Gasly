@@ -1,8 +1,37 @@
+# =============================================================================
+# Default: nothing at the repo root is committed except the allowlist below.
+# Put the real site under local-repo/; keep loose files (admin, notes, etc.)
+# only on your machine — they never reach GitHub.
+# =============================================================================
+
+# Everything directly under this repo root (non-hidden)
+/*
+# Hidden names directly under repo root (.cursor, .vscode, …) — not under local-repo/
+/.*
+!.gitignore
+
+# -----------------------------------------------------------------------------
+# Allowlist — only these paths are versioned outside local-repo/
+# -----------------------------------------------------------------------------
+
+!/local-repo/
+!/local-repo/**
+
+# Vercel when the project root is this repo (not local-repo/). If you switch
+# Vercel → Settings → Root Directory to "local-repo", you can drop these.
+!vercel.json
+!/api/
+!/api/**
+
+# -----------------------------------------------------------------------------
+# Re-ignore after the local-repo/ allowlist (last match wins)
+# -----------------------------------------------------------------------------
+
+**/.DS_Store
 .DS_Store
 node_modules/
 
-# NEVER commit business docs in this outer folder
-admin/
+# Business / office binaries — anywhere, including under local-repo/
 *.doc
 *.docx
 *.xls
