@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=149" />
+  <link rel="stylesheet" href="assets/app.css?v=151" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -73,7 +73,7 @@
       <div class="grab" id="grab" role="button" tabindex="0" aria-label="Drag to resize panel"></div>
       <div class="sheet-region-sticky" id="sheet-region-sticky">
         <div class="sheet-region-head">
-          <div class="title" id="hi-title">Semenanjung</div>
+          <div class="title" id="hi-title"></div>
         </div>
       </div>
       <div class="sheet-scroll" id="sheet-scroll">
@@ -98,7 +98,7 @@
         <div class="card" id="card-history">
           <div class="pad">
             <div class="card-head-inline">
-              <div class="kicker" id="chart-kicker">Malaysia petrol prices history</div>
+              <div class="kicker" id="chart-kicker"></div>
               <button type="button" class="card-export" aria-label="Export price history" title="Export">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M15 3h6v6" />
@@ -152,7 +152,6 @@
               <span class="app-settings-switch-ui" aria-hidden="true"></span>
             </label>
           </div>
-          <a class="app-settings-home-link" href="home.html" aria-label="PetrolPrice map landing"><span class="app-settings-home-link__bk" aria-hidden="true">&lt;</span> PetrolPrice map</a>
         </div>
       </div>
     </div>
@@ -215,7 +214,7 @@
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js?v=idfuels-6"></script>
   <script src="assets/utils.js?v=chart-ytick-1"></script>
-  <script src="assets/app-dashboard-core.js?v=129"></script>
+  <script src="assets/app-dashboard-core.js?v=136"></script>
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="assets/app-settings.js?v=123"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -626,6 +625,10 @@
       const subEl = document.getElementById('hi-sub');
       const chartKicker = document.getElementById('chart-kicker');
       const cname = COUNTRIES[cid]?.name || '—';
+      /* Country name immediately so we never flash Malaysia defaults while async
+         sheet/API work runs (embed + full app). Sub-region titles (e.g. MY) overwrite below. */
+      if (titleEl) titleEl.textContent = cname;
+      if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
       resetHiTitleInteractivity();
       try {
         window.__appCloseSgProviderMenu?.();
@@ -2124,10 +2127,28 @@
     function initChart(){
       const cv = document.getElementById('chart');
       if (!cv || !window.Chart) return;
+      let chartCountryId = 458;
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.get('cards') === '1') {
+          const raw = sp.get('country');
+          const id = raw != null ? +raw : NaN;
+          if (
+            Number.isFinite(id) &&
+            typeof COUNTRIES !== 'undefined' &&
+            COUNTRIES[id] &&
+            !COUNTRIES[id].searchGroupOnly
+          ) {
+            chartCountryId = id;
+          } else {
+            chartCountryId = null;
+          }
+        }
+      } catch (_) {}
       updateChart({
         labels: [''],
         datasets: [{ label: 'Loading…', data: [null], color: cssVar('--chart-empty', '#d4d4d4') }],
-        countryId: 458,
+        countryId: chartCountryId,
       });
     }
 
@@ -2575,6 +2596,24 @@
       } catch (_) {}
       return null;
     }
+
+    /** Cards-only iframe: set headline from `?country=` before `load` / currency fetch
+       so we never show empty or Malaysia placeholder while waiting for `setSelected`. */
+    function syncCardsOnlyPlaceholderHeadingsFromQuery() {
+      if (!__APP_CARDS_ONLY) return;
+      const id = __appReadInitialCidFromQuery();
+      const titleEl = document.getElementById('hi-title');
+      const chartKicker = document.getElementById('chart-kicker');
+      if (id == null || typeof COUNTRIES === 'undefined' || !COUNTRIES[id]) {
+        if (titleEl) titleEl.textContent = '';
+        if (chartKicker) chartKicker.textContent = '';
+        return;
+      }
+      const nm = COUNTRIES[id].name || '';
+      if (titleEl) titleEl.textContent = nm;
+      if (chartKicker) chartKicker.textContent = nm ? `${nm} petrol prices history` : '';
+    }
+    syncCardsOnlyPlaceholderHeadingsFromQuery();
 
     window.addEventListener('load', () => {
       initChart();

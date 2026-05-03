@@ -653,7 +653,8 @@ function dashboardOpenDetailSheet(item) {
     });
   }
   const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
-  if (panel) dashboardDetailSetSnap(0, panel, sheet, { instant: true });
+  /* Snap index 1 = ~½ viewport — same midsize stop as the map sheet's default half height. */
+  if (panel) dashboardDetailSetSnap(1, panel, sheet, { instant: true });
   sheet.hidden = false;
   sheet.setAttribute('aria-hidden', 'false');
   dashboardSheetsSyncBodyScroll();

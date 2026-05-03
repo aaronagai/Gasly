@@ -129,20 +129,45 @@
           });
         }
 
+        const z0 = mobile ? 3.35 : 3.65;
+
         const map = new maplibregl.Map({
           container: containerId,
           style: styleUrl,
           center: [115, mobile ? 6 : 9],
-          zoom: mobile ? 3.35 : 3.65,
-          minZoom: 2.6,
-          maxZoom: 14,
+          zoom: z0,
+          minZoom: z0,
+          maxZoom: z0,
           maxPitch: 0,
+          dragPan: false,
+          scrollZoom: false,
+          boxZoom: false,
+          doubleClickZoom: false,
           dragRotate: false,
           pitchWithRotate: false,
+          keyboard: false,
+          touchZoomRotate: false,
           touchPitch: false,
           cooperativeGestures: false,
           attributionControl: false,
         });
+
+        /** Hero map stays fixed: post-load locks (style init can re-enable handlers). */
+        function lockHeroMapNavigation() {
+          try {
+            map.dragPan.disable();
+            map.scrollZoom.disable();
+            map.boxZoom.disable();
+            map.doubleClickZoom.disable();
+            map.dragRotate.disable();
+            map.keyboard.disable();
+            if (map.touchZoomRotate) map.touchZoomRotate.disable();
+            if (map.touchPitch) map.touchPitch.disable();
+            if (map.cooperativeGestures) map.cooperativeGestures.disable();
+          } catch (_) {}
+        }
+
+        lockHeroMapNavigation();
 
         function featNid(feat) {
           if (!feat) return null;
@@ -169,6 +194,7 @@
         }
 
         map.on('load', () => {
+          lockHeroMapNavigation();
           container.classList.remove('index-hero-map--loading');
           suppressOpenFreeMapTextLabels(map, { hideCountryRegionLabels: true });
           includeOpenFreeMapMaritimeBoundaries(map);
@@ -203,6 +229,10 @@
           });
         });
 
+        map.once('idle', () => {
+          lockHeroMapNavigation();
+        });
+
         map.on('mousemove', (e) => {
           const nid = pickCountryId(e);
           const canvas = map.getCanvas();
@@ -221,21 +251,12 @@
         });
 
         map.on('click', (e) => {
+          const pe = e.originalEvent;
+          if (pe && pe.pointerType === 'touch') return;
           const nid = pickCountryId(e);
           if (nid == null) return;
           const c = LIVE[nid];
           if (c) window.location.href = c.url;
-        });
-
-        map.on('touchstart', (e) => {
-          if (!e.originalEvent.touches || !e.originalEvent.touches.length) return;
-          const nid = pickCountryId(e);
-          if (nid == null) {
-            hideTip();
-            return;
-          }
-          const t = e.originalEvent.touches[0];
-          showTip(t.clientX, t.clientY, nid);
         });
 
         const sgHit = document.createElement('button');
@@ -251,19 +272,6 @@
         sgHit.addEventListener('click', () => {
           window.location.href = LIVE[702].url;
         });
-        sgHit.addEventListener(
-          'touchstart',
-          (ev) => {
-            ev.stopPropagation();
-            const t = ev.touches[0];
-            showTip(t.clientX, t.clientY, 702);
-          },
-          { passive: true },
-        );
-        sgHit.addEventListener('touchend', (ev) => {
-          ev.preventDefault();
-          window.location.href = LIVE[702].url;
-        });
 
         const vnHit = document.createElement('button');
         vnHit.type = 'button';
@@ -276,19 +284,6 @@
         vnHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 704));
         vnHit.addEventListener('mouseleave', hideTip);
         vnHit.addEventListener('click', () => {
-          window.location.href = LIVE[704].url;
-        });
-        vnHit.addEventListener(
-          'touchstart',
-          (ev) => {
-            ev.stopPropagation();
-            const t = ev.touches[0];
-            showTip(t.clientX, t.clientY, 704);
-          },
-          { passive: true },
-        );
-        vnHit.addEventListener('touchend', (ev) => {
-          ev.preventDefault();
           window.location.href = LIVE[704].url;
         });
 

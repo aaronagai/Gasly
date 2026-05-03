@@ -109,6 +109,10 @@
       inset: 0;
     }
 
+    .map-wrap .maplibregl-canvas {
+      touch-action: none;
+    }
+
     .map-wrap .maplibregl-ctrl-bottom-right {
       margin-bottom: 8px;
       margin-right: 8px;
@@ -212,19 +216,15 @@
         0 0 8px rgba(255, 255, 255, 0.32);
     }
 
+    /* CTA under subtitle — `pointer-events: auto` so the link works inside `.hero-overlay` (which is `none`). */
+    .hero-cta {
+      margin-top: 22px;
+      pointer-events: auto;
+    }
+
     @media (max-width: 639px) {
       .hero-headline { font-size: 1.75rem; }
       .hero-subhead  { font-size: 0.78rem; }
-    }
-
-    /* Map hint */
-    .map-hint {
-      position: absolute; bottom: 40px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 2; pointer-events: none;
-      font-size: 0.7rem; color: var(--text-muted);
-      letter-spacing: 0.12em; text-transform: uppercase;
-      opacity: 0.4; white-space: nowrap;
     }
 
     /* ── Tooltip ──────────────────────────────────────────────── */
@@ -257,7 +257,7 @@
     @media (max-width: 639px) {
       .try-terminal-btn { height: 30px; padding: 0 10px; border-radius: 9px; font-size: 0.66rem; }
 
-      .map-hint    { font-size: 0.7rem; bottom: 38px; }
+      .hero-cta { margin-top: 18px; }
 
     }
 
@@ -281,11 +281,6 @@
           0 0 1px rgba(0, 0, 0, 0.5),
           0 0 16px rgba(0, 0, 0, 0.32),
           0 1px 2px rgba(0, 0, 0, 0.4);
-      }
-
-      .map-hint {
-        color: rgba(255, 255, 255, 0.52);
-        opacity: 0.9;
       }
 
       .map-wrap .maplibregl-ctrl-attrib {
