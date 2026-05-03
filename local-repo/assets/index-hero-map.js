@@ -41,16 +41,16 @@
     injectStylesheet('https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css');
 
     const LIVE = {
-      458: { name: 'Malaysia' },
-      702: { name: 'Singapore' },
-      96: { name: 'Brunei' },
-      360: { name: 'Indonesia' },
-      764: { name: 'Thailand' },
-      608: { name: 'Philippines' },
-      116: { name: 'Cambodia' },
-      418: { name: 'Laos' },
-      104: { name: 'Myanmar' },
-      704: { name: 'Vietnam' },
+      458: { name: 'Malaysia', url: '/terminal?country=458&my_region=peninsular' },
+      702: { name: 'Singapore', url: '/terminal?country=702' },
+      96: { name: 'Brunei', url: '/terminal?country=96' },
+      360: { name: 'Indonesia', url: '/terminal?country=360' },
+      764: { name: 'Thailand', url: '/terminal?country=764' },
+      608: { name: 'Philippines', url: '/terminal?country=608' },
+      116: { name: 'Cambodia', url: '/terminal?country=116' },
+      418: { name: 'Laos', url: '/terminal?country=418' },
+      104: { name: 'Myanmar', url: '/terminal?country=104' },
+      704: { name: 'Vietnam', url: '/terminal?country=704&vn_area=area_1' },
     };
 
     const NAMES = {
@@ -108,8 +108,8 @@
           throw new Error('MapLibre or TopoJSON global missing');
         }
         return Promise.all([
-          fetch('/assets/countries-110m.json').then((r) => r.json()),
-          fetch('/assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
+          fetch('./assets/countries-110m.json').then((r) => r.json()),
+          fetch('./assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
         ]);
       })
       .then(([world, sgFeat]) => {
@@ -220,25 +220,11 @@
           map.getCanvas().style.cursor = '';
         });
 
-        function selectCountryInDashboard(nid) {
-          try {
-            if (typeof window.homeDashboardSetCountry === 'function') {
-              window.homeDashboardSetCountry(nid);
-              if (typeof window.__homeDashboardSetHeight === 'function') {
-                const h = Math.round(Math.max(460, (window.innerHeight || 0) * 0.62));
-                window.__homeDashboardSetHeight(h, true);
-              }
-              return true;
-            }
-          } catch (_) {}
-          return false;
-        }
-
         map.on('click', (e) => {
           const nid = pickCountryId(e);
           if (nid == null) return;
-          // Dashboard-first homepage: clicking filters the dashboard instead of navigating away.
-          if (selectCountryInDashboard(nid)) return;
+          const c = LIVE[nid];
+          if (c) window.location.href = c.url;
         });
 
         map.on('touchstart', (e) => {
@@ -263,7 +249,7 @@
         sgHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 702));
         sgHit.addEventListener('mouseleave', hideTip);
         sgHit.addEventListener('click', () => {
-          selectCountryInDashboard(702);
+          window.location.href = LIVE[702].url;
         });
         sgHit.addEventListener(
           'touchstart',
@@ -276,7 +262,7 @@
         );
         sgHit.addEventListener('touchend', (ev) => {
           ev.preventDefault();
-          selectCountryInDashboard(702);
+          window.location.href = LIVE[702].url;
         });
 
         const vnHit = document.createElement('button');
@@ -290,7 +276,7 @@
         vnHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 704));
         vnHit.addEventListener('mouseleave', hideTip);
         vnHit.addEventListener('click', () => {
-          selectCountryInDashboard(704);
+          window.location.href = LIVE[704].url;
         });
         vnHit.addEventListener(
           'touchstart',
@@ -303,7 +289,7 @@
         );
         vnHit.addEventListener('touchend', (ev) => {
           ev.preventDefault();
-          selectCountryInDashboard(704);
+          window.location.href = LIVE[704].url;
         });
 
         const wrap = document.getElementById('map-wrap');

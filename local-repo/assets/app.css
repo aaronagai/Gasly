@@ -478,8 +478,12 @@
       z-index: 0;
       border-radius: inherit;
       pointer-events: none;
-      background: none;
-      opacity: 0;
+      background: linear-gradient(
+        168deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        transparent 52%
+      );
+      opacity: 0.12;
     }
     .app-liquid-nav__pill::after{
       content: '';
@@ -488,8 +492,12 @@
       z-index: 0;
       border-radius: inherit;
       pointer-events: none;
-      background: none;
-      opacity: 0;
+      background: radial-gradient(
+        120% 90% at 50% 0%,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%
+      );
+      opacity: 0.14;
     }
     a.app-liquid-nav__item:visited{
       color: var(--liquid-nav-label);
@@ -621,7 +629,7 @@
           rgba(255, 255, 255, 0.12) 0%,
           transparent 55%
         );
-        opacity: 0;
+        opacity: 0.28;
       }
       .app-liquid-nav__pill::after{
         background: radial-gradient(
@@ -629,7 +637,7 @@
           rgba(255, 255, 255, 0.08) 0%,
           transparent 50%
         );
-        opacity: 0;
+        opacity: 0.32;
       }
     }
     @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))){
@@ -638,7 +646,7 @@
       }
       .app-liquid-nav__pill::before,
       .app-liquid-nav__pill::after{
-        opacity: 0;
+        opacity: 0.25;
       }
     }
     @media (prefers-reduced-transparency: reduce){
@@ -703,77 +711,6 @@
       -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
       box-shadow: var(--shadow);
       overflow: hidden;
-      /* Bottom scrim: extra-tall strip for mask + blur ramp (content scrolls underneath). */
-      --sheet-bottom-blur-h: 96px;
-    }
-    /* Gradual frosted blur at card bottom (mask ramps opacity of the blurred layer). */
-    .sheet::before{
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--sheet-bottom-blur-h, 96px);
-      pointer-events: none;
-      z-index: 3;
-      border-bottom-left-radius: 36px;
-      border-bottom-right-radius: 36px;
-      -webkit-backdrop-filter: blur(36px) saturate(175%);
-      backdrop-filter: blur(36px) saturate(175%);
-      -webkit-mask-image: linear-gradient(
-        to top,
-        transparent 0%,
-        #000 14%,
-        #000 24%,
-        rgba(0, 0, 0, 0.55) 55%,
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to top,
-        transparent 0%,
-        #000 14%,
-        #000 24%,
-        rgba(0, 0, 0, 0.55) 55%,
-        transparent 100%
-      );
-    }
-    @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))){
-      .sheet::before{
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        background: linear-gradient(
-          to top,
-          transparent 0%,
-          var(--sheet-frost-fill) 35%,
-          transparent 100%
-        );
-      }
-    }
-    @media (prefers-reduced-transparency: reduce){
-      .sheet::before{
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        background: linear-gradient(
-          to top,
-          transparent 0%,
-          var(--sheet-frost-fill) 32%,
-          transparent 100%
-        );
-        -webkit-mask-image: linear-gradient(
-          to top,
-          transparent 0%,
-          #000 18%,
-          #000 28%,
-          transparent 100%
-        );
-        mask-image: linear-gradient(
-          to top,
-          transparent 0%,
-          #000 18%,
-          #000 28%,
-          transparent 100%
-        );
-      }
     }
     /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
     .sheet:not(.sheet-scrollable){
@@ -784,7 +721,7 @@
     }
     .grab{
       position: relative;
-      z-index: 12;
+      z-index: 4;
       flex-shrink: 0;
       min-height: 36px;
       padding: 5px 0 6px;
@@ -1305,18 +1242,6 @@
       pointer-events: auto;
     }
 
-    /* Embedded dashboard inside another container (e.g. app pull-up sheet). */
-    .app-dashboard.app-dashboard--embed{
-      position: relative;
-      inset: auto;
-      z-index: auto;
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      background: transparent;
-      transition: none;
-    }
-
     /* Light mode: CoinGecko-style list — white canvas, slate chrome, cool gray controls */
     @media (prefers-color-scheme: light) {
       .app-dashboard{
@@ -1490,24 +1415,6 @@
       overflow: visible;
       padding-bottom: 2px;
     }
-    /* Frosted toolbar when dashboard is embedded in the app pull-up sheet. */
-    .sheet .app-dashboard.app-dashboard--embed .app-dashboard-toolbar{
-      margin: 10px 10px 16px;
-      padding: 10px 10px;
-      border-radius: 14px;
-      background: transparent;
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      border: none;
-      box-shadow: none;
-    }
-    @media (prefers-color-scheme: dark) {
-      .sheet .app-dashboard.app-dashboard--embed .app-dashboard-toolbar{
-        background: transparent;
-        border-color: transparent;
-        box-shadow: none;
-      }
-    }
     /** One row: three equal flex slots so controls stay on a single line on narrow viewports. */
     .app-dashboard-toolbar-field{
       display: flex;
@@ -1547,23 +1454,6 @@
       align-items: center;
       justify-content: flex-start;
       text-align: left;
-    }
-    /* Embedded toolbar: triggers should not add a second “pill” layer. */
-    .sheet .app-dashboard.app-dashboard--embed .app-dashboard-sort-trigger,
-    .sheet .app-dashboard.app-dashboard--embed .app-dashboard-country-trigger,
-    .sheet .app-dashboard.app-dashboard--embed .app-dashboard-fuel-trigger{
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.10);
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-    @media (prefers-color-scheme: dark) {
-      .sheet .app-dashboard.app-dashboard--embed .app-dashboard-sort-trigger,
-      .sheet .app-dashboard.app-dashboard--embed .app-dashboard-country-trigger,
-      .sheet .app-dashboard.app-dashboard--embed .app-dashboard-fuel-trigger{
-        background: transparent;
-        border-color: rgba(255, 255, 255, 0.12);
-      }
     }
     .app-dashboard-sort-trigger-row{
       display: inline-flex;
@@ -1678,7 +1568,7 @@
       -webkit-overflow-scrolling: touch;
       flex: 1 1 auto;
       min-height: 0;
-      padding: 10px 12px 10px;
+      padding: 0 8px 4px;
     }
     .app-dashboard-sort-sheet-list,
     .app-dashboard-fuel-sheet-list,
@@ -1692,15 +1582,14 @@
     .app-dashboard-sort-option,
     .app-dashboard-fuel-option,
     .app-dashboard-country-option{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: block;
       width: 100%;
       margin: 0;
-      padding: 14px 14px;
-      border: 1px solid var(--hairline);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 14px 16px;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid var(--hairline);
+      background: transparent;
       color: var(--text);
       font-family: var(--font);
       font-size: 0.9375rem;
@@ -1710,43 +1599,13 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-    .app-dashboard-bottom-sheet-list [role='option'] + [role='option']{
-      margin-top: 10px;
+    .app-dashboard-bottom-sheet-list [role='option']:last-child{
+      border-bottom: none;
     }
     .app-dashboard-sort-option:hover,
     .app-dashboard-fuel-option:hover,
     .app-dashboard-country-option:hover{
       background: var(--menu-hover);
-    }
-    .app-dashboard-sort-option[aria-selected='true'],
-    .app-dashboard-fuel-option[aria-selected='true'],
-    .app-dashboard-country-option[aria-selected='true']{
-      background: rgba(255, 106, 0, 0.10);
-      border-color: rgba(255, 106, 0, 0.35);
-    }
-    .app-dashboard-sort-option[aria-selected='true']::after,
-    .app-dashboard-fuel-option[aria-selected='true']::after,
-    .app-dashboard-country-option[aria-selected='true']::after{
-      content: '✓';
-      flex: 0 0 auto;
-      margin-left: 12px;
-      font-size: 0.95rem;
-      line-height: 1;
-      color: rgba(255, 106, 0, 0.95);
-    }
-    @media (prefers-color-scheme: dark) {
-      .app-dashboard-sort-option,
-      .app-dashboard-fuel-option,
-      .app-dashboard-country-option{
-        background: rgba(255, 255, 255, 0.02);
-        border-color: rgba(255, 255, 255, 0.10);
-      }
-      .app-dashboard-sort-option[aria-selected='true'],
-      .app-dashboard-fuel-option[aria-selected='true'],
-      .app-dashboard-country-option[aria-selected='true']{
-        background: rgba(255, 106, 0, 0.14);
-        border-color: rgba(255, 106, 0, 0.42);
-      }
     }
     .app-dashboard-sort-option:focus-visible,
     .app-dashboard-fuel-option:focus-visible,
@@ -1862,19 +1721,6 @@
       z-index: 20;
       background: var(--bg);
       background-clip: padding-box;
-    }
-    /* Frosted sticky header when dashboard is embedded inside the pull-up sheet. */
-    .sheet .app-dashboard.app-dashboard--embed .app-dashboard-table thead th{
-      background: rgba(255, 255, 255, 0.16);
-      -webkit-backdrop-filter: blur(22px) saturate(175%);
-      backdrop-filter: blur(22px) saturate(175%);
-      border-bottom-color: rgba(255, 255, 255, 0.18);
-    }
-    @media (prefers-color-scheme: dark) {
-      .sheet .app-dashboard.app-dashboard--embed .app-dashboard-table thead th{
-        background: rgba(22, 22, 22, 0.52);
-        border-bottom-color: rgba(255, 255, 255, 0.10);
-      }
     }
     .app-dashboard-th--period{
       text-transform: none;

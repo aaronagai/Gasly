@@ -83,7 +83,7 @@
 
     <main class="main" aria-label="Country map">
       <div class="map-topbar" aria-label="Map toolbar">
-        <a href="/home" class="map-topbar-wordmark site-wordmark site-wordmark-lockup" aria-label="PetrolPrice.xyz home">
+        <a href="/" class="map-topbar-wordmark site-wordmark site-wordmark-lockup">
           <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
           <span>petrolprice.xyz</span>
         </a>
@@ -603,8 +603,9 @@
     }
 
     // Right-panel chart
-    function chartThemeOptions(countryId) {
+    function chartThemeOptions(countryId, yAxisTitle) {
       const tick = cssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
+      const axis = cssVar('--term-chart-axis', withAlpha(tick, 0.32));
       return {
         tooltip: {
           backgroundColor: cssVar('--term-chart-tooltip-bg', 'rgba(255,255,255,0.96)'),
@@ -618,10 +619,20 @@
         scales: {
           x: {
             grid: { display: false },
+            border: { display: false },
             ticks: { color: tick, font: { family: 'Inter', size: 11 }, maxRotation: 0 },
           },
           y: {
+            display: true,
             grid: { color: cssVar('--term-chart-grid', 'rgba(0,0,0,0.06)') },
+            border: { display: true, color: axis },
+            title: {
+              display: !!(yAxisTitle && String(yAxisTitle).trim()),
+              text: yAxisTitle || '',
+              color: tick,
+              font: { family: 'Inter', size: 11, weight: '700' },
+              padding: { top: 0, bottom: 6 },
+            },
             ticks: {
               color: tick,
               font: { family: 'Inter', size: 11 },
@@ -657,17 +668,21 @@
 
     function applyChartTheme(chart) {
       if (!chart?.options?.plugins?.tooltip || !chart?.options?.scales) return;
-      const t = chartThemeOptions(RIGHT_CHART_COUNTRY);
+      const t = chartThemeOptions(RIGHT_CHART_COUNTRY, RIGHT_CHART_Y_TITLE);
       Object.assign(chart.options.plugins.tooltip, t.tooltip);
       chart.options.scales.x.grid = { ...chart.options.scales.x.grid, ...t.scales.x.grid };
+      chart.options.scales.x.border = { ...chart.options.scales.x.border, ...t.scales.x.border };
       chart.options.scales.x.ticks = { ...chart.options.scales.x.ticks, ...t.scales.x.ticks };
       chart.options.scales.y.grid = { ...chart.options.scales.y.grid, ...t.scales.y.grid };
+      chart.options.scales.y.border = { ...chart.options.scales.y.border, ...t.scales.y.border };
+      chart.options.scales.y.title = { ...chart.options.scales.y.title, ...t.scales.y.title };
       chart.options.scales.y.ticks = { ...chart.options.scales.y.ticks, ...t.scales.y.ticks };
     }
 
     let RIGHT_CHART = null;
     let RIGHT_CHART_COUNTRY = null;
     let RIGHT_CHART_MY_DIESEL_KEY = null;
+    let RIGHT_CHART_Y_TITLE = '';
     function destroyRightChart() {
       if (RIGHT_CHART) {
         RIGHT_CHART.destroy();
@@ -675,6 +690,7 @@
       }
       RIGHT_CHART_COUNTRY = null;
       RIGHT_CHART_MY_DIESEL_KEY = null;
+      RIGHT_CHART_Y_TITLE = '';
       window.__terminalIndonesiaChartKey = null;
       window.__terminalSingaporeChartKey = null;
       window.__terminalHongKongChartKey = null;
@@ -703,6 +719,8 @@
         isTerminalUsd() && ccyKey && USD_RATES[ccyKey] != null
           ? USD_RATES[ccyKey]
           : 1;
+      const yTitle = isTerminalUsd() ? 'USD/L' : (ccyKey ? `${ccyKey}/L` : 'Price/L');
+      RIGHT_CHART_Y_TITLE = yTitle;
 
       const nextDs = (datasets || []).map(ds => ({
         label: ds.label,
@@ -746,7 +764,7 @@
       }
 
       destroyRightChart();
-      const themeChart = chartThemeOptions(countryId);
+      const themeChart = chartThemeOptions(countryId, yTitle);
       try {
         RIGHT_CHART = new Chart(ctx, {
           type: 'line',

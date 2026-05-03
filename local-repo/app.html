@@ -20,8 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
-  <link rel="stylesheet" href="assets/app.css?v=124" />
+  <link rel="stylesheet" href="assets/app.css?v=126" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -93,23 +92,6 @@
             <canvas id="chart"></canvas>
           </div>
         </div>
-
-        <div class="card" id="card-overview">
-          <div class="pad">
-            <div class="card-head-inline">
-              <div class="kicker" id="ov-kicker">Malaysia overview</div>
-              <button type="button" class="card-export" aria-label="Export overview" title="Export">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M15 3h6v6" />
-                  <path d="M10 14 21 3" />
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                </svg>
-              </button>
-            </div>
-            <div class="oil" id="overview-text">—</div>
-            <div class="overview-metrics" id="overview-metrics" aria-label="Key metrics"></div>
-          </div>
-        </div>
         </div>
       </div>
     </div>
@@ -150,7 +132,7 @@
               <span class="app-settings-switch-ui" aria-hidden="true"></span>
             </label>
           </div>
-          <a class="app-settings-home-link" href="/home" aria-label="PetrolPrice home"><span class="app-settings-home-link__bk" aria-hidden="true">&lt;</span> PetrolPrice home</a>
+          <a class="app-settings-home-link" href="home.html" aria-label="PetrolPrice map landing"><span class="app-settings-home-link__bk" aria-hidden="true">&lt;</span> PetrolPrice map</a>
         </div>
       </div>
     </div>
@@ -172,7 +154,7 @@
 
   <nav class="app-liquid-nav" aria-label="Main navigation">
     <div class="app-liquid-nav__pill">
-      <a href="/app" class="app-liquid-nav__item app-liquid-nav__item--active" aria-current="page">
+      <a href="app.html" class="app-liquid-nav__item app-liquid-nav__item--active" aria-current="page">
         <span class="app-liquid-nav__icon-wrap" aria-hidden="true">
           <svg class="app-liquid-nav__icon app-liquid-nav__icon--muted" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
@@ -187,7 +169,7 @@
         </span>
         <span class="app-liquid-nav__label">Map</span>
       </a>
-      <a href="/dashboard" class="app-liquid-nav__item">
+      <a href="dashboard.html" class="app-liquid-nav__item">
         <span class="app-liquid-nav__icon-wrap" aria-hidden="true">
           <svg class="app-liquid-nav__icon app-liquid-nav__icon--muted" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -237,7 +219,6 @@
   <script src="assets/config.js?v=idfuels-6"></script>
   <script src="assets/utils.js?v=nsw-3"></script>
   <script src="assets/app-dashboard-core.js?v=124"></script>
-  <script src="assets/app-dashboard-embed.js?v=1"></script>
   <script src="assets/app-map-openfreemap.js"></script>
   <script src="assets/app-settings.js?v=120"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -262,15 +243,7 @@
     let _appHkSheetRows = null;
     /** Monotonic: stale `refreshHighlights` runs bail so async sheet fetches cannot overwrite a newer selection. */
     let __appHiRefreshEpoch = 0;
-    /** Monotonic: stale `getCountryOverview` responses cannot overwrite after a newer `renderCountryOverview` starts. */
-    let __appOverviewEpoch = 0;
     let __appChartResizeT = 0;
-
-    window.addEventListener('load', function () {
-      try {
-        void loadAppCurrencyRates().catch(function () {});
-      } catch (_) {}
-    });
 
     function scheduleChartResize() {
       clearTimeout(__appChartResizeT);
@@ -491,8 +464,6 @@
       const legendColor = cssVar('--chart-legend', 'rgba(0,0,0,0.48)');
       const tickColor = cssVar('--chart-tick', 'rgba(0,0,0,0.45)');
       const gridColor = cssVar('--chart-grid', 'rgba(0,0,0,0.06)');
-      const yUnit = chartUsdMode ? 'USD' : (countryId != null ? (APP_CHART_CCY[countryId] || '') : '');
-      const yTitle = yUnit ? `${yUnit} / L` : '';
       return {
         responsive: true,
         maintainAspectRatio: false,
@@ -543,13 +514,6 @@
           },
           y: {
             grid: { color: gridColor },
-            title: {
-              display: !!yTitle,
-              text: yTitle,
-              color: tickColor,
-              font: { size: 10, weight: '600', family: 'Inter, system-ui, sans-serif' },
-              padding: { bottom: 6 },
-            },
             ticks: {
               color: tickColor,
               font: { size: 10 },
@@ -1225,43 +1189,8 @@
       }
     }
 
-    function applyAppCountryOverview(ov) {
-      const oilEl = document.getElementById('overview-text');
-      const metricsEl = document.getElementById('overview-metrics');
-      if (oilEl) oilEl.textContent = ov?.oilContext || '—';
-      if (metricsEl) {
-        const rowData = ov?.metricRows;
-        const cellHtml = (m) => m
-          ? `<div class="metric"><div class="k">${m[0]}</div><div class="v">${m[1]}</div></div>`
-          : '<div class="overview-metric-empty" aria-hidden="true"></div>';
-        metricsEl.innerHTML = Array.isArray(rowData) && rowData.length
-          ? rowData.map((pair) => {
-              const left = pair[0];
-              const right = pair[1];
-              return `<div class="overview-row">${cellHtml(left)}${cellHtml(right)}</div>`;
-            }).join('')
-          : '';
-      }
-    }
-
-    async function renderCountryOverview(cid) {
-      const epoch = ++__appOverviewEpoch;
-      const fb = COUNTRY_OVERVIEW_FALLBACK[cid] || { oilContext: '—', metricRows: [] };
-      applyAppCountryOverview(fb);
-      try {
-        const ov = await getCountryOverview(cid);
-        if (selected !== cid || epoch !== __appOverviewEpoch) return;
-        applyAppCountryOverview(ov);
-      } catch (_) {}
-    }
-
     function setSelected(cid, opts){
       selected = cid;
-      document.getElementById('ov-kicker').textContent = `${COUNTRIES[cid]?.name || 'Country'} overview`;
-      try {
-        if (typeof window.appDashboardSetCountry === 'function') window.appDashboardSetCountry(cid);
-      } catch (_) {}
-      void renderCountryOverview(cid).catch(() => {});
       refreshHighlights(cid, opts);
       if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(cid, true);
       if (typeof window.__appMapApplySelection === 'function') {
@@ -1280,7 +1209,6 @@
       const sheet = document.getElementById('sheet');
       const grab = document.getElementById('grab');
       const scroller = document.getElementById('sheet-scroll');
-      const sticky = document.getElementById('sheet-region-sticky');
       let dragging = false, startY = 0, startH = 0;
       let dragRaf = null;
       let pendingDy = 0;
@@ -1328,28 +1256,13 @@
         scheduleChartResize();
       }
       function shouldStartSheetResize(e) {
-        const t = e && e.target;
-        const fromHandle = (grab && t && grab.contains(t)) || (sticky && t && sticky.contains(t));
-
-        // Expanded: only allow resize from the top handle area.
         if (sheet.classList.contains('sheet-expanded')) {
-          return !!fromHandle;
+          return grab.contains(e.target);
         }
-
         if (sheet.classList.contains('sheet-scrollable')) {
-          if (fromHandle) return true;
-          // When scrolled to top, allow resizing from the top band of the scroll area (restores old feel).
-          try {
-            if (scroller && scroller.scrollTop <= 0 && t && scroller.contains(t)) {
-              const y = (e.touches ? e.touches[0].clientY : e.clientY);
-              const top = scroller.getBoundingClientRect().top;
-              if (y <= top + 72) return true;
-            }
-          } catch (_) {}
-          return scroller ? !scroller.contains(t) : true;
+          if (grab.contains(e.target)) return true;
+          return !scroller.contains(e.target);
         }
-
-        // Quarter height: drag anywhere.
         return true;
       }
       function onSheetPointerDown(e) {
@@ -2120,7 +2033,6 @@
     function appExportSlug(cardId) {
       if (cardId === 'card-highlights') return 'highlights';
       if (cardId === 'card-history') return 'history';
-      if (cardId === 'card-overview') return 'overview';
       return 'export';
     }
 
@@ -2323,20 +2235,6 @@
           ...h2cOpts,
           ignoreElements: (el) => el.classList && el.classList.contains('card-export'),
         });
-      } else if (cardId === 'card-overview') {
-        const wrap = document.createElement('div');
-        wrap.style.cssText =
-          `position:fixed;left:-16000px;top:0;width:${APP_EXPORT_CAPTURE_W}px;max-width:100%;background:${exportBg};padding:36px 16px 48px;box-sizing:border-box;`;
-        const cd = document.getElementById('card-overview')?.cloneNode(true);
-        stripExports(cd);
-        stripIdsForExport(cd);
-        if (cd) wrap.appendChild(cd);
-        document.body.appendChild(wrap);
-        try {
-          snap = await html2canvas(wrap, h2cOpts);
-        } finally {
-          wrap.remove();
-        }
       } else return;
 
       if (!snap) return;

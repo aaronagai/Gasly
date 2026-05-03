@@ -10,12 +10,12 @@
   <meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#131314" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/assets/appicon.png" />
-  <link rel="icon" type="image/png" href="/assets/appicon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="assets/appicon.png" />
+  <link rel="icon" type="image/png" href="assets/appicon.png" />
   <title>PetrolPrice — World Live Fuel Prices</title>
   <meta name="description" content="Live fuel prices for Southeast Asia — Malaysia, Singapore, Brunei, and Indonesia. Compare petrol and diesel before you drive or travel." />
-  <link rel="canonical" href="https://petrolprice.xyz" />
+  <link rel="canonical" href="https://petrolprice.xyz/home" />
 
   <!-- Open Graph + X (Twitter) link preview — image URL must be absolute -->
   <meta property="og:type" content="website" />
@@ -48,9 +48,10 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" />
   </noscript>
-  <link rel="stylesheet" href="/assets/shared.css" />
-  <link rel="stylesheet" href="/assets/home.css?v=1" />
-  <!-- styles: assets/home.css -->
+  <link rel="stylesheet" href="assets/shared.css" />
+  <link rel="stylesheet" href="assets/index.css" />
+  <!-- styles: assets/index.css -->
+  <!-- Vercel Web Analytics: enabled in the Vercel dashboard; `/_vercel/insights/*` is provided on deploy -->
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
@@ -61,18 +62,21 @@
     <div class="logo-block">
       <div class="logo-block-lockup-row">
         <h1 class="site-wordmark site-wordmark-lockup">
-          <img src="/assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
+          <img src="assets/logo.svg" alt="" class="site-wordmark-logo" width="28" height="28" decoding="async" />
           <span>petrolprice.xyz</span>
         </h1>
       </div>
     </div>
 
     <div class="header-actions">
-      <a class="try-terminal-btn" href="/app">App</a>
+      <a class="try-terminal-btn" href="terminal.html">Terminal</a>
+      <a class="try-terminal-btn" href="app.html">App</a>
     </div>
   </header>
 
+  <!-- ── Hero: full viewport ───────────────────��─────────────── -->
   <div class="hero">
+
     <div class="map-wrap" id="map-wrap">
       <div id="index-hero-map" class="index-hero-map" role="img" aria-label="Southeast Asia map"></div>
       <div class="map-hint">Tap a country with live data to view prices</div>
@@ -83,13 +87,14 @@
     </div>
   </div>
 
+  <!-- ── Footer ────────────────────────────────────────────────── -->
   <footer class="site-footer">
     <div class="footer-row footer-row-top">
       <div class="footer-brand site-wordmark">petrolprice.xyz</div>
       <nav class="footer-nav-primary" aria-label="Footer">
-        <a href="/about/">About</a>
-        <a href="/careers/">Careers</a>
-        <a href="/faq/">FAQ</a>
+        <a href="about/">About</a>
+        <a href="careers/">Careers</a>
+        <a href="faq/">FAQ</a>
       </nav>
     </div>
     <div class="footer-divider" aria-hidden="true"></div>
@@ -113,14 +118,14 @@
     </div>
   </footer>
 
+  <!-- Tooltip -->
   <div id="tooltip">
     <span class="tt-country" id="tt-country"></span>
     <span class="tt-status"  id="tt-status"></span>
   </div>
 
-  <script defer src="/assets/config.js?v=idfuels-6"></script>
-  <script defer src="/assets/utils.js?v=nsw-3"></script>
-  <script defer src="/assets/index-hero-map.js"></script>
+  <script defer src="assets/config.js?v=idfuels-6"></script>
+  <script defer src="assets/utils.js?v=nsw-3"></script>
+  <script defer src="assets/index-hero-map.js"></script>
 </body>
 </html>
-

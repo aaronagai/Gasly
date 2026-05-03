@@ -518,18 +518,14 @@ function wireAppDashboardPeriodSelect() {
     toggleMenu();
   });
 
-  function closeOnBackdropEvent(e) {
-    try {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    } catch (_) {}
+  backdrop.addEventListener('click', function () {
     closeMenu();
-  }
-  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
-  backdrop.addEventListener('click', closeOnBackdropEvent);
+  });
 
   if (handle) {
-    handle.addEventListener('pointerdown', closeOnBackdropEvent);
-    handle.addEventListener('click', closeOnBackdropEvent);
+    handle.addEventListener('click', function () {
+      closeMenu();
+    });
   }
 
   menu.querySelectorAll('.app-dashboard-period-option').forEach(function (btn) {
@@ -735,18 +731,14 @@ function wireAppDashboardCountryFilter() {
     toggleMenu();
   });
 
-  function closeOnBackdropEvent(e) {
-    try {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    } catch (_) {}
+  backdrop.addEventListener('click', function () {
     closeMenu();
-  }
-  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
-  backdrop.addEventListener('click', closeOnBackdropEvent);
+  });
 
   if (handle) {
-    handle.addEventListener('pointerdown', closeOnBackdropEvent);
-    handle.addEventListener('click', closeOnBackdropEvent);
+    handle.addEventListener('click', function () {
+      closeMenu();
+    });
   }
 
   menu.querySelectorAll('.app-dashboard-country-option').forEach(function (btn) {
@@ -854,18 +846,14 @@ function wireAppDashboardFuelSelect() {
     toggleMenu();
   });
 
-  function closeOnBackdropEvent(e) {
-    try {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    } catch (_) {}
+  backdrop.addEventListener('click', function () {
     closeMenu();
-  }
-  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
-  backdrop.addEventListener('click', closeOnBackdropEvent);
+  });
 
   if (handle) {
-    handle.addEventListener('pointerdown', closeOnBackdropEvent);
-    handle.addEventListener('click', closeOnBackdropEvent);
+    handle.addEventListener('click', function () {
+      closeMenu();
+    });
   }
 
   menu.querySelectorAll('.app-dashboard-fuel-option').forEach(function (btn) {
@@ -1017,18 +1005,14 @@ function wireAppDashboardSortSelect() {
     toggleMenu();
   });
 
-  function closeOnBackdropEvent(e) {
-    try {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    } catch (_) {}
+  backdrop.addEventListener('click', function () {
     closeMenu();
-  }
-  backdrop.addEventListener('pointerdown', closeOnBackdropEvent);
-  backdrop.addEventListener('click', closeOnBackdropEvent);
+  });
 
   if (handle) {
-    handle.addEventListener('pointerdown', closeOnBackdropEvent);
-    handle.addEventListener('click', closeOnBackdropEvent);
+    handle.addEventListener('click', function () {
+      closeMenu();
+    });
   }
 
   menu.querySelectorAll('.app-dashboard-sort-option').forEach(function (btn) {

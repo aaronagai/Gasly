@@ -1,0 +1,20 @@
+---
+description: Serve the site from local-repo when running a local static preview
+alwaysApply: true
+---
+
+# Local static preview
+
+The browsable static site for this project lives under **`local-repo/`** at the repo root (not the repo root itself).
+
+When starting a local preview server (`python3 -m http.server`, `npx serve`, etc.), **`cd` into `local-repo/` first**, then bind/listen as usual.
+
+Example:
+
+```bash
+cd local-repo && python3 -m http.server 5513
+```
+
+Then open `http://localhost:<port>/`.
+
+The root URL **`/`** sends visitors to **`app.html`** (same idea as production **`/` → `/app`**). The SEA map landing page is **`home.html`**.
