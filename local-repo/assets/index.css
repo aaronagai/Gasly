@@ -118,7 +118,7 @@
       margin-right: 8px;
     }
 
-    /* HTML markers sit in the map container; keep them above the canvas for clicks. */
+    /* HTML markers sit in the map container; keep them above the canvas for hover tooltips. */
     .map-wrap .maplibregl-marker {
       z-index: 6;
     }
@@ -131,7 +131,7 @@
       padding: 0;
       border: none;
       border-radius: 50%;
-      cursor: pointer;
+      cursor: default;
       background: transparent;
       -webkit-tap-highlight-color: transparent;
     }

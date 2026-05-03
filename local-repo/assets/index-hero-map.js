@@ -241,7 +241,7 @@
             canvas.style.cursor = '';
             return;
           }
-          canvas.style.cursor = LIVE[nid] || SEA_IDS.includes(nid) ? 'pointer' : '';
+          canvas.style.cursor = '';
           showTip(e.originalEvent.clientX, e.originalEvent.clientY, nid);
         });
 
@@ -250,42 +250,27 @@
           map.getCanvas().style.cursor = '';
         });
 
-        map.on('click', (e) => {
-          const pe = e.originalEvent;
-          if (pe && pe.pointerType === 'touch') return;
-          const nid = pickCountryId(e);
-          if (nid == null) return;
-          const c = LIVE[nid];
-          if (c) window.location.href = c.url;
-        });
-
         const sgHit = document.createElement('button');
         sgHit.type = 'button';
         sgHit.className = 'index-map-sg-hit';
-        sgHit.setAttribute('aria-label', 'Singapore — live prices');
+        sgHit.setAttribute('aria-label', 'Singapore — fuel price data');
         new maplibregl.Marker({ element: sgHit, anchor: 'center' })
           .setLngLat([103.82, 1.35])
           .addTo(map);
 
         sgHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 702));
         sgHit.addEventListener('mouseleave', hideTip);
-        sgHit.addEventListener('click', () => {
-          window.location.href = LIVE[702].url;
-        });
 
         const vnHit = document.createElement('button');
         vnHit.type = 'button';
         vnHit.className = 'index-map-vn-hit';
-        vnHit.setAttribute('aria-label', 'Vietnam — live prices');
+        vnHit.setAttribute('aria-label', 'Vietnam — fuel price data');
         new maplibregl.Marker({ element: vnHit, anchor: 'center' })
           .setLngLat([108.25, 14.4])
           .addTo(map);
 
         vnHit.addEventListener('mousemove', (ev) => showTip(ev.clientX, ev.clientY, 704));
         vnHit.addEventListener('mouseleave', hideTip);
-        vnHit.addEventListener('click', () => {
-          window.location.href = LIVE[704].url;
-        });
 
         const wrap = document.getElementById('map-wrap');
         if (wrap && typeof ResizeObserver !== 'undefined') {
