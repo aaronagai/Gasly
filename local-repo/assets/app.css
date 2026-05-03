@@ -225,6 +225,36 @@
       color: var(--input-ph);
       font-weight: 300;
     }
+    .app-topbar-settings-btn{
+      box-sizing: border-box;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 46;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      border-radius: 999px;
+      border: 1px solid var(--sheet-frost-stroke);
+      background: var(--sheet-frost-fill);
+      backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      color: var(--icon-fg);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-topbar-settings-btn svg{
+      flex-shrink: 0;
+      display: block;
+    }
+    .app-topbar-settings-btn:focus-visible{
+      outline: 2px solid color-mix(in srgb, var(--text) 35%, transparent);
+      outline-offset: 2px;
+    }
     .search-field .search-menu{
       position: absolute;
       left: 0;
@@ -678,7 +708,7 @@
       );
     }
 
-    /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
+    /* Bottom sheet — three stops: ~¼, ~½, expanded; inner scroll only at expanded (full) height */
     /* Cards-only embed mode (?cards=1) — used by the dashboard row pull-up to iframe just the details sheet. */
     html.app-cards-only-root,
     html.app-cards-only-root body{
@@ -772,12 +802,12 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-    /* Quarter height: drag anywhere resizes. Half+ : scroll inside sheet-scroll; drag handle still resizes. */
+    /* Quarter/half: drag anywhere resizes. Full (scrollable): whole sheet can resize; JS probes scroll vs resize on the scroller. */
     .sheet:not(.sheet-scrollable){
       touch-action: none;
     }
-    .sheet.sheet-scrollable:not(.sheet-expanded){
-      touch-action: manipulation;
+    .sheet.sheet-scrollable{
+      touch-action: none;
     }
     .grab{
       position: relative;
@@ -1341,6 +1371,10 @@
         margin-left: 12px;
         margin-right: 12px;
       }
+      .app-dashboard .app-dashboard-search-row{
+        margin-left: 12px;
+        margin-right: 12px;
+      }
       .app-dashboard .app-dsh-pct--up{ color: #16a34a; }
       .app-dashboard .app-dsh-pct--down{ color: #dc2626; }
       .app-dashboard .app-dashboard-td--err{
@@ -1402,7 +1436,11 @@
       gap: 0.5rem;
       min-width: 0;
       flex: 1 1 auto;
+      width: 100%;
       justify-content: flex-start;
+    }
+    .app-dashboard-top-brand-row .app-topbar-settings-btn{
+      margin-left: auto;
     }
     .app-dashboard-brand{
       min-width: 0;
@@ -1463,6 +1501,21 @@
     .app-dashboard-scroll::-webkit-scrollbar-track{
       background: transparent;
     }
+    .app-dashboard-search-row{
+      position: relative;
+      z-index: 50;
+      margin: 10px 16px 8px;
+    }
+    .app-dashboard-search-row .search-field{
+      width: 100%;
+      min-width: 0;
+    }
+    /** Reuse map `.search` frosted pill; scoped tweaks for full-width dashboard strip */
+    .app-dashboard-search-row .app-dashboard-search.search{
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
     .app-dashboard-toolbar{
       position: relative;
       z-index: 50;
@@ -1470,7 +1523,7 @@
       flex-wrap: nowrap;
       align-items: center;
       gap: 6px 8px;
-      margin: 10px 16px 20px;
+      margin: 0 16px 20px;
       /* Fuel + sort use fixed bottom sheets, not dropdowns in this box. */
       overflow: visible;
       padding-bottom: 2px;
@@ -1686,6 +1739,17 @@
     .app-dashboard-detail-sheet{
       z-index: 130;
     }
+    /* Quarter/half card: sheet + backdrop ignore pointers so the list behind can scroll.
+       Full-height card removes this class — backdrop behaves like a normal modal scrim again. */
+    .app-dashboard-detail-sheet.app-dashboard-detail-sheet--peek{
+      pointer-events: none;
+    }
+    .app-dashboard-detail-sheet.app-dashboard-detail-sheet--peek .app-dashboard-detail-sheet-backdrop{
+      pointer-events: none;
+    }
+    .app-dashboard-detail-sheet.app-dashboard-detail-sheet--peek .app-dashboard-detail-sheet-panel{
+      pointer-events: auto;
+    }
     /* Drop the dark scrim so the dashboard table behind the panel is what gets
        blurred — that's what makes the frost effect visible. A tap anywhere on the
        (now invisible) backdrop still closes the sheet. */
@@ -1698,11 +1762,10 @@
       }
     }
     .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-panel{
-      /* Tall but not full-bleed — leave a peek of the dashboard at the top so
-         users can tap outside to dismiss. Drag-down + Escape still close. */
-      min-height: calc(100dvh - 90px);
-      max-height: calc(100dvh - 90px);
-      height: calc(100dvh - 90px);
+      /* Same three stops as map `app.html` sheet: ~¼ / ~½ / expanded (`--dashboard-detail-sheet-h`). */
+      min-height: 0;
+      height: var(--dashboard-detail-sheet-h, 50vh);
+      max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       padding: 0;
       /* The floating Map / Dashboard / Settings nav (z-index 140) hovers over the
          panel's bottom strip. Pad the panel so the iframe's flex: 1 child shrinks

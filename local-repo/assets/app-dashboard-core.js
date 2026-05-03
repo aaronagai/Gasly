@@ -40,10 +40,21 @@ async function buildSearchRegionsList() {
     });
   }
   let vnRows = [];
+  let mmRows = [];
+  let sgRows = [];
+  let hkRows = [];
   try {
-    vnRows = await ensureSheetRows(VN_SHEET_URL);
+    [vnRows, mmRows, sgRows, hkRows] = await Promise.all([
+      ensureSheetRows(VN_SHEET_URL).catch(() => []),
+      ensureSheetRows(MM_SHEET_URL).catch(() => []),
+      ensureSheetRows(SG_SHEET_URL).catch(() => []),
+      ensureSheetRows(HK_SHEET_URL).catch(() => []),
+    ]);
   } catch (_) {
     vnRows = [];
+    mmRows = [];
+    sgRows = [];
+    hkRows = [];
   }
   const vnAreas = [...new Set(vnRows.map((r) => canonVietnamAreaKey(r.area)).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
@@ -60,12 +71,6 @@ async function buildSearchRegionsList() {
     rows.push({ countryId: 704, label: `${vnName} - National`, vnArea: '' });
   }
   rows.push({ countryId: 116, label: `${COUNTRIES[116].name} - National` });
-  let mmRows = [];
-  try {
-    mmRows = await ensureSheetRows(MM_SHEET_URL);
-  } catch (_) {
-    mmRows = [];
-  }
   const mmRegs = [...new Set(mmRows.map((r) => normalizeSheetString(r.region)).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
   );
@@ -77,12 +82,6 @@ async function buildSearchRegionsList() {
     rows.push({ countryId: 104, label: `${COUNTRIES[104].name} - National`, mmRegion: '' });
   }
 
-  let sgRows = [];
-  try {
-    sgRows = await ensureSheetRows(SG_SHEET_URL);
-  } catch (_) {
-    sgRows = [];
-  }
   const sgProvs = sortedSingaporeProviders(sgRows);
   if (sgProvs.length) {
     sgProvs.forEach((p) => {
@@ -90,13 +89,6 @@ async function buildSearchRegionsList() {
     });
   } else {
     rows.push({ countryId: 702, label: `${COUNTRIES[702].name} - National` });
-  }
-
-  let hkRows = [];
-  try {
-    hkRows = await ensureSheetRows(HK_SHEET_URL);
-  } catch (_) {
-    hkRows = [];
   }
   const hkProvs = sortedSingaporeProviders(hkRows);
   if (hkProvs.length) {
@@ -251,6 +243,8 @@ var _dashboardFuelBound = false;
 var _dashboardCountryBound = false;
 var _dashboardSortBound = false;
 var _dashboardColumnHeadersBound = false;
+var _dashboardRegionSearchBound = false;
+var _dashboardRegionSearchDebounce = null;
 const DASHBOARD_FUEL_STATUS_LABELS = {
   all: 'All types',
   entry: 'Entry (90-91)',
@@ -275,6 +269,24 @@ const DASHBOARD_FUEL_PRESETS_ALL = Object.freeze(['entry', 'mid', 'premium', 'di
 
 const DASHBOARD_FUEL_KEYS = new Set(['all', 'entry', 'mid', 'premium', 'diesel']);
 
+/** Sheet/API keys that are RON95-class (or HK “premium petrol” / AU P95) — not Entry (90–91) on the dashboard. */
+const DASHBOARD_ENTRY_EXCLUDED_PRICE_KEYS = new Set([
+  'ron95',
+  'ron95_v',
+  'ron95_iii',
+  'ron95_budi95',
+  'gasohol_95',
+  'gasoline_95',
+  'pertamax',
+  'p95',
+  'gasoline_premium',
+  'premium_petrol',
+]);
+
+function dashboardEntryExcludedPriceKey(priceKey) {
+  return priceKey != null && DASHBOARD_ENTRY_EXCLUDED_PRICE_KEYS.has(String(priceKey));
+}
+
 function dashboardSheetsSyncBodyScroll() {
   try {
     const sortS = document.getElementById('app-dashboard-sort-sheet');
@@ -282,12 +294,16 @@ function dashboardSheetsSyncBodyScroll() {
     const countryS = document.getElementById('app-dashboard-country-sheet');
     const periodS = document.getElementById('app-dashboard-period-sheet');
     const detailS = document.getElementById('app-dashboard-detail-sheet');
+    const detailBlocksScroll =
+      detailS &&
+      !detailS.hidden &&
+      !detailS.classList.contains('app-dashboard-detail-sheet--peek');
     const anyOpen =
       (sortS && !sortS.hidden) ||
       (fuelS && !fuelS.hidden) ||
       (countryS && !countryS.hidden) ||
       (periodS && !periodS.hidden) ||
-      (detailS && !detailS.hidden);
+      detailBlocksScroll;
     document.body.style.overflow = anyOpen ? 'hidden' : '';
   } catch (_) {}
 }
@@ -341,6 +357,14 @@ function dashboardCloseDetailSheetIfOpen() {
   if (sheet && !sheet.hidden) {
     sheet.hidden = true;
     sheet.setAttribute('aria-hidden', 'true');
+    sheet.classList.remove('app-dashboard-detail-sheet--peek');
+    sheet.style.removeProperty('--dashboard-detail-sheet-h');
+    const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
+    if (panel) {
+      panel.style.transition = '';
+      panel.style.transform = '';
+    }
+    _dashboardDetailSnapIndex = 0;
     /* Tear down the embedded `app.html` iframe so its chart loop, fetches, and
        map-init side effects stop running while the sheet is closed. */
     const frame = document.getElementById('app-dashboard-detail-frame');
@@ -352,12 +376,120 @@ function dashboardCloseDetailSheetIfOpen() {
 }
 
 let _dashboardDetailBound = false;
+let _dashboardDetailSnapIndex = 0;
+
+/** Match `app.html` `initSheet()` heights: ~¼, ~½, expanded. */
+function dashboardDetailViewportH() {
+  return window.visualViewport ? Math.round(window.visualViewport.height) : window.innerHeight;
+}
+
+function dashboardDetailHeights() {
+  const vh = dashboardDetailViewportH();
+  const quarter = Math.round(vh * 0.25);
+  const half = Math.round(vh * 0.5);
+  const expandedTop = Math.round(Math.min(vh - 72, vh * 0.94));
+  const expanded = Math.max(half + 100, expandedTop);
+  return { quarter, half, expanded };
+}
+
+/** Cards-only `app.html` iframe: allow inner `.sheet-scroll` only at the expanded snap (same as map app). */
+function dashboardDetailSyncCardsOnlyIframeScroll(intendedHeightPx) {
+  const frame = document.getElementById('app-dashboard-detail-frame');
+  const sheet = document.getElementById('app-dashboard-detail-sheet');
+  if (!frame || !sheet || sheet.hidden) return;
+  let src = '';
+  try {
+    src = String(frame.getAttribute('src') || frame.src || '');
+  } catch (_) {
+    src = '';
+  }
+  if (!src || src.includes('about:blank')) return;
+  const { expanded } = dashboardDetailHeights();
+  const tol = 4;
+  let h;
+  if (typeof intendedHeightPx === 'number' && Number.isFinite(intendedHeightPx)) {
+    h = Math.round(intendedHeightPx);
+  } else {
+    const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
+    h = panel ? Math.round(panel.getBoundingClientRect().height) : 0;
+  }
+  const full = h >= expanded - tol;
+  try {
+    const w = frame.contentWindow;
+    const fn = w && w.__appSetCardsOnlySheetScroll;
+    if (typeof fn === 'function') fn(full);
+  } catch (_) {}
+}
+
+function dashboardDetailApplyHeight(panel, sheet, px) {
+  const rounded = Math.round(px);
+  if (sheet) {
+    sheet.style.setProperty('--dashboard-detail-sheet-h', `${rounded}px`);
+    const { expanded } = dashboardDetailHeights();
+    const tol = 8;
+    /* Peek heights: let touches pass through to the dashboard list (see app.css). */
+    const peek = rounded < expanded - tol;
+    const wasPeek = sheet.classList.contains('app-dashboard-detail-sheet--peek');
+    sheet.classList.toggle('app-dashboard-detail-sheet--peek', peek);
+    if (peek !== wasPeek) dashboardSheetsSyncBodyScroll();
+  }
+  dashboardDetailSyncCardsOnlyIframeScroll(rounded);
+}
+
+function dashboardDetailNearestSnapIndex(h) {
+  const { quarter, half, expanded } = dashboardDetailHeights();
+  const snaps = [quarter, half, expanded];
+  let best = 0;
+  let d = Infinity;
+  snaps.forEach((x, i) => {
+    const dd = Math.abs(h - x);
+    if (dd < d) {
+      d = dd;
+      best = i;
+    }
+  });
+  return best;
+}
+
+function dashboardDetailSetSnap(i, panel, sheet, opts) {
+  const snap = Math.max(0, Math.min(2, Number(i) || 0));
+  _dashboardDetailSnapIndex = snap;
+  const { quarter, half, expanded } = dashboardDetailHeights();
+  const target = snap === 0 ? quarter : snap === 1 ? half : expanded;
+  const animate = !(opts && opts.instant);
+  if (animate) {
+    panel.style.transition = 'height 220ms cubic-bezier(0.32, 0.72, 0, 1)';
+    const done = function (e) {
+      if (e && e.propertyName && e.propertyName !== 'height') return;
+      panel.removeEventListener('transitionend', done);
+      panel.style.transition = '';
+    };
+    panel.addEventListener('transitionend', done);
+    setTimeout(done, 280);
+    dashboardDetailApplyHeight(panel, sheet, target);
+  } else {
+    panel.style.transition = 'none';
+    dashboardDetailApplyHeight(panel, sheet, target);
+    requestAnimationFrame(function () {
+      panel.style.transition = '';
+    });
+  }
+}
+
+function dashboardDetailOnViewportResize() {
+  const sheet = document.getElementById('app-dashboard-detail-sheet');
+  if (!sheet || sheet.hidden) return;
+  const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
+  if (!panel) return;
+  dashboardDetailSetSnap(_dashboardDetailSnapIndex, panel, sheet, { instant: true });
+}
 
 /**
  * Bind interactions on the row-detail pull-up sheet:
  * - Backdrop click closes the sheet.
- * - The handle supports drag-down-to-dismiss (snap back on a short drag, animate
- *   off-screen + close on a long drag) and tap-to-close.
+ * - The handle uses the same three height stops as map `app.html` (~¼ / ~½ / expanded):
+ *   drag vertically to resize, release snaps; tap handle (no drag) closes.
+ *   Enter / Space on the handle cycles stops.
  * - Escape key closes the sheet.
  *
  * The drag handler is bound to the visible handle area above the iframe because
@@ -370,95 +502,118 @@ function wireAppDashboardDetailSheet() {
   _dashboardDetailBound = true;
   const backdrop = document.getElementById('app-dashboard-detail-backdrop');
   const handle = document.getElementById('app-dashboard-detail-sheet-handle');
-  const panel = sheet.querySelector('.app-dashboard-bottom-sheet-panel');
+  const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
   if (backdrop) backdrop.addEventListener('click', dashboardCloseDetailSheetIfOpen);
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && !sheet.hidden) dashboardCloseDetailSheetIfOpen();
   });
 
   if (handle && panel) {
+    handle.tabIndex = 0;
+    handle.setAttribute('role', 'button');
+    handle.setAttribute('aria-label', 'Resize region details sheet');
+
+    const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+    const TAP_PX = 12;
+    const DISMISS_BELOW_QUARTER_PX = 56;
+
     let dragging = false;
     let startY = 0;
-    let dy = 0;
-    let panelH = 0;
+    let startH = 0;
+    let lastY = 0;
+    let dragRaf = null;
     let activePointer = null;
-    const DRAG_THRESHOLD_PX = 80;
-    const DRAG_THRESHOLD_PCT = 0.2;
+
+    const flushDragFrame = function () {
+      dragRaf = null;
+      if (!dragging) return;
+      const { quarter, expanded } = dashboardDetailHeights();
+      const h = clamp(startH + (startY - lastY), quarter, expanded);
+      dashboardDetailApplyHeight(panel, sheet, h);
+    };
+
     const onDown = function (ev) {
       if (ev.button != null && ev.button !== 0) return;
       dragging = true;
       activePointer = ev.pointerId != null ? ev.pointerId : null;
       startY = ev.clientY;
-      dy = 0;
-      panelH = panel.getBoundingClientRect().height || 1;
+      lastY = ev.clientY;
+      startH = panel.getBoundingClientRect().height || 1;
       panel.style.transition = 'none';
-      panel.style.willChange = 'transform';
       if (activePointer != null && handle.setPointerCapture) {
         try { handle.setPointerCapture(activePointer); } catch (_) {}
       }
       ev.preventDefault();
     };
+
     const onMove = function (ev) {
       if (!dragging) return;
-      dy = Math.max(0, ev.clientY - startY);
-      panel.style.transform = `translateY(${dy}px)`;
+      lastY = ev.clientY;
+      if (dragRaf == null) dragRaf = requestAnimationFrame(flushDragFrame);
       if (ev.cancelable) ev.preventDefault();
     };
-    const finishDrag = function (shouldClose) {
-      dragging = false;
-      panel.style.willChange = '';
-      panel.style.transition = 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)';
-      if (shouldClose) {
-        panel.style.transform = `translateY(${panelH}px)`;
-        const reset = function () {
-          panel.removeEventListener('transitionend', reset);
-          panel.style.transition = '';
-          panel.style.transform = '';
-          dashboardCloseDetailSheetIfOpen();
-        };
-        panel.addEventListener('transitionend', reset);
-        /* Fallback in case the transitionend doesn't fire (e.g. element removed). */
-        setTimeout(reset, 320);
-      } else {
-        panel.style.transform = 'translateY(0)';
-        const cleanup = function () {
-          panel.removeEventListener('transitionend', cleanup);
-          panel.style.transition = '';
-          panel.style.transform = '';
-        };
-        panel.addEventListener('transitionend', cleanup);
-        setTimeout(cleanup, 280);
-      }
-    };
+
     const onUp = function (ev) {
       if (!dragging) return;
+      dragging = false;
+      if (dragRaf != null) {
+        cancelAnimationFrame(dragRaf);
+        dragRaf = null;
+      }
       if (activePointer != null && handle.releasePointerCapture) {
         try { handle.releasePointerCapture(activePointer); } catch (_) {}
       }
       activePointer = null;
-      const threshold = Math.max(DRAG_THRESHOLD_PX, panelH * DRAG_THRESHOLD_PCT);
-      const moved = dy > 4;
-      let shouldClose;
-      if (!moved) {
-        shouldClose = true; /* tap = close */
-      } else if (dy >= threshold) {
-        shouldClose = true; /* dragged far enough = close */
-      } else {
-        shouldClose = false; /* short drag = snap back */
+
+      const { quarter, expanded } = dashboardDetailHeights();
+      const totalMove = Math.abs(lastY - startY);
+      if (totalMove < TAP_PX) {
+        dashboardCloseDetailSheetIfOpen();
+        if (ev && ev.cancelable) ev.preventDefault();
+        return;
       }
-      finishDrag(shouldClose);
-      if (ev) ev.preventDefault();
+
+      const rawH = startH + (startY - lastY);
+      if (_dashboardDetailSnapIndex === 0 && rawH < quarter - DISMISS_BELOW_QUARTER_PX) {
+        dashboardCloseDetailSheetIfOpen();
+        if (ev && ev.cancelable) ev.preventDefault();
+        return;
+      }
+
+      const h = clamp(rawH, quarter, expanded);
+      const nextSnap = dashboardDetailNearestSnapIndex(h);
+      dashboardDetailSetSnap(nextSnap, panel, sheet);
+      if (ev && ev.cancelable) ev.preventDefault();
     };
+
     const onCancel = function () {
       if (!dragging) return;
+      dragging = false;
+      if (dragRaf != null) {
+        cancelAnimationFrame(dragRaf);
+        dragRaf = null;
+      }
       activePointer = null;
-      finishDrag(false);
+      const { quarter: q2, expanded: e2 } = dashboardDetailHeights();
+      const h2 = clamp(startH + (startY - lastY), q2, e2);
+      dashboardDetailSetSnap(dashboardDetailNearestSnapIndex(h2), panel, sheet);
     };
+
     handle.addEventListener('pointerdown', onDown);
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onUp);
     handle.addEventListener('pointercancel', onCancel);
     handle.addEventListener('lostpointercapture', onCancel);
+    handle.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      if (sheet.hidden) return;
+      ev.preventDefault();
+      const next = (_dashboardDetailSnapIndex + 1) % 3;
+      dashboardDetailSetSnap(next, panel, sheet);
+    });
+
+    window.addEventListener('resize', dashboardDetailOnViewportResize);
+    window.visualViewport?.addEventListener('resize', dashboardDetailOnViewportResize);
   }
 }
 
@@ -491,8 +646,14 @@ function dashboardOpenDetailSheet(item) {
     /* Cache-bust per-row so the iframe re-runs setSelected even when the same row
        is re-tapped after closing the sheet. */
     params.set('t', String(Date.now()));
+    frame.addEventListener('load', dashboardDetailSyncCardsOnlyIframeScroll, { once: true });
     frame.src = `app.html?${params.toString()}`;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(dashboardDetailSyncCardsOnlyIframeScroll);
+    });
   }
+  const panel = sheet.querySelector('.app-dashboard-detail-sheet-panel');
+  if (panel) dashboardDetailSetSnap(0, panel, sheet, { instant: true });
   sheet.hidden = false;
   sheet.setAttribute('aria-hidden', 'false');
   dashboardSheetsSyncBodyScroll();
@@ -1303,10 +1464,45 @@ function compareDashboardSortRows(a, b, mode) {
   return tie;
 }
 
+/** Live trimmed query from the dashboard search field (empty if absent). */
+function readDashboardRegionSearchFromDom() {
+  const input = document.getElementById('app-dashboard-region-search');
+  if (!input) return { norm: '', text: '' };
+  const t = String(input.value || '').trim();
+  return { norm: t ? t.toLowerCase() : '', text: t };
+}
+
+function wireAppDashboardRegionSearch() {
+  const input = document.getElementById('app-dashboard-region-search');
+  if (!input || _dashboardRegionSearchBound) return;
+  _dashboardRegionSearchBound = true;
+
+  function scheduleRender() {
+    if (_dashboardRegionSearchDebounce) clearTimeout(_dashboardRegionSearchDebounce);
+    _dashboardRegionSearchDebounce = setTimeout(function () {
+      _dashboardRegionSearchDebounce = null;
+      if (_dashboardDataCache) renderAppDashboardTbody();
+    }, 200);
+  }
+
+  input.addEventListener('input', scheduleRender);
+  input.addEventListener('change', function () {
+    if (_dashboardDataCache) renderAppDashboardTbody();
+  });
+  input.addEventListener('blur', function () {
+    if (_dashboardRegionSearchDebounce) {
+      clearTimeout(_dashboardRegionSearchDebounce);
+      _dashboardRegionSearchDebounce = null;
+      if (_dashboardDataCache) renderAppDashboardTbody();
+    }
+  });
+}
+
 function renderAppDashboardTbody() {
   const tbody = document.getElementById('app-dashboard-tbody');
   const statusEl = document.getElementById('app-dashboard-status');
   if (!tbody || !_dashboardDataCache) return;
+  const { norm: regionSearchNorm, text: regionSearchText } = readDashboardRegionSearchFromDom();
   const { list: fullList, caches } = _dashboardDataCache;
   let list = fullList;
   const countryFilterId = getDashboardCountryFilterId();
@@ -1342,9 +1538,10 @@ function renderAppDashboardTbody() {
     const st = dashboardRowStats(series, meta.key, meta.sym, meta.dec);
     const usdSort = dashboardLatestUsdForSort(series, meta.key, meta.sym);
     const pctSort = dashboardPctForPeriod(st, period);
-    return { row, originalIndex, st, usdSort, pctSort, displayLabel, priceKey: meta.key };
+    return { row, originalIndex, st, usdSort, pctSort, displayLabel, priceKey: meta.key, preset };
   });
   enriched = enriched.filter((e) => dashboardRowHasUsdSpot(e.st));
+  enriched = enriched.filter((e) => e.preset !== 'entry' || !dashboardEntryExcludedPriceKey(e.priceKey));
   if (fuelPreset === 'all') {
     const seen = new Set();
     enriched = enriched.filter((e) => {
@@ -1355,6 +1552,12 @@ function renderAppDashboardTbody() {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
+    });
+  }
+  if (regionSearchNorm) {
+    enriched = enriched.filter(function (e) {
+      const lab = String(e.displayLabel != null ? e.displayLabel : e.row.label || '').toLowerCase();
+      return lab.includes(regionSearchNorm);
     });
   }
   enriched.sort((a, b) => compareDashboardSortRows(a, b, sortMode));
@@ -1417,7 +1620,8 @@ function renderAppDashboardTbody() {
   tbody.appendChild(frag);
   if (statusEl) {
     const shown = enriched.length;
-    statusEl.textContent = `${shown} regions · ${countryStatus} · ${fuelLabel} · sort: ${sortLabel} · prices USD/L · sheet/API columns vary by market`;
+    const searchFrag = regionSearchText ? ` · matching "${regionSearchText}"` : '';
+    statusEl.textContent = `${shown} regions · ${countryStatus} · ${fuelLabel} · sort: ${sortLabel}${searchFrag} · prices USD/L · sheet/API columns vary by market`;
   }
 }
 
@@ -1498,7 +1702,8 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'diesel') return { key: myEast ? 'diesel_eastmsia' : 'diesel', sym: 'MYR', dec: 2 };
     if (p === 'mid') return { key: 'ron95', sym: 'MYR', dec: 2 };
     if (p === 'premium') return { key: 'ron97', sym: 'MYR', dec: 2 };
-    if (p === 'entry') return { key: 'ron95_budi95', sym: 'MYR', dec: 2 };
+    /* Entry = 90–91: MY pump data has no separate tier here — do not use BUDI95 / RON95-class column. */
+    if (p === 'entry') return { key: '__none__', sym: 'MYR', dec: 2 };
     return { key: 'ron95', sym: 'MYR', dec: 2 };
   }
   if (cid === 702) {
@@ -1884,11 +2089,16 @@ async function loadAndRenderAppDashboard() {
   wireAppDashboardPeriodSelect();
   wireAppDashboardSortSelect();
   wireAppDashboardColumnHeaders();
+  wireAppDashboardRegionSearch();
   tbody.innerHTML = '';
   if (statusEl) statusEl.textContent = 'Loading…';
   try {
+    /* Currency + all dashboard fetches in parallel; search list then uses warm sheet cache. */
+    const [, caches] = await Promise.all([
+      loadAppCurrencyRates().catch(() => {}),
+      preloadDashboardCaches(),
+    ]);
     const list = await buildSearchRegionsList();
-    const caches = await preloadDashboardCaches();
     _dashboardDataCache = { list, caches };
     renderAppDashboardTbody();
   } catch (e) {

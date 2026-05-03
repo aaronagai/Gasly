@@ -148,12 +148,12 @@
   <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js?v=idfuels-6"></script>
-  <script src="assets/utils.js?v=nsw-3"></script>
+  <script src="assets/utils.js?v=chart-ytick-1"></script>
   <script src="assets/terminal-map-mapkit.js"></script>
   <script src="assets/terminal-map-openfreemap.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH_FUELS, PH_FUELS, KH/MM/LA/VIC fuels — from config.js
-    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, ensureNswFuelSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries — from utils.js
+    // ensureMalaysiaRows, ensureSheetRows, ensureVicServoSnapshot, ensureNswFuelSnapshot, mergeCurrencySheetRowsIntoUsdRates, cssVar, withAlpha, takeLastN, rowsForPriceChart, asNum, buildChartSeries, formatPriceChartYTick — from utils.js
 
     let MY_INDEX = null; // selected week index in ascending series
     // Per-country selected index for the highlights pager (all non-Malaysia).
@@ -602,10 +602,28 @@
       syncTerminalInfoTitleSwitchable();
     }
 
-    // Right-panel chart
+    // Right-panel chart (ISO map matches `renderRightChart` FX / y-axis title)
+    const TERMINAL_CHART_ISO = {
+      360: 'IDR',
+      458: 'MYR',
+      344: 'HKD',
+      702: 'SGD',
+      96: 'BND',
+      764: 'THB',
+      608: 'PHP',
+      116: 'KHR',
+      418: 'LAK',
+      104: 'MMK',
+      704: 'VND',
+      801: 'AUD',
+      802: 'AUD',
+    };
+
     function chartThemeOptions(countryId, yAxisTitle) {
       const tick = cssVar('--term-chart-tick', 'rgba(0,0,0,0.45)');
       const axis = cssVar('--term-chart-axis', withAlpha(tick, 0.32));
+      const usdMode = isTerminalUsd();
+      const iso = countryId != null ? TERMINAL_CHART_ISO[countryId] : null;
       return {
         tooltip: {
           backgroundColor: cssVar('--term-chart-tooltip-bg', 'rgba(255,255,255,0.96)'),
@@ -637,28 +655,7 @@
               color: tick,
               font: { family: 'Inter', size: 11 },
               callback(v) {
-                if (countryId === 360) {
-                  const nv = Number(v);
-                  if (!Number.isFinite(nv)) return v;
-                  if (nv >= 1e6) return `${formatNumberCommas(nv / 1e6, 1, 1)}M`;
-                  return `${formatNumberCommas(Math.round(nv / 1000), 0, 0)}k`;
-                }
-                if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
-                  const n = Number(v);
-                  if (!Number.isFinite(n)) return v;
-                  if (Math.abs(n) >= 1e6) return `${formatNumberCommas(n / 1e6, 1, 1)}M`;
-                  if (Math.abs(n) >= 1000) return `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
-                  return formatNumberCommas(Math.round(n), 0, 0);
-                }
-                if (countryId === 344 || countryId === 801 || countryId === 802) {
-                  const n2 = Number(v);
-                  if (!Number.isFinite(n2)) return v;
-                  return formatNumberCommas(parseFloat(n2.toFixed(2)), 0, 2);
-                }
-                const n = Number(v);
-                return Number.isFinite(n)
-                  ? formatNumberCommas(parseFloat(n.toFixed(6)), 0, 6)
-                  : v;
+                return formatPriceChartYTick(v, { usdMode, countryId, isoCurrency: iso });
               },
             },
           },

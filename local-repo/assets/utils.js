@@ -634,6 +634,54 @@ function buildChartSeries(rows, keys, labels, colorOffset = 0) {
   }));
 }
 
+/**
+ * Chart.js y-axis tick for price/L series. Matches highlight conventions: `$` + 2dp in USD highlight mode;
+ * `ISO value` in local mode for BND/MYR/SGD/etc.; compact `IDR …k` / `IDR …M` for Indonesia.
+ *
+ * @param {unknown} tickValue
+ * @param {{ usdMode?: boolean, countryId?: number|null, isoCurrency?: string|null }} [opts]
+ * @returns {string|unknown}
+ */
+function formatPriceChartYTick(tickValue, opts) {
+  const n = Number(tickValue);
+  if (!Number.isFinite(n)) return tickValue;
+
+  const usdMode = !!opts?.usdMode;
+  const countryId = opts?.countryId ?? null;
+  const rawIso = opts?.isoCurrency;
+  const iso =
+    rawIso != null && String(rawIso).trim() ? String(rawIso).trim().toUpperCase() : null;
+
+  if (usdMode) {
+    return `$${formatNumberCommas(n, 2, 2)}`;
+  }
+
+  if (countryId === 360) {
+    if (n >= 1e6) return `IDR ${formatNumberCommas(n / 1e6, 1, 1)}M`;
+    return `IDR ${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
+  }
+
+  if (countryId === 116 || countryId === 418 || countryId === 104 || countryId === 704) {
+    let core;
+    if (Math.abs(n) >= 1e6) core = `${formatNumberCommas(n / 1e6, 1, 1)}M`;
+    else if (Math.abs(n) >= 1000) core = `${formatNumberCommas(Math.round(n / 1000), 0, 0)}k`;
+    else core = formatNumberCommas(Math.round(n), 0, 0);
+    return iso ? `${iso} ${core}` : core;
+  }
+
+  if (countryId === 344 || countryId === 801 || countryId === 802) {
+    const core = formatNumberCommas(parseFloat(n.toFixed(2)), 2, 2);
+    return iso ? `${iso} ${core}` : core;
+  }
+
+  if (countryId == null) {
+    return formatNumberCommas(parseFloat(n.toFixed(2)), 2, 2);
+  }
+
+  const core = formatNumberCommas(parseFloat(n.toFixed(2)), 2, 2);
+  return iso ? `${iso} ${core}` : core;
+}
+
 // ── Data fetching ────────────────────────────────────────────────────────────
 
 let _myRows = null;

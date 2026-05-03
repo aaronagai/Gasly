@@ -8,7 +8,7 @@
  *   #app-settings-sheet-handle      — top drag-handle strip that closes on click
  *   #app-settings-close             — explicit × close button
  *   #app-settings-usd               — checkbox for "Highlight prices in USD"
- *   #app-liquid-nav-open-settings   — the nav pill that opens the sheet
+ *   #app-open-settings              — topbar circular control that opens the sheet
  *
  * @param {{ onUsdToggle?: () => void }} [opts]
  * @returns {{ open: () => void, close: () => void } | null}
@@ -19,7 +19,7 @@ function initAppSettingsSheet(opts) {
   const handle = document.getElementById('app-settings-sheet-handle');
   const closeBtn = document.getElementById('app-settings-close');
   const chk = document.getElementById('app-settings-usd');
-  const trigger = document.getElementById('app-liquid-nav-open-settings');
+  const trigger = document.getElementById('app-open-settings');
   const onUsdToggle = opts && typeof opts.onUsdToggle === 'function' ? opts.onUsdToggle : null;
   if (!sheet || !chk) return null;
 
