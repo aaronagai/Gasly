@@ -242,3 +242,20 @@ body > .site-footer {
   text-decoration: underline;
   text-underline-offset: 0.12em;
 }
+
+/* Privacy Policy — disc lists inside .careers-intro */
+.privacy-list {
+  margin: 0 0 1.125rem;
+  padding-left: 1.35rem;
+  list-style: disc;
+  color: var(--careers-list);
+  line-height: 1.55;
+}
+
+.privacy-list li {
+  margin: 0 0 0.45rem;
+}
+
+.privacy-list li:last-child {
+  margin-bottom: 0;
+}

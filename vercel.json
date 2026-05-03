@@ -10,7 +10,9 @@
     { "source": "/", "destination": "/app", "permanent": false },
     { "source": "/about.html", "destination": "/about", "permanent": true },
     { "source": "/careers.html", "destination": "/careers", "permanent": true },
-    { "source": "/faq.html", "destination": "/faq", "permanent": true }
+    { "source": "/faq.html", "destination": "/faq", "permanent": true },
+    { "source": "/privacy.html", "destination": "/privacy", "permanent": true },
+    { "source": "/terms.html", "destination": "/terms", "permanent": true }
   ],
   "rewrites": [
     { "source": "/assets/:path*", "destination": "/local-repo/assets/:path*" },

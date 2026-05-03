@@ -1425,7 +1425,6 @@
       padding: max(10px, env(safe-area-inset-top, 0px)) 12px 12px;
       padding-left: max(12px, env(safe-area-inset-left, 0px));
       padding-right: max(12px, env(safe-area-inset-right, 0px));
-      border-bottom: 1px solid var(--line);
       background: var(--bg);
     }
     .app-dashboard-top-brand-row{
