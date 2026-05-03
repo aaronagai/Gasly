@@ -1436,11 +1436,7 @@
       gap: 0.5rem;
       min-width: 0;
       flex: 1 1 auto;
-      width: 100%;
       justify-content: flex-start;
-    }
-    .app-dashboard-top-brand-row .app-topbar-settings-btn{
-      margin-left: auto;
     }
     .app-dashboard-brand{
       min-width: 0;

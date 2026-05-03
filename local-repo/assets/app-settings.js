@@ -8,7 +8,7 @@
  *   #app-settings-sheet-handle      — top drag-handle strip that closes on click
  *   #app-settings-close             — explicit × close button
  *   #app-settings-usd               — checkbox for "Highlight prices in USD"
- *   #app-open-settings              — topbar circular control that opens the sheet
+ *   #app-open-settings              — optional; map topbar circular control that opens the sheet
  *
  * @param {{ onUsdToggle?: () => void }} [opts]
  * @returns {{ open: () => void, close: () => void } | null}
