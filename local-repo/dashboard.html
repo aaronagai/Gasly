@@ -17,7 +17,7 @@
   />
   <link rel="stylesheet" href="assets/shared.css" />
   <link rel="stylesheet" href="assets/vendor/flag-icons/css/flag-icons.min.css" />
-  <link rel="stylesheet" href="assets/app.css?v=125" />
+  <link rel="stylesheet" href="assets/app.css?v=142" />
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
@@ -300,6 +300,43 @@
     </div>
   </div>
 
+  <div
+    id="app-dashboard-detail-sheet"
+    class="app-dashboard-detail-sheet app-dashboard-bottom-sheet"
+    hidden
+    aria-hidden="true"
+  >
+    <button
+      type="button"
+      class="app-dashboard-detail-sheet-backdrop app-dashboard-bottom-sheet-backdrop"
+      id="app-dashboard-detail-backdrop"
+      tabindex="-1"
+      aria-label="Close details"
+    ></button>
+    <div
+      class="app-dashboard-detail-sheet-panel app-dashboard-bottom-sheet-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="app-dashboard-detail-sheet-title"
+    >
+      <div
+        class="app-dashboard-detail-sheet-handle app-dashboard-bottom-sheet-handle"
+        id="app-dashboard-detail-sheet-handle"
+        role="presentation"
+      >
+        <span class="app-dashboard-bottom-sheet-handle-bar" aria-hidden="true"></span>
+      </div>
+      <h2 id="app-dashboard-detail-sheet-title" class="app-dashboard-detail-sheet-sr-title" hidden>Region details</h2>
+      <iframe
+        id="app-dashboard-detail-frame"
+        class="app-dashboard-detail-frame"
+        title="Region details"
+        loading="lazy"
+        referrerpolicy="same-origin"
+      ></iframe>
+    </div>
+  </div>
+
   <nav class="app-liquid-nav" aria-label="Main navigation">
     <div class="app-liquid-nav__pill">
       <a href="app.html" class="app-liquid-nav__item">
@@ -405,8 +442,8 @@
 
   <script src="assets/config.js?v=idfuels-6"></script>
   <script src="assets/utils.js?v=nsw-3"></script>
-  <script src="assets/app-dashboard-core.js?v=125"></script>
-  <script src="assets/app-settings.js?v=120"></script>
+  <script src="assets/app-dashboard-core.js?v=129"></script>
+  <script src="assets/app-settings.js?v=121"></script>
   <script>
     window.addEventListener('load', function () {
       void loadAppCurrencyRates()

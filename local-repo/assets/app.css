@@ -679,6 +679,66 @@
     }
 
     /* Bottom sheet — three stops: ~¼, ~½, expanded; scroll from half height up */
+    /* Cards-only embed mode (?cards=1) — used by the dashboard row pull-up to iframe just the details sheet. */
+    html.app-cards-only-root,
+    html.app-cards-only-root body{
+      background: transparent !important;
+    }
+    html.app-cards-only-root body{
+      overflow: visible !important;
+    }
+    body.app-cards-only .map,
+    body.app-cards-only .topbar,
+    body.app-cards-only .app-liquid-nav,
+    body.app-cards-only #app-settings-sheet,
+    body.app-cards-only #sg-provider-menu,
+    body.app-cards-only #hk-provider-menu,
+    body.app-cards-only #app-dashboard{
+      display: none !important;
+    }
+    /* Keep .export-story-modal alive in cards-only so the highlight / chart export
+       button works from inside the dashboard pull-up. The modal is `position: fixed;
+       inset: 0` and scopes to the iframe viewport (== the panel), centering nicely
+       on the pull-up sheet. */
+    body.app-cards-only .app{
+      position: static;
+      height: auto;
+      min-height: 100%;
+    }
+    body.app-cards-only .sheet{
+      position: static;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      /* Stay transparent so the parent dashboard's frosted panel shows through. */
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    body.app-cards-only .grab{
+      display: none;
+    }
+    body.app-cards-only .sheet-scroll{
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      /* Modest padding inside the iframe scroll. The dashboard panel reserves
+         the bigger clearance for the floating nav so the chart card never lives
+         under it. */
+      padding-bottom: 28px !important;
+      margin-bottom: 0 !important;
+    }
+    body.app-cards-only .sheet-region-sticky{
+      padding-top: 18px;
+    }
     .sheet{
       /* Horizontal rhythm: sticky headline + .sheet-scroll + .card .pad must match (inherited by children). */
       /* Extra empty band inside the card below the last card (scroll + margin below scroller). */
@@ -1619,6 +1679,86 @@
       outline: 2px solid rgba(255, 106, 0, 0.45);
       outline-offset: 2px;
     }
+    /* Row-detail pull-up sheet — opens when a dashboard table row is tapped. The body
+       is an iframe loading `app.html?cards=1&country=<id>` so the cards are
+       byte-for-byte identical to the map view. The panel borrows the same frosted
+       glass treatment as the map's `.sheet` for visual parity. */
+    .app-dashboard-detail-sheet{
+      z-index: 130;
+    }
+    /* Drop the dark scrim so the dashboard table behind the panel is what gets
+       blurred — that's what makes the frost effect visible. A tap anywhere on the
+       (now invisible) backdrop still closes the sheet. */
+    .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-backdrop{
+      background: transparent;
+    }
+    @media (prefers-color-scheme: dark){
+      .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-backdrop{
+        background: transparent;
+      }
+    }
+    .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-panel{
+      /* Tall but not full-bleed — leave a peek of the dashboard at the top so
+         users can tap outside to dismiss. Drag-down + Escape still close. */
+      min-height: calc(100dvh - 90px);
+      max-height: calc(100dvh - 90px);
+      height: calc(100dvh - 90px);
+      padding: 0;
+      /* The floating Map / Dashboard / Settings nav (z-index 140) hovers over the
+         panel's bottom strip. Pad the panel so the iframe's flex: 1 child shrinks
+         and stops above the nav, instead of letting the chart card's axis labels
+         sit underneath it. Padding lives on the panel (not the iframe scroll
+         container) so it works whether the cards overflow or not. */
+      padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+      border-radius: 26px 26px 0 0;
+      border: 1px solid var(--sheet-frost-stroke);
+      border-bottom: none;
+      /* Frost tapers toward the bottom so the dashboard table reads through softly. */
+      background: linear-gradient(
+        to bottom,
+        var(--sheet-frost-fill) 0%,
+        var(--sheet-frost-fill) 70%,
+        color-mix(in srgb, var(--sheet-frost-fill) 65%, transparent) 100%
+      );
+      backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      -webkit-backdrop-filter: blur(var(--sheet-frost-blur)) saturate(175%);
+      box-shadow: var(--shadow);
+    }
+    .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-handle{
+      /* Drag-down-to-dismiss is bound to the handle; let the browser yield vertical
+         gestures to our pointer handlers instead of treating them as page scroll. */
+      touch-action: none;
+      padding: 12px 16px 8px;
+      cursor: grab;
+    }
+    .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-handle:active{
+      cursor: grabbing;
+    }
+    .app-dashboard-detail-sheet .app-dashboard-bottom-sheet-handle-bar{
+      background: var(--grab, var(--line));
+      opacity: 0.85;
+    }
+    .app-dashboard-detail-sheet-sr-title{
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .app-dashboard-detail-frame{
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 0;
+      border: 0;
+      background: transparent;
+      display: block;
+      color-scheme: light dark;
+    }
     .app-dashboard-table-outer{
       margin: 0 8px;
       /* `overflow: hidden` breaks `position: sticky` on thead in many browsers */
@@ -1714,6 +1854,18 @@
     .app-dashboard-table tbody{
       position: relative;
       z-index: 0;
+    }
+    .app-dashboard-table tbody tr.app-dashboard-row{
+      cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+    .app-dashboard-table tbody tr.app-dashboard-row:hover,
+    .app-dashboard-table tbody tr.app-dashboard-row:focus-visible{
+      background: var(--menu-hover, rgba(0, 0, 0, 0.04));
+    }
+    .app-dashboard-table tbody tr.app-dashboard-row:focus-visible{
+      outline: 2px solid var(--metric-k, currentColor);
+      outline-offset: -2px;
     }
     .app-dashboard-table thead th{
       position: sticky;

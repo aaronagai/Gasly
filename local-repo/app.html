@@ -20,7 +20,7 @@
   <link rel="preload" href="./assets/singapore-geo.json" as="fetch" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@600&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/shared.css" />
-  <link rel="stylesheet" href="assets/app.css?v=126" />
+  <link rel="stylesheet" href="assets/app.css?v=142" />
   <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <!-- styles: assets/app.css -->
@@ -218,9 +218,9 @@
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="assets/config.js?v=idfuels-6"></script>
   <script src="assets/utils.js?v=nsw-3"></script>
-  <script src="assets/app-dashboard-core.js?v=124"></script>
+  <script src="assets/app-dashboard-core.js?v=129"></script>
   <script src="assets/app-map-openfreemap.js"></script>
-  <script src="assets/app-settings.js?v=120"></script>
+  <script src="assets/app-settings.js?v=121"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     // COUNTRIES, COUNTRY_OVERVIEW_FALLBACK, OVERVIEW_SHEET_URL, ID_CITY_LONLAT, LA_PROVINCE_LONLAT, MY_REGIONS, TH/PH/KH/MM/VN/LA/VIC fuels — from config.js
@@ -2298,13 +2298,75 @@
       mq.addEventListener('change', onSchemeChange);
     })();
 
+    /**
+     * Cards-only embed mode: when `?cards=1` is set in the URL, hide everything
+     * except the details sheet so this page can be iframed into the dashboard's
+     * row pull-up. The body class is toggled before `load` so CSS hides the map
+     * without a flash. `?country=<id>` selects the initial region.
+     */
+    const __APP_CARDS_ONLY = (function () {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        return sp.get('cards') === '1';
+      } catch (_) {
+        return false;
+      }
+    })();
+    if (__APP_CARDS_ONLY) {
+      try { document.documentElement.classList.add('app-cards-only-root'); } catch (_) {}
+      const applyBodyClass = function () {
+        if (document.body) document.body.classList.add('app-cards-only');
+      };
+      if (document.body) applyBodyClass();
+      else document.addEventListener('DOMContentLoaded', applyBodyClass, { once: true });
+    }
+
+    function __appReadInitialCidFromQuery() {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        const raw = sp.get('country');
+        if (raw == null || raw === '') return null;
+        const id = +raw;
+        if (
+          Number.isFinite(id) &&
+          typeof COUNTRIES !== 'undefined' &&
+          COUNTRIES[id] &&
+          !COUNTRIES[id].searchGroupOnly
+        ) {
+          return id;
+        }
+      } catch (_) {}
+      return null;
+    }
+
     window.addEventListener('load', () => {
       initChart();
-      initMap();
+      if (!__APP_CARDS_ONLY) initMap();
       void loadAppCurrencyRates()
         .catch(() => {})
         .then(() => {
-          setSelected(458, { syncSearchBar: false });
+          let initialCid = 458;
+          const fromQuery = __appReadInitialCidFromQuery();
+          if (fromQuery != null) {
+            initialCid = fromQuery;
+          } else {
+            try {
+              const stored = localStorage.getItem('app_selected_country');
+              if (stored != null && stored !== '') {
+                const id = +stored;
+                if (
+                  Number.isFinite(id) &&
+                  typeof COUNTRIES !== 'undefined' &&
+                  COUNTRIES[id] &&
+                  !COUNTRIES[id].searchGroupOnly
+                ) {
+                  initialCid = id;
+                }
+              }
+              localStorage.removeItem('app_selected_country');
+            } catch (_) {}
+          }
+          setSelected(initialCid, { syncSearchBar: false });
         });
     });
   </script>

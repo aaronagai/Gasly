@@ -44,6 +44,7 @@ function initAppSettingsSheet(opts) {
       if (typeof window.dashboardCloseFuelSheetIfOpen === 'function') window.dashboardCloseFuelSheetIfOpen();
       if (typeof window.dashboardCloseCountrySheetIfOpen === 'function') window.dashboardCloseCountrySheetIfOpen();
       if (typeof window.dashboardClosePeriodSheetIfOpen === 'function') window.dashboardClosePeriodSheetIfOpen();
+      if (typeof window.dashboardCloseDetailSheetIfOpen === 'function') window.dashboardCloseDetailSheetIfOpen();
     } catch (_) {}
     syncToggle();
     sheet.hidden = false;

@@ -281,11 +281,13 @@ function dashboardSheetsSyncBodyScroll() {
     const fuelS = document.getElementById('app-dashboard-fuel-sheet');
     const countryS = document.getElementById('app-dashboard-country-sheet');
     const periodS = document.getElementById('app-dashboard-period-sheet');
+    const detailS = document.getElementById('app-dashboard-detail-sheet');
     const anyOpen =
       (sortS && !sortS.hidden) ||
       (fuelS && !fuelS.hidden) ||
       (countryS && !countryS.hidden) ||
-      (periodS && !periodS.hidden);
+      (periodS && !periodS.hidden) ||
+      (detailS && !detailS.hidden);
     document.body.style.overflow = anyOpen ? 'hidden' : '';
   } catch (_) {}
 }
@@ -332,6 +334,168 @@ function dashboardCloseCountrySheetIfOpen() {
     if (countryT) countryT.setAttribute('aria-expanded', 'false');
     dashboardSheetsSyncBodyScroll();
   }
+}
+
+function dashboardCloseDetailSheetIfOpen() {
+  const sheet = document.getElementById('app-dashboard-detail-sheet');
+  if (sheet && !sheet.hidden) {
+    sheet.hidden = true;
+    sheet.setAttribute('aria-hidden', 'true');
+    /* Tear down the embedded `app.html` iframe so its chart loop, fetches, and
+       map-init side effects stop running while the sheet is closed. */
+    const frame = document.getElementById('app-dashboard-detail-frame');
+    if (frame) {
+      try { frame.src = 'about:blank'; } catch (_) {}
+    }
+    dashboardSheetsSyncBodyScroll();
+  }
+}
+
+let _dashboardDetailBound = false;
+
+/**
+ * Bind interactions on the row-detail pull-up sheet:
+ * - Backdrop click closes the sheet.
+ * - The handle supports drag-down-to-dismiss (snap back on a short drag, animate
+ *   off-screen + close on a long drag) and tap-to-close.
+ * - Escape key closes the sheet.
+ *
+ * The drag handler is bound to the visible handle area above the iframe because
+ * the iframe captures pointer events inside its own document.
+ */
+function wireAppDashboardDetailSheet() {
+  if (_dashboardDetailBound) return;
+  const sheet = document.getElementById('app-dashboard-detail-sheet');
+  if (!sheet) return;
+  _dashboardDetailBound = true;
+  const backdrop = document.getElementById('app-dashboard-detail-backdrop');
+  const handle = document.getElementById('app-dashboard-detail-sheet-handle');
+  const panel = sheet.querySelector('.app-dashboard-bottom-sheet-panel');
+  if (backdrop) backdrop.addEventListener('click', dashboardCloseDetailSheetIfOpen);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && !sheet.hidden) dashboardCloseDetailSheetIfOpen();
+  });
+
+  if (handle && panel) {
+    let dragging = false;
+    let startY = 0;
+    let dy = 0;
+    let panelH = 0;
+    let activePointer = null;
+    const DRAG_THRESHOLD_PX = 80;
+    const DRAG_THRESHOLD_PCT = 0.2;
+    const onDown = function (ev) {
+      if (ev.button != null && ev.button !== 0) return;
+      dragging = true;
+      activePointer = ev.pointerId != null ? ev.pointerId : null;
+      startY = ev.clientY;
+      dy = 0;
+      panelH = panel.getBoundingClientRect().height || 1;
+      panel.style.transition = 'none';
+      panel.style.willChange = 'transform';
+      if (activePointer != null && handle.setPointerCapture) {
+        try { handle.setPointerCapture(activePointer); } catch (_) {}
+      }
+      ev.preventDefault();
+    };
+    const onMove = function (ev) {
+      if (!dragging) return;
+      dy = Math.max(0, ev.clientY - startY);
+      panel.style.transform = `translateY(${dy}px)`;
+      if (ev.cancelable) ev.preventDefault();
+    };
+    const finishDrag = function (shouldClose) {
+      dragging = false;
+      panel.style.willChange = '';
+      panel.style.transition = 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)';
+      if (shouldClose) {
+        panel.style.transform = `translateY(${panelH}px)`;
+        const reset = function () {
+          panel.removeEventListener('transitionend', reset);
+          panel.style.transition = '';
+          panel.style.transform = '';
+          dashboardCloseDetailSheetIfOpen();
+        };
+        panel.addEventListener('transitionend', reset);
+        /* Fallback in case the transitionend doesn't fire (e.g. element removed). */
+        setTimeout(reset, 320);
+      } else {
+        panel.style.transform = 'translateY(0)';
+        const cleanup = function () {
+          panel.removeEventListener('transitionend', cleanup);
+          panel.style.transition = '';
+          panel.style.transform = '';
+        };
+        panel.addEventListener('transitionend', cleanup);
+        setTimeout(cleanup, 280);
+      }
+    };
+    const onUp = function (ev) {
+      if (!dragging) return;
+      if (activePointer != null && handle.releasePointerCapture) {
+        try { handle.releasePointerCapture(activePointer); } catch (_) {}
+      }
+      activePointer = null;
+      const threshold = Math.max(DRAG_THRESHOLD_PX, panelH * DRAG_THRESHOLD_PCT);
+      const moved = dy > 4;
+      let shouldClose;
+      if (!moved) {
+        shouldClose = true; /* tap = close */
+      } else if (dy >= threshold) {
+        shouldClose = true; /* dragged far enough = close */
+      } else {
+        shouldClose = false; /* short drag = snap back */
+      }
+      finishDrag(shouldClose);
+      if (ev) ev.preventDefault();
+    };
+    const onCancel = function () {
+      if (!dragging) return;
+      activePointer = null;
+      finishDrag(false);
+    };
+    handle.addEventListener('pointerdown', onDown);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onCancel);
+    handle.addEventListener('lostpointercapture', onCancel);
+  }
+}
+
+/**
+ * Show the row-detail bottom sheet for a clicked dashboard row by pointing its
+ * iframe at `app.html?cards=1&country=<id>` so the highlight + history cards
+ * render with the exact same styling as the map view.
+ */
+function dashboardOpenDetailSheet(item) {
+  if (!item || !item.row) return;
+  const sheet = document.getElementById('app-dashboard-detail-sheet');
+  if (!sheet) return;
+  wireAppDashboardDetailSheet();
+  dashboardCloseSortSheetIfOpen();
+  dashboardCloseFuelSheetIfOpen();
+  dashboardClosePeriodSheetIfOpen();
+  dashboardCloseCountrySheetIfOpen();
+
+  const row = item.row;
+  const cid = row.countryId != null ? +row.countryId : NaN;
+  /* Persist sub-region selection so the embedded `app.html` reads it via the same
+     `terminal_*` localStorage keys the search bar writes. */
+  try { dashboardPersistRowSelectionForApp(row); } catch (_) {}
+
+  const frame = document.getElementById('app-dashboard-detail-frame');
+  if (frame) {
+    const params = new URLSearchParams();
+    params.set('cards', '1');
+    if (Number.isFinite(cid)) params.set('country', String(cid));
+    /* Cache-bust per-row so the iframe re-runs setSelected even when the same row
+       is re-tapped after closing the sheet. */
+    params.set('t', String(Date.now()));
+    frame.src = `app.html?${params.toString()}`;
+  }
+  sheet.hidden = false;
+  sheet.setAttribute('aria-hidden', 'false');
+  dashboardSheetsSyncBodyScroll();
 }
 
 const DASHBOARD_SORT_STATUS_LABELS = {
@@ -493,6 +657,7 @@ function wireAppDashboardPeriodSelect() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseFuelSheetIfOpen();
     dashboardCloseCountrySheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
@@ -564,6 +729,7 @@ function wireAppDashboardColumnHeaders() {
     dashboardCloseFuelSheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
     dashboardCloseCountrySheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     const cur = getDashboardSortMode();
     const next = cur === 'region_az' ? 'region_za' : 'region_az';
     applyDashboardSort(next);
@@ -575,6 +741,7 @@ function wireAppDashboardColumnHeaders() {
     dashboardCloseFuelSheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
     dashboardCloseCountrySheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     const cur = getDashboardSortMode();
     const next = cur === 'price_high' ? 'price_low' : 'price_high';
     applyDashboardSort(next);
@@ -706,6 +873,7 @@ function wireAppDashboardCountryFilter() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseFuelSheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
@@ -821,6 +989,7 @@ function wireAppDashboardFuelSelect() {
     dashboardCloseSortSheetIfOpen();
     dashboardCloseCountrySheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
@@ -980,6 +1149,7 @@ function wireAppDashboardSortSelect() {
     dashboardCloseFuelSheetIfOpen();
     dashboardCloseCountrySheetIfOpen();
     dashboardClosePeriodSheetIfOpen();
+    dashboardCloseDetailSheetIfOpen();
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
@@ -1042,6 +1212,36 @@ function wireAppDashboardSortSelect() {
 function dashboardCountryName(cid) {
   const c = typeof COUNTRIES !== 'undefined' && COUNTRIES[+cid];
   return (c && c.name) || `Country ${cid}`;
+}
+
+/**
+ * Persist a dashboard row's selection so the map view (`app.html`) opens to the same
+ * country/region card on its next load. `app_selected_country` is a one-shot signal
+ * read on app.html load and cleared after use; the `terminal_*` keys mirror the
+ * existing search bar persistence so the highlight and chart cards reflect the row.
+ */
+function dashboardPersistRowSelectionForApp(row) {
+  if (!row || row.countryId == null) return;
+  const cid = +row.countryId;
+  if (!Number.isFinite(cid)) return;
+  try {
+    localStorage.setItem('app_selected_country', String(cid));
+  } catch (_) {}
+  try {
+    if (row.myRegion) localStorage.setItem('terminal_my_region', String(row.myRegion));
+    if (cid === 702) {
+      if (row.sgProvider) localStorage.setItem('terminal_sg_provider', String(row.sgProvider));
+      else localStorage.removeItem('terminal_sg_provider');
+    }
+    if (cid === 344) {
+      if (row.hkProvider) localStorage.setItem('terminal_hk_provider', String(row.hkProvider));
+      else localStorage.removeItem('terminal_hk_provider');
+    }
+    if (row.idCity) localStorage.setItem('terminal_id_city', String(row.idCity));
+    if (row.laProvince) localStorage.setItem('terminal_la_province', String(row.laProvince));
+    if (row.mmRegion) localStorage.setItem('terminal_mm_region', String(row.mmRegion));
+    if (row.vnArea) localStorage.setItem('terminal_vn_area', String(row.vnArea));
+  } catch (_) {}
 }
 
 /** Latest spot in USD/L for sorting (matches dashboard spot column). */
@@ -1162,6 +1362,24 @@ function renderAppDashboardTbody() {
   enriched.forEach((item, displayIdx) => {
     const { row, st, displayLabel } = item;
     const tr = document.createElement('tr');
+    tr.className = 'app-dashboard-row';
+    tr.tabIndex = 0;
+    tr.setAttribute('role', 'button');
+    const labelText = String(displayLabel != null ? displayLabel : row.label || '');
+    if (labelText) tr.setAttribute('aria-label', `Open details for ${labelText}`);
+    const detailItem = { row, st, displayLabel: labelText, priceKey: item.priceKey };
+    const activate = function () {
+      try {
+        dashboardOpenDetailSheet(detailItem);
+      } catch (_) {}
+    };
+    tr.addEventListener('click', activate);
+    tr.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        activate();
+      }
+    });
     const tdRank = document.createElement('td');
     tdRank.className = 'app-dashboard-td app-dashboard-td--rank';
     tdRank.textContent = String(displayIdx + 1);
@@ -1180,7 +1398,7 @@ function renderAppDashboardTbody() {
     }
     const regionLabel = document.createElement('span');
     regionLabel.className = 'app-dashboard-region-label';
-    regionLabel.textContent = String(displayLabel != null ? displayLabel : row.label || '');
+    regionLabel.textContent = labelText;
     regionWrap.appendChild(flagEl);
     regionWrap.appendChild(regionLabel);
     tdName.appendChild(regionWrap);
