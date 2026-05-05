@@ -245,6 +245,9 @@ var _dashboardSortBound = false;
 var _dashboardColumnHeadersBound = false;
 var _dashboardRegionSearchBound = false;
 var _dashboardRegionSearchDebounce = null;
+var _dashboardPullToRefreshBound = false;
+var _dashboardPullToRefreshStartY = 0;
+var _dashboardPullToRefreshPulled = false;
 const DASHBOARD_FUEL_STATUS_LABELS = {
   all: 'All types',
   entry: 'Entry (90-91)',
@@ -1499,6 +1502,60 @@ function wireAppDashboardRegionSearch() {
   });
 }
 
+/** Mobile: pull down at top to reload the page. */
+function wireAppDashboardPullToRefresh() {
+  const scroller = document.querySelector('.app-dashboard-scroll');
+  if (!scroller || _dashboardPullToRefreshBound) return;
+  _dashboardPullToRefreshBound = true;
+
+  const THRESHOLD_PX = 70;
+
+  function canTrigger(ev) {
+    try {
+      const t = ev && ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return false;
+      if (t && typeof t.closest === 'function' && t.closest('.app-dashboard-toolbar, .app-dashboard-search-row')) return false;
+    } catch (_) {}
+    return true;
+  }
+
+  scroller.addEventListener(
+    'touchstart',
+    function (ev) {
+      if (!canTrigger(ev)) return;
+      if (scroller.scrollTop > 0) return;
+      const y = ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0;
+      _dashboardPullToRefreshStartY = y;
+      _dashboardPullToRefreshPulled = false;
+    },
+    { passive: true },
+  );
+
+  scroller.addEventListener(
+    'touchmove',
+    function (ev) {
+      if (!canTrigger(ev)) return;
+      if (scroller.scrollTop > 0) return;
+      const y = ev.touches && ev.touches[0] ? ev.touches[0].clientY : 0;
+      const dy = y - _dashboardPullToRefreshStartY;
+      if (dy > THRESHOLD_PX) _dashboardPullToRefreshPulled = true;
+    },
+    { passive: true },
+  );
+
+  scroller.addEventListener(
+    'touchend',
+    function () {
+      if (_dashboardPullToRefreshPulled) {
+        try {
+          window.location.reload();
+        } catch (_) {}
+      }
+    },
+    { passive: true },
+  );
+}
+
 function renderAppDashboardTbody() {
   const tbody = document.getElementById('app-dashboard-tbody');
   const statusEl = document.getElementById('app-dashboard-status');
@@ -2109,6 +2166,7 @@ async function loadAndRenderAppDashboard() {
   wireAppDashboardSortSelect();
   wireAppDashboardColumnHeaders();
   wireAppDashboardRegionSearch();
+  wireAppDashboardPullToRefresh();
   tbody.innerHTML = '';
   if (statusEl) statusEl.textContent = 'Loading…';
   try {
