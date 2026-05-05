@@ -142,7 +142,17 @@ function normalizeSingaporeSheetRows(rows) {
   let curDate = '';
   let curProvider = '';
   const filled = rows.map((r) => {
-    const d = r.date != null ? String(r.date).trim() : '';
+    /* Singapore (and HK) sheets sometimes export with a blank header in column A.
+       In that case `parseCSV` will name it `col_0` even though it holds the date. */
+    const rawDate =
+      r.date != null
+        ? r.date
+        : r.col_0 != null
+          ? r.col_0
+          : r.p != null
+            ? r.p
+            : '';
+    const d = rawDate != null ? String(rawDate).trim() : '';
     if (d) curDate = d;
     const p = r.provider != null ? String(r.provider).trim() : '';
     if (p) curProvider = p;
