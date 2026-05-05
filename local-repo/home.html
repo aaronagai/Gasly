@@ -58,6 +58,32 @@
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <div class="a2hs" id="a2hs" aria-hidden="true" hidden>
+    <div class="a2hs-card" role="dialog" aria-modal="true" aria-label="Install PetrolPrice">
+      <div class="a2hs-row">
+        <div class="a2hs-icon" aria-hidden="true">
+          <img src="assets/appicon.png?v=3" alt="" width="48" height="48" decoding="async" />
+        </div>
+        <div class="a2hs-copy">
+          <div class="a2hs-title">Install PetrolPrice</div>
+          <div class="a2hs-subtitle">Get the full app experience.</div>
+          <div class="a2hs-instr">
+            For quick access, tap
+            <span class="a2hs-share" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 16V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </span>
+            then “Add to Home Screen”.
+          </div>
+        </div>
+        <button type="button" class="a2hs-close" id="a2hs-close" aria-label="Close">×</button>
+      </div>
+      <button type="button" class="a2hs-ok" id="a2hs-ok">Got it</button>
+    </div>
+  </div>
   <header>
     <div class="logo-block">
       <div class="logo-block-lockup-row">
@@ -124,5 +150,57 @@
   <script defer src="assets/config.js?v=idfuels-6"></script>
   <script defer src="assets/utils.js?v=chart-ytick-2"></script>
   <script defer src="assets/index-hero-map.js?v=3"></script>
+  <script>
+    (function () {
+      function isIos() {
+        const ua = navigator.userAgent || '';
+        const plat = navigator.platform || '';
+        const ios = /iP(hone|ad|od)/.test(plat) || (/Mac/.test(plat) && navigator.maxTouchPoints > 1);
+        if (!ios) return false;
+        // Ignore in-app browsers (Instagram, Facebook, etc.) where A2HS isn't reliably available
+        if (/FBAN|FBAV|Instagram|Line\\//i.test(ua)) return false;
+        return true;
+      }
+      function isStandalone() {
+        try {
+          if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+        } catch (_) {}
+        // iOS Safari legacy
+        try {
+          if (window.navigator && window.navigator.standalone) return true;
+        } catch (_) {}
+        return false;
+      }
+      function seen() {
+        try { return localStorage.getItem('a2hs_seen_v1') === '1'; } catch (_) { return false; }
+      }
+      function markSeen() {
+        try { localStorage.setItem('a2hs_seen_v1', '1'); } catch (_) {}
+      }
+      function close(el) {
+        if (!el) return;
+        el.hidden = true;
+        el.setAttribute('aria-hidden', 'true');
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const root = document.getElementById('a2hs');
+        if (!root) return;
+        if (!isIos() || isStandalone() || seen()) return;
+
+        root.hidden = false;
+        root.setAttribute('aria-hidden', 'false');
+
+        const ok = document.getElementById('a2hs-ok');
+        const x = document.getElementById('a2hs-close');
+        function dismiss() { markSeen(); close(root); }
+        ok && ok.addEventListener('click', dismiss);
+        x && x.addEventListener('click', dismiss);
+        root.addEventListener('click', function (ev) {
+          if (ev.target === root) dismiss();
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
