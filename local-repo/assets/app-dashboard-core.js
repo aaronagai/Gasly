@@ -1528,8 +1528,20 @@ function renderAppDashboardTbody() {
 
   const rowJobs =
     fuelPreset === 'all'
-      ? list.flatMap((row) => DASHBOARD_FUEL_PRESETS_ALL.map((p) => ({ row, preset: p })))
-      : list.map((row) => ({ row, preset: fuelPreset }));
+      ? list.flatMap((row) => {
+          const jobs = DASHBOARD_FUEL_PRESETS_ALL.map((p) => ({ row, preset: p }));
+          if (+row.countryId === 458) jobs.push({ row, preset: 'my_budi95' });
+          return jobs;
+        })
+      : fuelPreset === 'mid'
+        ? list.flatMap((row) => {
+            if (+row.countryId !== 458) return [{ row, preset: fuelPreset }];
+            return [
+              { row, preset: 'mid' },
+              { row, preset: 'my_budi95' },
+            ];
+          })
+        : list.map((row) => ({ row, preset: fuelPreset }));
 
   let enriched = rowJobs.map((job, originalIndex) => {
     const { row, preset } = job;
@@ -1685,6 +1697,12 @@ function dashboardPriceMetaForRow(row) {
  * Unknown presets fall back to mid-grade.
  */
 function dashboardFuelMetaForRow(row, preset) {
+  const cidEarly = +row.countryId;
+  /** Malaysia BUDI Madani tier (`ron95_budi95`) — extra dashboard row paired with mid-grade RON95. */
+  if (preset === 'my_budi95' && cidEarly === 458) {
+    return { key: 'ron95_budi95', sym: 'MYR', dec: 2 };
+  }
+
   const p = ['mid', 'premium', 'entry', 'diesel', 'premium_diesel'].includes(preset) ? preset : 'mid';
   const cid = +row.countryId;
   const myEast = cid === 458 && row.myRegion === 'SabahSarawak';
@@ -1703,7 +1721,7 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'diesel') return { key: myEast ? 'diesel_eastmsia' : 'diesel', sym: 'MYR', dec: 2 };
     if (p === 'mid') return { key: 'ron95', sym: 'MYR', dec: 2 };
     if (p === 'premium') return { key: 'ron97', sym: 'MYR', dec: 2 };
-    /* Entry = 90–91: MY pump data has no separate tier here — do not use BUDI95 / RON95-class column. */
+    /* Entry = 90–91: MY national sheet has no RON92-class column; BUDI95 is exposed as a second row next to mid-grade RON95 (`my_budi95`). */
     if (p === 'entry') return { key: '__none__', sym: 'MYR', dec: 2 };
     return { key: 'ron95', sym: 'MYR', dec: 2 };
   }
