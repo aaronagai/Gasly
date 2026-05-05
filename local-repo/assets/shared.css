@@ -23,6 +23,7 @@
   background: transparent;
   box-sizing: border-box;
 }
+.a2hs[hidden]{ display: none; }
 .a2hs::before{
   content: "";
   position: absolute;
