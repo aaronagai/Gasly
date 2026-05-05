@@ -15,6 +15,7 @@
   inset: 0;
   z-index: 9999;
   display: flex;
+  /* Ensure the gradient sits behind the card. */
   align-items: flex-end;
   justify-content: center;
   padding: 0 0 max(0px, env(safe-area-inset-bottom, 0px));
@@ -30,6 +31,7 @@
   bottom: 0;
   height: 44vh;
   pointer-events: none;
+  z-index: 0;
   background: linear-gradient(
     to top,
     rgba(2, 6, 23, 0.42) 0%,
@@ -39,6 +41,7 @@
 }
 .a2hs-card{
   position: relative;
+  z-index: 1;
   width: 100%;
   border-radius: 20px 20px 0 0;
   background: rgba(255, 255, 255, 0.92);

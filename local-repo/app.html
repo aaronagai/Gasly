@@ -2715,7 +2715,11 @@
         const x = document.getElementById('a2hs-close');
         function dismiss() { markSeen(); close(root); }
         ok && ok.addEventListener('click', dismiss);
+        ok && ok.addEventListener('touchend', dismiss, { passive: true });
+        ok && ok.addEventListener('pointerup', dismiss);
         x && x.addEventListener('click', dismiss);
+        x && x.addEventListener('touchend', dismiss, { passive: true });
+        x && x.addEventListener('pointerup', dismiss);
         root.addEventListener('click', function (ev) {
           if (ev.target === root) dismiss();
         });
