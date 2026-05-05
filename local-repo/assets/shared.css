@@ -15,28 +15,61 @@
   inset: 0;
   z-index: 9999;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: center;
-  padding: max(16px, env(safe-area-inset-top, 0px)) 16px 16px;
-  background: rgba(2, 6, 23, 0.42);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 0 0 max(0px, env(safe-area-inset-bottom, 0px));
+  /* Keep the page visible; don't dim/blur the whole viewport. */
+  background: transparent;
   box-sizing: border-box;
 }
+.a2hs::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44vh;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(2, 6, 23, 0.42) 0%,
+    rgba(2, 6, 23, 0.14) 45%,
+    rgba(2, 6, 23, 0.00) 100%
+  );
+}
 .a2hs-card{
-  width: min(560px, 100%);
-  border-radius: 22px;
+  position: relative;
+  width: 100%;
+  border-radius: 20px 20px 0 0;
   background: rgba(255, 255, 255, 0.92);
   color: #0f172a;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
-  padding: 18px 18px 16px;
+  padding: 18px 18px max(16px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  backdrop-filter: blur(18px) saturate(155%);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+}
+.a2hs-card::before{
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.16);
 }
 @media (prefers-color-scheme: dark) {
   .a2hs-card{
     background: rgba(16, 16, 18, 0.92);
     color: rgba(255, 255, 255, 0.92);
     box-shadow: 0 24px 90px rgba(0, 0, 0, 0.58);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .a2hs-card::before{
+    background: rgba(255, 255, 255, 0.18);
   }
 }
 .a2hs-row{
@@ -67,7 +100,7 @@
 }
 .a2hs-title{
   font-family: 'DM Sans', var(--font);
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -75,12 +108,12 @@
 .a2hs-subtitle{
   margin-top: 4px;
   opacity: 0.72;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   line-height: 1.2;
 }
 .a2hs-instr{
   margin-top: 10px;
-  font-size: 1.02rem;
+  font-size: 0.92rem;
   line-height: 1.35;
   opacity: 0.86;
 }
