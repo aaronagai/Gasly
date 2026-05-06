@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
   "functions": {
     "api/nsw-fuel.js": {
       "maxDuration": 60
@@ -9,6 +8,7 @@
       "maxDuration": 30
     }
   },
+  "cleanUrls": true,
   "redirects": [
     { "source": "/", "destination": "/app", "permanent": false },
     { "source": "/about.html", "destination": "/about", "permanent": true },
@@ -18,10 +18,17 @@
     { "source": "/terms.html", "destination": "/terms", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/assets/:path*", "destination": "/local-repo/assets/:path*" },
     {
-      "source": "/((?!api(?:/|$)|_vercel(?:/|$)).*)",
-      "destination": "/local-repo/$1"
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/terminal",
+      "destination": "/terminal.html"
     }
   ]
 }
