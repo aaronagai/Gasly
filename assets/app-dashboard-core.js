@@ -690,6 +690,7 @@ const DASHBOARD_SORT_MODES = new Set([
 const DASHBOARD_COUNTRY_FLAG_ISO2 = {
   458: 'my',
   702: 'sg',
+  156: 'cn',
   96: 'bn',
   360: 'id',
   764: 'th',
