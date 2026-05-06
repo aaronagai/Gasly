@@ -21,6 +21,8 @@
   padding: 0 0 max(0px, env(safe-area-inset-bottom, 0px));
   /* Keep the page visible; don't dim/blur the whole viewport. */
   background: transparent;
+  /* Do not block the page (map) — only the card is interactive. */
+  pointer-events: none;
   box-sizing: border-box;
 }
 .a2hs[hidden]{ display: none; }
@@ -44,6 +46,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  pointer-events: auto;
   border-radius: 20px 20px 0 0;
   background: rgba(255, 255, 255, 0.92);
   color: #0f172a;
