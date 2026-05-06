@@ -180,40 +180,6 @@
       gap: 10px;
       align-items: center;
     }
-
-    /* Map flag marker (MapLibre HTML marker) */
-    .app-map-flag-marker{
-      width: 34px;
-      height: 34px;
-      padding: 0;
-      border: none;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.88);
-      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.22);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(10px) saturate(145%);
-      -webkit-backdrop-filter: blur(10px) saturate(145%);
-    }
-    .app-map-flag-marker img{
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      display: block;
-    }
-    .app-map-flag-marker:focus-visible{
-      outline: 2px solid rgba(255, 106, 0, 0.45);
-      outline-offset: 2px;
-    }
-    @media (prefers-color-scheme: dark) {
-      .app-map-flag-marker{
-        background: rgba(20, 20, 22, 0.78);
-        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
-      }
-    }
     /* Combobox: dropdown anchors under the pill; stays above the sheet. */
     .search-field{
       flex: 1;

@@ -198,35 +198,6 @@
       suppressOpenFreeMapTextLabels(map);
       includeOpenFreeMapMaritimeBoundaries(map);
       applyOpenFreeMapOrangeLand(map);
-
-      // China flag marker (live country affordance on the map)
-      try {
-        if (COUNTRIES && COUNTRIES[156]) {
-          const el = document.createElement('button');
-          el.type = 'button';
-          el.className = 'app-map-flag-marker';
-          el.setAttribute('aria-label', 'China');
-          const img = document.createElement('img');
-          img.src = 'assets/vendor/flag-icons/flags/1x1/cn.svg';
-          img.alt = '';
-          img.decoding = 'async';
-          img.loading = 'lazy';
-          el.appendChild(img);
-          el.addEventListener('click', function (ev) {
-            try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {}
-            try {
-              o.setSelected(156, { syncSearchBar: true });
-            } catch (_) {}
-            try {
-              if (typeof window.APP_ZOOM_TO === 'function') window.APP_ZOOM_TO(156, true);
-            } catch (_) {}
-          });
-          new maplibregl.Marker({ element: el, anchor: 'center' })
-            .setLngLat([104.0, 35.0])
-            .addTo(map);
-        }
-      } catch (_) {}
-
       Promise.all([
         fetch('./assets/countries-110m.json').then((r) => r.json()),
         fetch('./assets/singapore-geo.json').then((r) => r.json()).catch(() => null),
