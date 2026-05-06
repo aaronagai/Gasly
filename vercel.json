@@ -4,6 +4,9 @@
   "functions": {
     "api/nsw-fuel.js": {
       "maxDuration": 60
+    },
+    "api/my-fuel.js": {
+      "maxDuration": 30
     }
   },
   "redirects": [

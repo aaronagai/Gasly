@@ -702,9 +702,21 @@ let _myRows = null;
  */
 async function ensureMalaysiaRows() {
   if (_myRows && _myRows.length) return _myRows;
-  const res = await fetch(MY_API_URL, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Malaysia API ${res.status}`);
-  const json = await res.json();
+  let json = null;
+  try {
+    const res = await fetch(MY_API_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Malaysia API ${res.status}`);
+    json = await res.json();
+  } catch (e) {
+    /* Browser CORS failures manifest as TypeError; retry via same-origin Vercel proxy. */
+    try {
+      const res2 = await fetch('/api/my-fuel', { cache: 'no-store' });
+      if (!res2.ok) throw new Error(`Malaysia proxy ${res2.status}`);
+      json = await res2.json();
+    } catch (e2) {
+      throw e;
+    }
+  }
   const raw = Array.isArray(json)
     ? json
     : json && Array.isArray(json.data)
