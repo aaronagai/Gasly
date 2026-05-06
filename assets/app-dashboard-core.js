@@ -25,6 +25,9 @@ async function buildSearchRegionsList() {
   rows.push({ countryId: 96, label: `${COUNTRIES[96].name} - National` });
   rows.push({ countryId: 764, label: `${COUNTRIES[764].name} - National` });
   rows.push({ countryId: 608, label: `${COUNTRIES[608].name} - National` });
+  if (COUNTRIES[156]) {
+    rows.push({ countryId: 156, label: `${COUNTRIES[156].name} - National` });
+  }
   if (COUNTRIES[801]) {
     rows.push({
       countryId: 801,
@@ -1735,6 +1738,7 @@ function dashboardPriceMetaForRow(row) {
       : { key: 'ron95', sym: 'MYR', dec: 2 };
   }
   if (cid === 702) return { key: 'ron95', sym: 'SGD', dec: 2 };
+  if (cid === 156) return { key: 'ron95', sym: 'CNY', dec: 2 };
   if (cid === 344) return { key: 'premium_petrol', sym: 'HKD', dec: 2 };
   if (cid === 96) return { key: 'gasoline', sym: 'BND', dec: 2 };
   if (cid === 764) return { key: 'gasohol_95', sym: 'THB', dec: 2 };
@@ -1788,6 +1792,13 @@ function dashboardFuelMetaForRow(row, preset) {
     if (p === 'premium') return { key: 'ron98', sym: 'SGD', dec: 2 };
     if (p === 'entry') return { key: 'ron92', sym: 'SGD', dec: 2 };
     return { key: 'ron95', sym: 'SGD', dec: 2 };
+  }
+  if (cid === 156) {
+    if (p === 'diesel') return { key: 'diesel', sym: 'CNY', dec: 2 };
+    if (p === 'mid') return { key: 'ron95', sym: 'CNY', dec: 2 };
+    if (p === 'premium') return { key: 'ron98', sym: 'CNY', dec: 2 };
+    if (p === 'entry') return { key: 'ron92', sym: 'CNY', dec: 2 };
+    return { key: 'ron95', sym: 'CNY', dec: 2 };
   }
   if (cid === 344) {
     if (p === 'diesel' || p === 'premium_diesel') return { key: 'diesel', sym: 'HKD', dec: 2 };
@@ -1999,6 +2010,7 @@ function dashboardFilterSeries(row, c) {
     }
     return sortRowsByDate(r);
   }
+  if (cid === 156) return sortRowsByDate(c.cnRows || []);
   if (cid === 344) {
     let r = c.hkRows || [];
     if (row.hkProvider) {
@@ -2103,6 +2115,7 @@ async function preloadDashboardCaches() {
   const [
     myRows,
     sgRows,
+    cnRows,
     hkRows,
     bnRows,
     thRows,
@@ -2117,6 +2130,7 @@ async function preloadDashboardCaches() {
   ] = await Promise.all([
     ensureMalaysiaRows().catch(() => []),
     ensureSheetRows(SG_SHEET_URL).catch(() => []),
+    ensureSheetRows(CN_SHEET_URL).catch(() => []),
     ensureSheetRows(HK_SHEET_URL).catch(() => []),
     ensureSheetRows(BN_SHEET_URL).catch(() => []),
     ensureSheetRows(TH_SHEET_URL).catch(() => []),
@@ -2142,6 +2156,7 @@ async function preloadDashboardCaches() {
   return {
     myRows,
     sgRows,
+    cnRows,
     hkRows,
     bnRows,
     thRows,

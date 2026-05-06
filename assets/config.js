@@ -42,6 +42,7 @@ const MY_API_URL = 'https://api.data.gov.my/data-catalogue/?id=fuelprice&sort=-d
 /** Petrol price history charts: rows from this many days before the latest observation (~3 months). */
 const CHART_HISTORY_LOOKBACK_DAYS = 90;
 const SG_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Singapore`;
+const CN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=China`;
 const BN_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Brunei`;
 const TH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Thailand`;
 const PH_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Philippines`;
@@ -105,6 +106,8 @@ const COUNTRIES = {
   36: { name: 'Australia', searchGroupOnly: true },
   458: { name: 'Malaysia' },
   702: { name: 'Singapore' },
+  /** China — Google Sheet tab `China` (CNY/L, national rows). ISO numeric 156. */
+  156: { name: 'China' },
   /** Hong Kong — Google Sheet tab `Hong Kong` (HKD/L, per `provider` rows). ISO numeric 344. */
   344: { name: 'Hong Kong' },
   96:  { name: 'Brunei' },
@@ -137,6 +140,8 @@ const COUNTRIES = {
 const USD_RATES = {
   MYR: 0.2527648,
   SGD: 0.7870299,
+  /** China: USD per 1 CNY (refresh via Currency sheet). */
+  CNY: 0.14,
   /** Hong Kong: USD per 1 HKD (refresh via Currency sheet). */
   HKD: 0.128,
   BND: 0.7862731,

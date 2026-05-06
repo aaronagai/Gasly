@@ -1145,8 +1145,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     ['australia', 'AUD'],
     ['newsouthwales', 'AUD'],
     ['hongkong', 'HKD'],
+    ['china', 'CNY'],
   ]);
-  const CCY_CODES = ['MYR', 'SGD', 'HKD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD'];
+  const CCY_CODES = ['MYR', 'SGD', 'HKD', 'BND', 'IDR', 'THB', 'PHP', 'KHR', 'LAK', 'MMK', 'VND', 'AUD', 'CNY'];
 
   function normName(s) {
     return normalizeSheetString(s).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1174,6 +1175,9 @@ function mergeCurrencySheetRowsIntoUsdRates(rows, usdRates) {
     }
     if (nk === 'hk' || nk.includes('hongkong')) {
       return 'HKD';
+    }
+    if (nk === 'cn' || nk.endsWith('china')) {
+      return 'CNY';
     }
     return null;
   }

@@ -767,6 +767,39 @@
           return;
         }
 
+        if (cid === 156) {
+          const rows = await ensureSheetRows(CN_SHEET_URL);
+          if (!alive()) return;
+          const seriesAsc = sortRowsByDate(rows);
+          const { row: rSel, prev: rPrev } = selectLatestHighlightRow(seriesAsc);
+          titleEl.textContent = 'National';
+          subEl.textContent = `As of ${fmtDateFromRow(rSel)} · ${cname}`;
+          renderHiRows([
+            ['RON92', fmtHiPerL('CNY', rSel.ron92, 2), fmtDeltaPerL('CNY', rSel.ron92, rPrev?.ron92, 2)],
+            ['RON95', fmtHiPerL('CNY', rSel.ron95, 2), fmtDeltaPerL('CNY', rSel.ron95, rPrev?.ron95, 2)],
+            ['RON98', fmtHiPerL('CNY', rSel.ron98, 2), fmtDeltaPerL('CNY', rSel.ron98, rPrev?.ron98, 2)],
+            ['Diesel', fmtHiPerL('CNY', rSel.diesel, 2), fmtDeltaPerL('CNY', rSel.diesel, rPrev?.diesel, 2)],
+          ]);
+          if (chartKicker) chartKicker.textContent = `${cname} petrol prices history`;
+
+          const sliceRows = rowsForPriceChart(seriesAsc).map(r => ({ ...r, __label: fmtDate(r.date) }));
+          const labels = sliceRows.map(r => r.__label);
+          const chartKeys = [
+            { key: 'ron92', label: 'RON92' },
+            { key: 'ron95', label: 'RON95' },
+            { key: 'ron98', label: 'RON98' },
+            { key: 'diesel', label: 'Diesel' },
+          ];
+          if (labels.length) {
+            updateChart({
+              labels,
+              datasets: buildChartSeries(sliceRows, chartKeys, labels),
+              countryId: 156,
+            });
+          } else emptyChart();
+          return;
+        }
+
         if (cid === 344) {
           const rows = await ensureSheetRows(HK_SHEET_URL);
           if (!alive()) return;
